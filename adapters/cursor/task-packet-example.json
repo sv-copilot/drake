@@ -1,0 +1,41 @@
+{
+  "$schema": "https://github.com/sv-copilot/drake/adapters/task-packet.schema.json",
+  "id": "run-20260622-abc123/2-b7c9",
+  "task_type": "implement_slice",
+  "slice_ref": {
+    "slice_id": "ADAPTER-CURSOR-1",
+    "slice_number": 2,
+    "slice_title": "Cursor adapter reference implementation",
+    "dependency_tree_path": ".docs/slice_dependency_tree.json",
+    "slice_detail_dir": ".docs/slices"
+  },
+  "orchestrator_ref": {
+    "run_id": "hourly-20260622-abc123",
+    "orchestrator_type": "hourly",
+    "dispatched_at": "2026-06-22T21:00:00Z"
+  },
+  "adapter_type": "cursor",
+  "payload": {
+    "instructions": "Implement the Cursor adapter reference implementation. Create adapters/cursor/ directory with CURSOR-ADAPTER.md, task-packet-example.json, and evidence-contract-example.json. Create the slice detail doc at .docs/slices/ADAPTER-CURSOR-1.md. Validate all example JSON files against their schemas.",
+    "working_directory": "<workspace-root>",
+    "branch_prefix": "agent/",
+    "target_branch": "ai-dev"
+  },
+  "context": {
+    "credential_refs": [
+      "GH_TOKEN"
+    ],
+    "github_slug": "sv-copilot/drake",
+    "integration_branch": "ai-dev",
+    "environment": "local",
+    "model_hint": "composer-2.5",
+    "tags": {
+      "slice_group": "technical",
+      "tier": "P0",
+      "checkpoint": "medium-risk"
+    }
+  },
+  "created_at": "2026-06-22T21:00:00Z",
+  "ttl_seconds": 3600,
+  "priority": 2
+}

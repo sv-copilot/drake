@@ -1,0 +1,27 @@
+{
+  "projectName": "{{PROJECT_NAME}}",
+  "projectId": "{{PROJECT_ID}}",
+  "githubSlug": "{{GITHUB_SLUG}}",
+  "localPath": "{{LOCAL_PATH}}",
+  "integrationBranch": "{{INTEGRATION_BRANCH}}",
+  "featureBranchPrefix": "{{FEATURE_BRANCH_PREFIX}}",
+  "legacyFeatureBranchPrefixes": {{LEGACY_FEATURE_BRANCH_PREFIXES_JSON}},
+  "dependencyTreePath": "{{DEPENDENCY_TREE_PATH}}",
+  "sliceBacklogPath": "{{SLICE_BACKLOG_PATH}}",
+  "sliceDetailDir": "{{SLICE_DETAIL_DIR}}",
+  "sliceSelectorCommand": "{{SLICE_SELECTOR_COMMAND}}",
+  "docsSyncCommand": "{{DOCS_SYNC_COMMAND}}",
+  "validationCommands": [
+    "{{VALIDATION_COMMANDS}}"
+  ],
+  "approvedSubagents": [
+    "slice-preflight",
+    "slice-implementer",
+    "pr-babysitter"
+  ],
+  "model": "{{SDK_MODEL}}",
+  "portfolioWebhookUrlEnv": "{{PORTFOLIO_WEBHOOK_URL_ENV}}",
+  "portfolioWebhookTokenEnv": "{{PORTFOLIO_WEBHOOK_TOKEN_ENV}}",
+  "localWebhookUrlEnv": "{{LOCAL_WEBHOOK_URL_ENV}}",
+  "localWebhookTokenEnv": "{{LOCAL_WEBHOOK_TOKEN_ENV}}"
+}

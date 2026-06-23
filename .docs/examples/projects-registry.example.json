@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "updated_at": "2026-01-01",
+  "portfolio_automations": {
+    "hourly_improvement_id": "00000000-0000-0000-0000-000000000000",
+    "hourly_improvement_schedule": "0 * * * *",
+    "hourly_improvement_prompt": ".docs/agent_prompts/hourly-improvement.example.md",
+    "hourly_improvement_pr_target_branch": "ai-dev",
+    "hourly_improvement_model_slug": "composer-2.5"
+  },
+  "orchestrator": {
+    "automation_id": "00000000-0000-0000-0000-000000000000",
+    "schedule": "0 * * * *",
+    "global_fanout_limit": 1,
+    "same_repo_max_when_others_idle": 1,
+    "priority_order": "lower_number_first",
+    "model_slug": "composer-2.5"
+  },
+  "projects": [
+    {
+      "id": "example-app",
+      "name": "example-app",
+      "local_path": "<workspace-root>/example-app",
+      "github_slug": "example-org/example-app",
+      "integration_branch": "ai-dev",
+      "priority": 1,
+      "bootstrap_maturity": "starter",
+      "readiness": {
+        "bootstrap_alignment": true,
+        "ci_green": true,
+        "smoke_slice_ready": true,
+        "worker_manual_test": false,
+        "sdk_dry_run": true,
+        "automation_safe": true
+      },
+      "automation_enabled": false,
+      "docs": {
+        "slice_backlog": ".docs/slice_backlog.example.md",
+        "dependency_tree": ".docs/examples/slice_dependency_tree.example.json",
+        "agent_automations": ".docs/agent_automations.example.md"
+      },
+      "workers": [
+        {
+          "worker_id": "example-app-slice-pipeline",
+          "adapter_type": "cursor",
+          "role": "slice_pipeline",
+          "automation_id": "00000000-0000-0000-0000-000000000000",
+          "model_slug": "composer-2.5",
+          "enabled": false,
+          "primary": true,
+          "webhook_env": {
+            "url": "EXAMPLE_SLICE_PIPELINE_WEBHOOK_URL",
+            "token": "EXAMPLE_SLICE_PIPELINE_WEBHOOK_TOKEN"
+          },
+          "credential_refs": [
+            "GH_TOKEN"
+          ]
+        }
+      ]
+    }
+  ]
+}

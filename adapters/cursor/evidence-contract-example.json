@@ -1,0 +1,77 @@
+{
+  "$schema": "https://github.com/sv-copilot/drake/adapters/evidence-contract.schema.json",
+  "task_id": "run-20260622-abc123/2-b7c9",
+  "status": "success",
+  "summary": "Created Cursor adapter reference implementation: CURSOR-ADAPTER.md, task-packet-example.json, evidence-contract-example.json, and slice detail doc",
+  "evidence_items": [
+    {
+      "path": "adapters/cursor/CURSOR-ADAPTER.md",
+      "change_type": "added",
+      "description": "Cursor adapter documentation covering task type mapping, evidence production, backward compatibility, and SDK integration."
+    },
+    {
+      "path": "adapters/cursor/task-packet-example.json",
+      "change_type": "added",
+      "description": "Concrete example Task Packet for Cursor adapter dispatch, valid against task-packet.schema.json."
+    },
+    {
+      "path": "adapters/cursor/evidence-contract-example.json",
+      "change_type": "added",
+      "description": "Concrete example Evidence Contract produced by the Cursor adapter, valid against evidence-contract.schema.json."
+    },
+    {
+      "path": ".docs/slices/ADAPTER-CURSOR-1.md",
+      "change_type": "added",
+      "description": "Slice detail document for ADAPTER-CURSOR-1 following the standard slice doc pattern."
+    }
+  ],
+  "validation_results": {
+    "overall": "passed",
+    "checks": [
+      {
+        "check_name": "JSON syntax (task-packet-example)",
+        "status": "passed",
+        "command": "python3 -m json.tool adapters/cursor/task-packet-example.json",
+        "exit_code": 0
+      },
+      {
+        "check_name": "JSON syntax (evidence-contract-example)",
+        "status": "passed",
+        "command": "python3 -m json.tool adapters/cursor/evidence-contract-example.json",
+        "exit_code": 0
+      },
+      {
+        "check_name": "Schema validation (task-packet-example)",
+        "status": "passed",
+        "command": "python3 -c \"import json, jsonschema; s=json.load(open('adapters/task-packet.schema.json')); d=json.load(open('adapters/cursor/task-packet-example.json')); jsonschema.validate(d, s)\"",
+        "exit_code": 0
+      },
+      {
+        "check_name": "Schema validation (evidence-contract-example)",
+        "status": "passed",
+        "command": "python3 -c \"import json, jsonschema; s=json.load(open('adapters/evidence-contract.schema.json')); d=json.load(open('adapters/cursor/evidence-contract-example.json')); jsonschema.validate(d, s)\"",
+        "exit_code": 0
+      }
+    ],
+    "runtime": "local-cli",
+    "source": "cursor"
+  },
+  "adapter_info": {
+    "adapter_type": "cursor",
+    "adapter_version": "1.0.0",
+    "runtime": "local-cli"
+  },
+  "pr_info": {
+    "pr_url": "https://github.com/sv-copilot/drake/pull/60",
+    "pr_number": 60,
+    "branch": "agent/adapter-cursor-1",
+    "base_branch": "ai-dev",
+    "state": "open"
+  },
+  "completed_at": "2026-06-22T21:05:42Z",
+  "timestamps": {
+    "started_at": "2026-06-22T21:00:05Z",
+    "completed_at": "2026-06-22T21:05:42Z",
+    "duration_ms": 337000
+  }
+}

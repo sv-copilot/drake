@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "project": {
+    "id": "example-project",
+    "name": "Example Project",
+    "local_path": "<home>/example-project",
+    "github_slug": "sv-copilot/example-project",
+    "integration_branch": "ai-dev"
+  },
+  "product": {
+    "goal": "Help a clearly defined user complete one primary workflow.",
+    "target_users": [
+      "Primary user persona"
+    ],
+    "core_workflow": [
+      "Open the app",
+      "Complete the primary task",
+      "Review a clear result"
+    ],
+    "success_criteria": [
+      "The first useful workflow can be completed in local development.",
+      "The smoke slice can be validated without private services."
+    ],
+    "non_goals": [
+      "Payments",
+      "Production launch",
+      "Complex role-based access"
+    ]
+  },
+  "ux_directive": {
+    "tone": "Calm, clear, and task-first.",
+    "primary_flow": "Guide the user through one obvious path.",
+    "constraints": [
+      "Avoid dashboard-heavy chrome unless the content is object-like.",
+      "Keep copy concise and operationally clear."
+    ],
+    "human_review_required": true
+  },
+  "profiles": {
+    "sensitivity": "standard",
+    "frontend": "product-app-default",
+    "backend": "none-yet",
+    "data": "local-fixtures-first",
+    "optional_profiles": []
+  },
+  "defaults": {
+    "package_manager": "npm",
+    "branch_model": [
+      "main",
+      "dev",
+      "ai-dev",
+      "agent/*",
+      "cursor/*"
+    ],
+    "uat_target": "deferred",
+    "production_target": "deferred",
+    "github_visibility": "private"
+  },
+  "human_gates": [
+    {
+      "id": "HG-UX-001",
+      "status": "open",
+      "question": "Operator reviews the first UX prototype before production implementation.",
+      "blocks_automation": false
+    }
+  ],
+  "validation": {
+    "install": "npm install",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "test": "npm test",
+    "build": "npm run build",
+    "smoke": "npm run test:e2e",
+    "requires_private_services": false
+  },
+  "automation": {
+    "smoke_slice_id": "SMOKE-AUTOMATION-001",
+    "slice_pipeline_local_installed": false,
+    "sdk_runner_configured": false,
+    "sdk_dry_run_passed": false,
+    "worker_manual_test_passed": false,
+    "automation_safe": false
+  }
+}

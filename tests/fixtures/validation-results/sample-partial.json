@@ -1,0 +1,23 @@
+{
+  "overall": "partial",
+  "checks": [
+    {
+      "check_name": "registry-json",
+      "status": "passed",
+      "command": "python3 -m json.tool .docs/projects-registry.json",
+      "exit_code": 0,
+      "output": "",
+      "duration_ms": 120
+    },
+    {
+      "check_name": "git-diff-check",
+      "status": "failed",
+      "command": "git diff --check",
+      "exit_code": 1,
+      "output": "trailing whitespace",
+      "duration_ms": 45
+    }
+  ],
+  "runtime": "local-cli",
+  "source": "validate_validation_results"
+}

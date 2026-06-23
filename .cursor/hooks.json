@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": "bash .cursor/hooks/post-edit-portfolio-validation.sh",
+        "matcher": "Write|StrReplace"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "bash .cursor/hooks/block-task-tool.sh",
+        "matcher": "Task",
+        "failClosed": true
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "bash .cursor/hooks/block-subagent.sh",
+        "failClosed": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "bash .cursor/hooks/block-task-tool.sh",
+        "matcher": "Task",
+        "failClosed": true
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "bash .cursor/hooks/block-subagent.sh",
+        "failClosed": true
+      }
+    ]
+  }
+}

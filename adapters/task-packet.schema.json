@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/sv-copilot/drake/adapters/task-packet.schema.json",
+  "title": "Task Packet",
+  "description": "A generic task packet exchanged between an orchestrator and a worker adapter. Carries slice identification, task type, payload, and runtime context. Designed to be tool-agnostic so any adapter (Cursor, Cline, OpenHands, etc.) can process it.",
+  "type": "object",
+  "required": [
+    "id",
+    "task_type",
+    "slice_ref",
+    "orchestrator_ref",
+    "adapter_type",
+    "payload",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Globally unique task identifier. Convention: '<orchestrator_run_id>/<slice_number>-<uuid_short>'.",
+      "pattern": "^[a-zA-Z0-9_\\-/]+$",
+      "examples": ["run-20260617-abc123/1-a4f8"]
+    },
+    "task_type": {
+      "type": "string",
+      "description": "The kind of work this task represents.",
+      "enum": [
+        "implement_slice",
+        "review_pr",
+        "babysit_pr",
+        "audit_repo",
+        "course_correct",
+        "bootstrap_project",
+        "dry_run",
+        "custom"
+      ]
+    },
+    "slice_ref": {
+      "type": "object",
+      "description": "Reference to the slice this task implements.",
+      "required": ["slice_id", "slice_number", "slice_title"],
+      "properties": {
+        "slice_id": {
+          "type": "string",
+          "description": "Slice identifier from the dependency tree, e.g. ADAPTER-SPEC-1."
+        },
+        "slice_number": {
+          "type": "integer",
+          "description": "Numeric rank of the slice in the backlog.",
+          "minimum": 1
+        },
+        "slice_title": {
+          "type": "string",
+          "description": "Human-readable title of the slice."
+        },
+        "dependency_tree_path": {
+          "type": "string",
+          "description": "Path to the dependency tree JSON used to select this slice.",
+          "default": ".docs/slice_dependency_tree.json"
+        },
+        "slice_detail_dir": {
+          "type": "string",
+          "description": "Path to the slice detail directory, if one exists.",
+          "default": ".docs/slices"
+        }
+      }
+    },
+    "orchestrator_ref": {
+      "type": "object",
+      "description": "Identifies which orchestrator run dispatched this task.",
+      "required": ["run_id", "orchestrator_type"],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "description": "Unique identifier for this orchestrator run."
+        },
+        "orchestrator_type": {
+          "type": "string",
+          "description": "The orchestrator that dispatched the task.",
+          "enum": ["hourly", "slice_pipeline", "manual", "webhook", "custom"]
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of when the task was dispatched."
+        }
+      }
+    },
+    "adapter_type": {
+      "type": "string",
+      "description": "The target adapter that should process this task. Determines routing.",
+      "examples": ["cursor", "cline", "openhands", "custom"]
+    },
+    "payload": {
+      "type": "object",
+      "description": "The actual task content. Structure depends on task_type. Adapters use this to determine what work to perform.",
+      "required": ["instructions"],
+      "properties": {
+        "instructions": {
+          "type": "string",
+          "description": "Natural-language or structured instructions for the worker."
+        },
+        "working_directory": {
+          "type": "string",
+          "description": "Repository root or working directory for this task.",
+          "default": "."
+        },
+        "branch_prefix": {
+          "type": "string",
+          "description": "Branch prefix convention for this task. Prefer agent/ for new work; cursor/ remains valid during migration.",
+          "default": "agent/"
+        },
+        "target_branch": {
+          "type": "string",
+          "description": "The base branch the worker should target with changes.",
+          "default": "ai-dev"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Non-secret runtime context and credential references.",
+      "properties": {
+        "credential_refs": {
+          "type": "array",
+          "description": "Names of credentials the worker may need. Actual values are resolved by the adapter or environment, never embedded here.",
+          "items": {
+            "type": "string",
+            "examples": ["GH_TOKEN", "OPENAI_API_KEY"]
+          }
+        },
+        "repo_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The target repository URL.",
+          "examples": ["https://github.com/sv-copilot/drake"]
+        },
+        "github_slug": {
+          "type": "string",
+          "description": "Short GitHub slug for the target repo.",
+          "examples": ["sv-copilot/drake"],
+          "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
+        },
+        "integration_branch": {
+          "type": "string",
+          "description": "The integration branch for PRs.",
+          "default": "ai-dev"
+        },
+        "environment": {
+          "type": "string",
+          "description": "Deployment or runtime environment hint.",
+          "enum": ["dev", "staging", "production", "local"],
+          "default": "local"
+        },
+        "model_hint": {
+          "type": "string",
+          "description": "Optional model preference for AI-powered adapters. Not a hard constraint.",
+          "examples": ["composer-2.5", "deepseek-v4-flash"]
+        },
+        "tags": {
+          "type": "object",
+          "description": "Arbitrary key-value metadata for routing, filtering, or observability.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of task creation."
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "description": "Optional time-to-live in seconds. If the task is not picked up within this window, it may be considered stale.",
+      "minimum": 60,
+      "default": 3600
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Task priority. Lower numbers = higher priority.",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 5
+    }
+  }
+}

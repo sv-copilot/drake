@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-21T18:00:00Z",
+  "description": "Example hosted API sketch illustrating portfolio dashboard and webhook dispatch views aligned with registry v2 and dependency tree conventions.",
+  "views": {
+    "dashboard": {
+      "portfolio": {
+        "global_fanout_limit": 3,
+        "same_repo_max_when_others_idle": 2,
+        "repo_count": 2,
+        "automation_enabled_count": 2,
+        "ready_slice_count": 3,
+        "running_slice_count": 1
+      },
+      "repos": [
+        {
+          "id": "drake",
+          "github_slug": "sv-copilot/drake",
+          "integration_branch": "ai-dev",
+          "automation_enabled": true,
+          "priority": 1,
+          "readiness": {
+            "bootstrap_alignment": true,
+            "ci_green": true,
+            "smoke_slice_ready": true,
+            "worker_manual_test": true,
+            "sdk_dry_run": true,
+            "automation_safe": true
+          },
+          "repo_native_paths": {
+            "registry_project_id": "drake",
+            "slice_backlog": ".docs/slice_backlog.md",
+            "dependency_tree": ".docs/slice_dependency_tree.json",
+            "agent_automations": ".docs/agent_automations.md"
+          },
+          "workers": [
+            {
+              "worker_id": "drake-slice-pipeline",
+              "adapter_type": "cursor",
+              "role": "slice_pipeline",
+              "enabled": true,
+              "primary": true,
+              "model_slug": "composer-2.5",
+              "credential_ref_names": [
+                "GH_TOKEN",
+                "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_URL",
+                "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN"
+              ],
+              "webhook_env_names": {
+                "url": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL",
+                "token": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_TOKEN"
+              }
+            }
+          ],
+          "slice_summary": {
+            "ready_count": 1,
+            "running_count": 0,
+            "blocked_count": 0,
+            "validated_count": 14
+          }
+        },
+        {
+          "id": "example-app",
+          "github_slug": "sv-copilot/example-app",
+          "integration_branch": "ai-dev",
+          "automation_enabled": true,
+          "priority": 3,
+          "readiness": {
+            "bootstrap_alignment": true,
+            "ci_green": true,
+            "smoke_slice_ready": true,
+            "worker_manual_test": true,
+            "sdk_dry_run": true,
+            "automation_safe": true
+          },
+          "repo_native_paths": {
+            "registry_project_id": "example-app",
+            "slice_backlog": ".docs/slice_backlog.md",
+            "dependency_tree": ".docs/slice_dependency_tree.json",
+            "agent_automations": ".docs/agent_automations.md"
+          },
+          "workers": [
+            {
+              "worker_id": "example-app-slice-pipeline",
+              "adapter_type": "cursor",
+              "role": "slice_pipeline",
+              "enabled": true,
+              "primary": true,
+              "model_slug": "composer-2.5",
+              "credential_ref_names": [
+                "GH_TOKEN",
+                "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_URL",
+                "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN"
+              ],
+              "webhook_env_names": {
+                "url": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
+                "token": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_TOKEN"
+              }
+            }
+          ],
+          "slice_summary": {
+            "ready_count": 2,
+            "running_count": 1,
+            "blocked_count": 0,
+            "validated_count": 8
+          }
+        }
+      ],
+      "slices": [
+        {
+          "slice_id": "HOSTED-ARCH-1",
+          "slice_number": 15,
+          "title": "Hosted UI/API architecture direction sketch",
+          "state": "running",
+          "repo_id": "drake",
+          "github_slug": "sv-copilot/drake",
+          "automation_eligible": true,
+          "operator_gates": [],
+          "dependencies": [],
+          "repo_native_path": ".docs/slices/HOSTED-ARCH-1.md"
+        },
+        {
+          "slice_id": "RS-SMOKE-2",
+          "slice_number": 4,
+          "title": "Example ready slice on example-app",
+          "state": "ready",
+          "repo_id": "example-app",
+          "github_slug": "sv-copilot/example-app",
+          "automation_eligible": true,
+          "operator_gates": [],
+          "dependencies": [3],
+          "repo_native_path": ".docs/slice_dependency_tree.json"
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "2026-06-21T17-30-00Z-hosted-arch-1",
+          "repo_id": "drake",
+          "slice_id": "HOSTED-ARCH-1",
+          "task_id": "hourly-20260621-abc123/15-f7a2",
+          "runtime": "cloud",
+          "status": "running",
+          "started_at": "2026-06-21T17:30:00Z",
+          "model_slug": "composer-2.5",
+          "artifact_source": "local_automation_runs",
+          "repo_native_artifact_path": ".cursor/automation-runs/2026-06-21T17-30-00Z-hosted-arch-1/"
+        },
+        {
+          "run_id": "2026-06-21T16-00-00Z-rs-slice",
+          "repo_id": "example-app",
+          "slice_id": "RS-FEATURE-1",
+          "task_id": "hourly-20260621-def456/4-b3c1",
+          "runtime": "cloud",
+          "status": "success",
+          "started_at": "2026-06-21T16:00:00Z",
+          "completed_at": "2026-06-21T16:45:00Z",
+          "model_slug": "composer-2.5",
+          "artifact_source": "hosted_storage",
+          "evidence_status": "success",
+          "pr_url": "https://github.com/sv-copilot/example-app/pull/42",
+          "handoff_path": "B"
+        }
+      ]
+    },
+    "dispatch": {
+      "orchestrator_run_id": "hourly-20260621-abc123",
+      "trigger_reason": "hourly_schedule",
+      "webhook_dispatches": [
+        {
+          "dispatch_id": "dispatch-20260621-001",
+          "orchestrator_run_id": "hourly-20260621-abc123",
+          "repo_id": "drake",
+          "worker_id": "drake-slice-pipeline",
+          "slice_id": "HOSTED-ARCH-1",
+          "adapter_type": "cursor",
+          "status": "accepted",
+          "dispatched_at": "2026-06-21T17:30:05Z",
+          "webhook_url_env_name": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL",
+          "chain_back": true,
+          "retry_count": 0,
+          "task_packet_id": "hourly-20260621-abc123/15-f7a2"
+        },
+        {
+          "dispatch_id": "dispatch-20260621-002",
+          "orchestrator_run_id": "hourly-20260621-abc123",
+          "repo_id": "example-app",
+          "worker_id": "example-app-slice-pipeline",
+          "slice_id": "RS-SMOKE-2",
+          "adapter_type": "cursor",
+          "status": "queued",
+          "dispatched_at": "2026-06-21T17:30:06Z",
+          "webhook_url_env_name": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
+          "chain_back": true,
+          "retry_count": 0,
+          "task_packet_id": "hourly-20260621-abc123/4-c8d9"
+        }
+      ],
+      "related_runs": [
+        {
+          "run_id": "2026-06-21T17-30-00Z-hosted-arch-1",
+          "repo_id": "drake",
+          "slice_id": "HOSTED-ARCH-1",
+          "runtime": "cloud",
+          "status": "running",
+          "started_at": "2026-06-21T17:30:00Z",
+          "artifact_source": "worker_callback"
+        }
+      ]
+    }
+  }
+}

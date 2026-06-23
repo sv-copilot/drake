@@ -1,0 +1,15 @@
+{
+  "overall": "passed",
+  "checks": [
+    {
+      "check_name": "ci_preflight",
+      "status": "passed",
+      "command": "bash scripts/ci_preflight.sh",
+      "exit_code": 0,
+      "output": "ci preflight passed",
+      "duration_ms": 42000
+    }
+  ],
+  "runtime": "cursor-cloud",
+  "source": "slice-pipeline"
+}

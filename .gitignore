@@ -1,0 +1,31 @@
+# Local env files (committed examples use .env.example only)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local operator notes with real secret values or paths
+SECRETS.local.md
+*.local.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Future shared tool build artifacts (when populated)
+shared/**/node_modules/
+shared/**/.venv/
+shared/**/__pycache__/
+shared/**/dist/
+shared/**/build/
+
+# Portfolio-local tool build artifacts
+tools/**/node_modules/
+tools/**/dist/
+scripts/**/__pycache__/
+
+# Keep future project symlinks/repos out of portfolio git
+projects/*
+!projects/README.md
+__pycache__/

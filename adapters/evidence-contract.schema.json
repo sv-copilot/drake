@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/sv-copilot/drake/adapters/evidence-contract.schema.json",
+  "title": "Evidence Contract",
+  "description": "The structured output a worker adapter returns after processing a Task Packet. Contains execution results, evidence items (files changed, artifacts produced), validation outcomes, and a summary. Designed to be tool-agnostic for uniform consumption by orchestrators, babysitters, and auditing tools.",
+  "type": "object",
+  "required": [
+    "task_id",
+    "status",
+    "summary",
+    "evidence_items",
+    "adapter_info",
+    "completed_at"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "The id of the Task Packet this evidence responds to. Must match the original task's id.",
+      "examples": ["run-20260617-abc123/1-a4f8"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Overall outcome of the task.",
+      "enum": [
+        "success",
+        "failure",
+        "partial",
+        "blocked",
+        "skipped",
+        "cancelled"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Human-readable summary of what was accomplished, why it failed, or what blocked progress."
+    },
+    "evidence_items": {
+      "type": "array",
+      "description": "List of concrete artifacts produced or modified by this task. Each item represents one file change or artifact.",
+      "items": {
+        "type": "object",
+        "required": ["path", "change_type", "description"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path of the changed file or artifact within the repository."
+          },
+          "change_type": {
+            "type": "string",
+            "description": "The type of change made.",
+            "enum": ["added", "modified", "deleted", "renamed", "artifact"]
+          },
+          "description": {
+            "type": "string",
+            "description": "Short description of what this change contains or represents."
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Optional content hash (e.g. SHA256) for integrity verification of generated artifacts.",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "description": "Optional file size in bytes.",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "validation_results": {
+      "$ref": "validation-results.schema.json",
+      "description": "Results of validation commands run by the worker. Uses adapters/validation-results.schema.json for cross-runtime parity."
+    },
+    "adapter_info": {
+      "type": "object",
+      "description": "Metadata about the adapter that executed this task.",
+      "required": ["adapter_type", "adapter_version"],
+      "properties": {
+        "adapter_type": {
+          "type": "string",
+          "description": "Which adapter implementation executed the task.",
+          "examples": ["cursor", "cline", "openhands"]
+        },
+        "adapter_version": {
+          "type": "string",
+          "description": "Version identifier for the adapter implementation.",
+          "examples": ["1.0.0", "2026-06-18"]
+        },
+        "runtime": {
+          "type": "string",
+          "description": "Runtime environment the adapter ran in.",
+          "examples": ["cursor-cloud", "local-cli", "github-actions"]
+        }
+      }
+    },
+    "pr_info": {
+      "type": "object",
+      "description": "Information about a Pull Request created as part of this task, if applicable.",
+      "properties": {
+        "pr_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the opened Pull Request."
+        },
+        "pr_number": {
+          "type": "integer",
+          "description": "Pull Request number on the target repository.",
+          "minimum": 1
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch name the PR was opened from."
+        },
+        "base_branch": {
+          "type": "string",
+          "description": "The base branch the PR targets."
+        },
+        "state": {
+          "type": "string",
+          "enum": ["open", "merged", "closed", "draft"],
+          "description": "State of the PR at time of evidence generation."
+        }
+      }
+    },
+    "logs": {
+      "type": "array",
+      "description": "Captured log entries from the worker execution, useful for debugging and audit.",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "level", "message"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the log entry."
+          },
+          "level": {
+            "type": "string",
+            "enum": ["debug", "info", "warn", "error"],
+            "description": "Log severity level."
+          },
+          "message": {
+            "type": "string",
+            "description": "The log message."
+          },
+          "context": {
+            "type": "object",
+            "description": "Optional structured context for the log entry.",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "description": "Key timestamps for the task execution lifecycle.",
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the worker began processing this task."
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the worker finished and produced this evidence."
+        },
+        "duration_ms": {
+          "type": "integer",
+          "description": "Wall-clock duration of the task in milliseconds.",
+          "minimum": 0
+        }
+      },
+      "required": ["completed_at"]
+    }
+  }
+}

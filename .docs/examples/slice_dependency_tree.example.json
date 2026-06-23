@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "source_backlog_path": ".docs/slice_backlog.example.md",
+  "default_fanout_limit": 1,
+  "notes": [
+    "Fictional smoke slice for Drake export validation."
+  ],
+  "slices": [
+    {
+      "slice_id": "SMOKE-1",
+      "slice_number": 1,
+      "group": "technical",
+      "title": "Smoke slice for export validation",
+      "state": "ready",
+      "status": "ready",
+      "dependencies": [],
+      "blocks": [],
+      "operator_gates": [],
+      "checkpoint": "low-risk",
+      "automation_eligible": true,
+      "priority": 1,
+      "last_known_pr": null,
+      "risk": "low",
+      "effort": "small",
+      "tier": "P0"
+    }
+  ]
+}
