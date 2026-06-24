@@ -93,11 +93,9 @@ overview](https://github.com/sv-copilot/drake).
 Drake is open source under the [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 license (see `LICENSE`).
 
-Community infrastructure is being built out. Coming soon:
-
-- **CONTRIBUTING.md** — how to contribute, DCO, and PR conventions
-- **GOVERNANCE.md** — project governance model
-- **CODE_OF_CONDUCT.md** — community standards
+- [**CONTRIBUTING.md**](CONTRIBUTING.md) — how to contribute, DCO, and PR conventions
+- [**GOVERNANCE.md**](GOVERNANCE.md) — project governance model _(coming soon)_
+- [**CODE_OF_CONDUCT.md**](CODE_OF_CONDUCT.md) — community standards
 
 ## Links
 
