@@ -35,6 +35,7 @@ def test_export_writes_tree(tmp_path: Path) -> None:
     assert (output / "README.md").is_file()
     assert (output / "docs/getting-started.md").is_file()
     assert (output / "adapters/cursor/CURSOR-ADAPTER.md").is_file()
+    assert (output / "scripts/dev-hosted.sh").is_file()
     assert (output / ".docs/hosted_api_sketch.schema.json").is_file()
     assert (output / ".docs/mcp_environment_profile.schema.json").is_file()
     assert (output / ".docs/slice_dependency_tree.schema.json").is_file()

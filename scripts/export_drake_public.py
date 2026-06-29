@@ -58,6 +58,7 @@ INCLUDE_FILES = [
     ".docs/slice_dependency_tree.schema.json",
     "SECRETS.example.md",
     ".gitignore",
+    "scripts/dev-hosted.sh",
 ]
 
 SCRIPT_ALLOWLIST = [
