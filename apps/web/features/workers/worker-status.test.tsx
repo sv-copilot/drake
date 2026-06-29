@@ -65,6 +65,31 @@ describe("Worker status", () => {
     expect(screen.queryByRole("button", { name: /enable|disable/i })).toBeNull();
   });
 
+  it("renders only declared env names and no webhook values or mutation controls", () => {
+    render(
+      <WorkerStatusContent
+        repos={[
+          {
+            ...repos[0],
+            workers: [
+              {
+                ...repos[0].workers[0],
+                webhook_env_names: {
+                  url: "EXAMPLE_WEBHOOK_URL",
+                },
+                credential_ref_names: [],
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("EXAMPLE_WEBHOOK_URL")).toBeInTheDocument();
+    expect(screen.queryByText(/https?:\/\//i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /enable|disable|rotate|edit/i })).toBeNull();
+  });
+
   it("renders an empty state when no workers are declared", () => {
     render(<WorkerStatusEmpty />);
 

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -63,10 +63,16 @@ describe("slice board gate highlighting", () => {
   });
 
   it("groups slices by lifecycle state", () => {
-    const grouped = groupSlices([readySlice, gatedSlice]);
+    const unknownSlice = {
+      ...readySlice,
+      slice_id: "UNKNOWN-1",
+      state: "paused",
+    };
+    const grouped = groupSlices([readySlice, gatedSlice, unknownSlice]);
 
     expect(grouped.ready).toEqual([readySlice]);
     expect(grouped.gated).toEqual([gatedSlice]);
+    expect(grouped.blocked).toEqual([unknownSlice]);
   });
 
   it("renders a detail panel with repo-native GitHub link", () => {
@@ -80,5 +86,20 @@ describe("slice board gate highlighting", () => {
       "https://github.com/example-org/example-app/blob/ai-dev/.docs/slices/GATED-1.md",
     );
     expect(screen.queryByRole("button", { name: /dispatch/i })).toBeNull();
+  });
+
+  it("updates detail selection and renders no-gate/no-dependency fallbacks", () => {
+    render(<SliceBoardContent repo={repo} slices={[gatedSlice, readySlice]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /READY-1/ }));
+
+    expect(screen.getAllByText("READY-1")).toHaveLength(2);
+    expect(screen.getByText("No unresolved operator gates.")).toBeInTheDocument();
+    expect(screen.getByText("none")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open in GitHub" })).toHaveAttribute(
+      "href",
+      "https://github.com/example-org/example-app/blob/ai-dev/.docs/slices/READY-1.md",
+    );
+    expect(screen.queryByRole("button", { name: /approve|promote|dispatch/i })).toBeNull();
   });
 });

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from hosted_api.main import create_app
+from hosted_api.sync.github import InMemorySyncCache, ProjectTree, SyncSnapshot
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
@@ -101,6 +103,164 @@ def test_read_projection_can_be_embedded_in_hosted_sketch_shape() -> None:
         ),
     )
     fixture["views"]["dashboard"] = dashboard
+    fixture["views"]["dispatch"]["webhook_dispatches"] = client.get(
+        "/api/v1/dispatches",
+    ).json()
 
     schema = load_json(REPO_ROOT / ".docs/hosted_api_sketch.schema.json")
     assert validate_with_schema(fixture, schema) == []
+
+
+def test_read_endpoints_do_not_expose_webhook_values_or_private_prefixes() -> None:
+    client = TestClient(create_app())
+
+    payload = {
+        "repos": client.get("/api/v1/repos").json(),
+        "dispatches": client.get("/api/v1/dispatches").json(),
+        "runs": client.get("/api/v1/runs").json(),
+    }
+    serialized = json.dumps(payload)
+
+    assert "SIMON_PROJECTS" not in serialized
+    assert "RESEARCH_SERVICE" not in serialized
+    assert "https://hooks.slack.com" not in serialized
+    assert "webhook.site" not in serialized
+    assert "secret" not in serialized.lower()
+    assert all(
+        dispatch["webhook_url_env_name"].endswith("_WEBHOOK_URL")
+        for dispatch in payload["dispatches"]
+    )
+
+
+def test_cache_backed_read_projection_counts_multiple_repos_and_missing_trees() -> None:
+    app = create_app()
+    app.state.sync_cache = InMemorySyncCache(
+        snapshot=SyncSnapshot(
+            synced_at=datetime.now(UTC),
+            stale_after_seconds=300,
+            registry={
+                "orchestrator": {
+                    "global_fanout_limit": 4,
+                    "same_repo_max_when_others_idle": 2,
+                },
+                "projects": [
+                    {
+                        "id": "alpha",
+                        "github_slug": "example-org/alpha",
+                        "integration_branch": "ai-dev",
+                        "automation_enabled": True,
+                        "docs": {
+                            "dependency_tree": ".docs/alpha-tree.json",
+                        },
+                        "workers": [
+                            {
+                                "worker_id": "alpha-worker",
+                                "adapter_type": "cursor",
+                                "role": "slice_pipeline",
+                                "enabled": True,
+                                "primary": True,
+                                "credential_refs": ["GH_TOKEN"],
+                                "webhook_env": {
+                                    "url": "ALPHA_WEBHOOK_URL",
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        "id": "beta",
+                        "github_slug": "example-org/beta",
+                        "integration_branch": "ai-dev",
+                        "automation_enabled": False,
+                        "docs": {
+                            "dependency_tree": ".docs/beta-tree.json",
+                        },
+                        "workers": [],
+                    },
+                ],
+            },
+            dependency_trees={
+                "alpha": ProjectTree(
+                    project_id="alpha",
+                    github_slug="example-org/alpha",
+                    ref="ai-dev",
+                    path=".docs/alpha-tree.json",
+                    tree={
+                        "slices": [
+                            {
+                                "slice_id": "READY-1",
+                                "slice_number": 1,
+                                "title": "Ready",
+                                "state": "ready",
+                                "automation_eligible": True,
+                            },
+                            {
+                                "slice_id": "RUN-1",
+                                "slice_number": 2,
+                                "title": "Running",
+                                "state": "running",
+                                "automation_eligible": True,
+                            },
+                            {
+                                "slice_id": "BLOCKED-1",
+                                "slice_number": 3,
+                                "title": "Blocked",
+                                "state": "blocked",
+                                "automation_eligible": False,
+                            },
+                            {
+                                "slice_id": "DONE-1",
+                                "slice_number": 4,
+                                "title": "Promoted",
+                                "state": "promoted",
+                                "automation_eligible": False,
+                            },
+                        ],
+                    },
+                ),
+            },
+            files=[],
+        ),
+    )
+    client = TestClient(app)
+
+    portfolio = client.get("/api/v1/portfolio").json()
+    repos = {repo["id"]: repo for repo in client.get("/api/v1/repos").json()}
+
+    assert portfolio["repo_count"] == 2
+    assert portfolio["automation_enabled_count"] == 1
+    assert portfolio["ready_slice_count"] == 1
+    assert portfolio["running_slice_count"] == 1
+    assert repos["alpha"]["slice_summary"] == {
+        "ready_count": 1,
+        "running_count": 1,
+        "blocked_count": 1,
+        "validated_count": 1,
+    }
+    assert repos["beta"]["slice_summary"] == {
+        "ready_count": 0,
+        "running_count": 0,
+        "blocked_count": 0,
+        "validated_count": 0,
+    }
+    assert client.get("/api/v1/repos/beta/slices").json() == []
+    assert client.get("/api/v1/repos/missing/slices").status_code == 404
+
+
+def test_read_endpoints_reject_mutation_methods() -> None:
+    client = TestClient(create_app())
+
+    paths = [
+        "/api/v1/portfolio",
+        "/api/v1/repos",
+        "/api/v1/repos/example-app",
+        "/api/v1/repos/example-app/slices",
+        "/api/v1/runs",
+        "/api/v1/runs/2026-06-21T16-00-00Z-rs-slice",
+        "/api/v1/dispatches",
+    ]
+
+    for path in paths:
+        assert client.post(path).status_code in {405, 422}
+        assert client.put(path).status_code == 405
+        assert client.patch(path).status_code == 405
+        assert client.delete(path).status_code == 405

@@ -32,4 +32,24 @@ describe("Run detail", () => {
       run.pr_url,
     );
   });
+
+  it("renders sparse runs as read-only provenance without mutation controls", () => {
+    const run: RunSummary = {
+      run_id: "run-2",
+      repo_id: "drake",
+      runtime: "local",
+      status: "pending",
+      started_at: "2026-06-21T18:00:00Z",
+    };
+
+    render(<RunDetailContent run={run} />);
+
+    expect(screen.getByText("Evidence and provenance summary for drake.")).toBeInTheDocument();
+    expect(screen.getByText("unknown")).toBeInTheDocument();
+    expect(screen.getAllByText("pending")).toHaveLength(2);
+    expect(screen.getAllByText("not declared")).toHaveLength(3);
+    expect(screen.getByText("not uploaded")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open PR" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /dispatch|retry|edit|rerun/i })).toBeNull();
+  });
 });

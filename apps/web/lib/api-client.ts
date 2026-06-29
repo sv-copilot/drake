@@ -125,11 +125,11 @@ export function fetchRepos() {
 }
 
 export function fetchRepo(repoId: string) {
-  return apiGet<RepoSummary>(`/api/v1/repos/${repoId}`);
+  return apiGet<RepoSummary>(`/api/v1/repos/${encodeURIComponent(repoId)}`);
 }
 
 export function fetchRepoSlices(repoId: string) {
-  return apiGet<SliceSummary[]>(`/api/v1/repos/${repoId}/slices`);
+  return apiGet<SliceSummary[]>(`/api/v1/repos/${encodeURIComponent(repoId)}/slices`);
 }
 
 export function fetchDispatches() {
@@ -141,5 +141,5 @@ export function fetchRuns() {
 }
 
 export function fetchRun(runId: string) {
-  return apiGet<RunSummary>(`/api/v1/runs/${runId}`);
+  return apiGet<RunSummary>(`/api/v1/runs/${encodeURIComponent(runId)}`);
 }

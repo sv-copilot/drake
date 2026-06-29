@@ -29,8 +29,12 @@ const dispatches: DispatchSummary[] = [
 describe("Dispatch log", () => {
   it("maps statuses to badge tones", () => {
     expect(statusTone("accepted")).toBe("success");
+    expect(statusTone("completed")).toBe("success");
     expect(statusTone("queued")).toBe("pending");
+    expect(statusTone("dispatched")).toBe("pending");
+    expect(statusTone("retrying")).toBe("pending");
     expect(statusTone("failed")).toBe("failed");
+    expect(statusTone("cancelled")).toBe("failed");
     expect(statusTone("unknown")).toBe("neutral");
   });
 
@@ -43,6 +47,26 @@ describe("Dispatch log", () => {
       screen.getByText("EXAMPLE_SLICE_PIPELINE_WEBHOOK_URL"),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /retry|dispatch/i })).toBeNull();
+  });
+
+  it("renders missing webhook env as not declared and avoids webhook values", () => {
+    render(
+      <DispatchLogContent
+        dispatches={[
+          {
+            ...dispatches[0],
+            dispatch_id: "dispatch-2",
+            webhook_url_env_name: undefined,
+            error_summary: undefined,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("not declared")).toBeInTheDocument();
+    expect(screen.getByText("Env var name only")).toBeInTheDocument();
+    expect(screen.queryByText(/https?:\/\//i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /retry|dispatch|edit/i })).toBeNull();
   });
 
   it("renders the OSS-equivalent empty state", () => {

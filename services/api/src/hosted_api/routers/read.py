@@ -123,7 +123,11 @@ def run_detail(run_id: str) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
 
 
-@router.get("/dispatches", response_model=list[DispatchResponse])
+@router.get(
+    "/dispatches",
+    response_model=list[DispatchResponse],
+    response_model_exclude_none=True,
+)
 def dispatches() -> list[dict[str, Any]]:
     return dispatches_from_examples()
 

@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -49,7 +50,18 @@ describe("Run history", () => {
   });
 
   it("builds unique filter options", () => {
-    expect(runFilterOptions(runs)).toEqual({
+    expect(
+      runFilterOptions([
+        ...runs,
+        {
+          run_id: "run-c",
+          repo_id: "drake",
+          runtime: "cloud",
+          status: "success",
+          started_at: "2026-06-21T18:00:00Z",
+        },
+      ]),
+    ).toEqual({
       repoIds: ["drake", "example-app"],
       sliceIds: ["HOSTED-ARCH-1", "RS-FEATURE-1"],
       statuses: ["running", "success"],
@@ -59,7 +71,12 @@ describe("Run history", () => {
   it("maps run statuses to tones", () => {
     expect(statusTone("success")).toBe("success");
     expect(statusTone("running")).toBe("running");
+    expect(statusTone("pending")).toBe("running");
     expect(statusTone("failure")).toBe("failed");
+    expect(statusTone("partial")).toBe("failed");
+    expect(statusTone("blocked")).toBe("failed");
+    expect(statusTone("cancelled")).toBe("failed");
+    expect(statusTone("mystery")).toBe("neutral");
   });
 
   it("renders run rows without dispatch controls", () => {
@@ -69,5 +86,63 @@ describe("Run history", () => {
     expect(screen.getAllByText("HOSTED-ARCH-1")).toHaveLength(2);
     expect(screen.getByText("local_automation_runs")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /dispatch/i })).toBeNull();
+  });
+
+  it("filters through the visible status select and shows filtered empty state", () => {
+    function Harness() {
+      const [filters, setFilters] = useState({
+        repoId: "",
+        sliceId: "",
+        status: "",
+      });
+      return (
+        <RunHistoryContent
+          runs={runs}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "success" },
+    });
+
+    expect(screen.getByText("run-b")).toBeInTheDocument();
+    expect(screen.queryByText("run-a")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Repo"), {
+      target: { value: "drake" },
+    });
+
+    expect(screen.getByText("No runs match these filters.")).toBeInTheDocument();
+  });
+
+  it("encodes run links and renders fallback values for sparse runs", () => {
+    render(
+      <RunHistoryContent
+        runs={[
+          {
+            run_id: "run/with spaces",
+            repo_id: "drake",
+            runtime: "local",
+            status: "pending",
+            started_at: "2026-06-21T18:00:00Z",
+          },
+        ]}
+      />,
+    );
+
+    const row = screen.getByText("run/with spaces").closest("article");
+    expect(row).not.toBeNull();
+    expect(screen.getByRole("link", { name: "run/with spaces" })).toHaveAttribute(
+      "href",
+      "/runs/run%2Fwith%20spaces",
+    );
+    expect(within(row as HTMLElement).getByText("no slice")).toBeInTheDocument();
+    expect(row).toHaveTextContent("local · unknown model");
+    expect(within(row as HTMLElement).getByText("not uploaded")).toBeInTheDocument();
   });
 });
