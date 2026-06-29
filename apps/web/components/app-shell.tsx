@@ -9,6 +9,7 @@ import {
   History,
   LayoutDashboard,
   Send,
+  RefreshCw,
 } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -33,6 +34,12 @@ const navItems = [
     label: "Runs",
     description: "Evidence and validation history",
     icon: History,
+  },
+  {
+    href: "/sync",
+    label: "Sync",
+    description: "Read cache freshness and source files",
+    icon: RefreshCw,
   },
   {
     href: "/workers",

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   apiGet,
   apiUrl,
+  fetchDispatch,
   fetchRepo,
   fetchRepoSlices,
   fetchRun,
@@ -72,7 +73,7 @@ describe("api client", () => {
     expect(fetchMock.mock.calls[0][1].headers.get("x-trace-id")).toBe("trace-1");
   });
 
-  it("encodes path identifiers before requesting repo and run details", async () => {
+  it("encodes path identifiers before requesting resource details", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test");
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -83,6 +84,7 @@ describe("api client", () => {
     await fetchRepo("org/repo");
     await fetchRepoSlices("org/repo");
     await fetchRun("2026/06/21 run");
+    await fetchDispatch("dispatch/run 1");
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -97,6 +99,11 @@ describe("api client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "https://api.example.test/api/v1/runs/2026%2F06%2F21%20run",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "https://api.example.test/api/v1/dispatches/dispatch%2Frun%201",
       expect.any(Object),
     );
   });

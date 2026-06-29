@@ -87,6 +87,24 @@ export type RunSummary = {
   handoff_path?: string;
 };
 
+export type SyncedFileSummary = {
+  repo: string;
+  ref: string;
+  path: string;
+  sha?: string;
+  source: string;
+};
+
+export type SyncStatusSummary = {
+  status: string;
+  last_synced_at?: string;
+  stale_after_seconds: number;
+  is_stale: boolean;
+  project_count: number;
+  dependency_tree_count: number;
+  files: SyncedFileSummary[];
+};
+
 const DEFAULT_API_URL = "http://127.0.0.1:8000";
 
 export function getApiBaseUrl() {
@@ -142,10 +160,20 @@ export function fetchDispatches() {
   return apiGet<DispatchSummary[]>("/api/v1/dispatches");
 }
 
+export function fetchDispatch(dispatchId: string) {
+  return apiGet<DispatchSummary>(
+    `/api/v1/dispatches/${encodeURIComponent(dispatchId)}`,
+  );
+}
+
 export function fetchRuns() {
   return apiGet<RunSummary[]>("/api/v1/runs");
 }
 
 export function fetchRun(runId: string) {
   return apiGet<RunSummary>(`/api/v1/runs/${encodeURIComponent(runId)}`);
+}
+
+export function fetchSyncStatus() {
+  return apiGet<SyncStatusSummary>("/api/v1/sync/status");
 }

@@ -72,6 +72,18 @@ def test_run_detail_returns_fixture_run() -> None:
     assert response.json()["pr_url"] == "https://github.com/sv-copilot/example-app/pull/42"
 
 
+def test_dispatch_detail_returns_fixture_dispatch() -> None:
+    client = TestClient(create_app())
+
+    response = client.get("/api/v1/dispatches/dispatch-20260621-001")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "accepted"
+    assert response.json()["webhook_url_env_name"] == (
+        "EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_URL"
+    )
+
+
 def test_hosted_api_sketch_example_validates_locally() -> None:
     from scripts.validate_hosted_api_sketch import (
         load_json,
@@ -247,6 +259,7 @@ def test_cache_backed_read_projection_counts_multiple_repos_and_missing_trees() 
     assert client.get("/api/v1/runs").json() == []
     assert client.get("/api/v1/dispatches").json() == []
     assert client.get("/api/v1/runs/2026-06-21T16-00-00Z-rs-slice").status_code == 404
+    assert client.get("/api/v1/dispatches/dispatch-20260621-001").status_code == 404
 
 
 def test_read_endpoints_reject_mutation_methods() -> None:

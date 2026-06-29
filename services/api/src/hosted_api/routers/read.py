@@ -132,6 +132,18 @@ def dispatches(request: Request) -> list[dict[str, Any]]:
     return _dashboard(request).dispatches
 
 
+@router.get(
+    "/dispatches/{dispatch_id}",
+    response_model=DispatchResponse,
+    response_model_exclude_none=True,
+)
+def dispatch_detail(dispatch_id: str, request: Request) -> dict[str, Any]:
+    for dispatch in _dashboard(request).dispatches:
+        if dispatch["dispatch_id"] == dispatch_id:
+            return dispatch
+    raise HTTPException(status_code=404, detail=f"dispatch not found: {dispatch_id}")
+
+
 def _dashboard(request: Request) -> DashboardProjection:
     snapshot = _snapshot(request)
     return build_dashboard(

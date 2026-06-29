@@ -32,6 +32,10 @@ describe("AppShell", () => {
       "href",
       "/runs",
     );
+    expect(screen.getByRole("link", { name: /Sync/ })).toHaveAttribute(
+      "href",
+      "/sync",
+    );
     expect(screen.getByRole("link", { name: /Workers/ })).toHaveAttribute(
       "href",
       "/workers",
