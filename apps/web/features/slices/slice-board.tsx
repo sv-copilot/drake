@@ -10,6 +10,7 @@ import {
   type RepoSummary,
   type SliceSummary,
 } from "@/lib/api-client";
+import { evidenceSearchString } from "@/lib/evidence-filters";
 import { cn } from "@/lib/utils";
 
 const STATE_ORDER = ["gated", "ready", "running", "blocked", "validated"];
@@ -140,6 +141,11 @@ function StateLane({
 
 function SliceDetail({ repo, slice }: { repo: RepoSummary; slice: SliceSummary }) {
   const href = `https://github.com/${repo.github_slug}/blob/${repo.integration_branch}/${slice.repo_native_path}`;
+  const evidenceSearch = evidenceSearchString({
+    repoId: repo.id,
+    sliceId: slice.slice_id,
+    status: "",
+  });
 
   return (
     <aside className="h-fit rounded-xl border border-stone-200 bg-white p-5">
@@ -193,6 +199,27 @@ function SliceDetail({ repo, slice }: { repo: RepoSummary; slice: SliceSummary }
         >
           Open in GitHub
         </Link>
+      </div>
+
+      <div className="mt-5">
+        <p className="text-sm font-medium text-slate-950">Evidence</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Read-only history scoped to this repo and slice.
+        </p>
+        <div className="mt-3 space-y-2 text-sm">
+          <Link
+            href={`/runs${evidenceSearch}`}
+            className="block rounded-lg border border-stone-200 px-3 py-2 font-medium text-slate-950 transition-colors hover:bg-stone-50"
+          >
+            Runs for this slice
+          </Link>
+          <Link
+            href={`/dispatches${evidenceSearch}`}
+            className="block rounded-lg border border-stone-200 px-3 py-2 font-medium text-slate-950 transition-colors hover:bg-stone-50"
+          >
+            Dispatches for this slice
+          </Link>
+        </div>
       </div>
     </aside>
   );

@@ -102,4 +102,24 @@ describe("slice board gate highlighting", () => {
     );
     expect(screen.queryByRole("button", { name: /approve|promote|dispatch/i })).toBeNull();
   });
+
+  it("links the selected slice to repo-and-slice scoped evidence views", () => {
+    render(<SliceBoardContent repo={repo} slices={[gatedSlice, readySlice]} />);
+
+    expect(
+      screen.getByRole("link", { name: "Runs for this slice" }),
+    ).toHaveAttribute("href", "/runs?repo=example-app&slice=GATED-1");
+    expect(
+      screen.getByRole("link", { name: "Dispatches for this slice" }),
+    ).toHaveAttribute("href", "/dispatches?repo=example-app&slice=GATED-1");
+
+    fireEvent.click(screen.getByRole("button", { name: /READY-1/ }));
+
+    expect(
+      screen.getByRole("link", { name: "Runs for this slice" }),
+    ).toHaveAttribute("href", "/runs?repo=example-app&slice=READY-1");
+    expect(
+      screen.getByRole("link", { name: "Dispatches for this slice" }),
+    ).toHaveAttribute("href", "/dispatches?repo=example-app&slice=READY-1");
+  });
 });
