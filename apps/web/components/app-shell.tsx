@@ -60,6 +60,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-stone-50 text-slate-950">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:border focus:border-slate-300 focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-950 focus:shadow"
+      >
+        Skip to content
+      </a>
       <div className="mx-auto flex min-h-screen max-w-7xl">
         <aside className="hidden w-80 border-r border-stone-200 bg-white px-6 py-8 lg:block">
           <Link href="/" className="block">
@@ -96,7 +102,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
         </aside>
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex min-w-0 flex-1 flex-col focus:outline-none"
+        >
           <header className="border-b border-stone-200 bg-white px-5 py-4 lg:hidden">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Drake

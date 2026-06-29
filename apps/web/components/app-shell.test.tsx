@@ -57,4 +57,17 @@ describe("AppShell", () => {
     );
     expect(screen.queryByRole("button", { name: /dispatch/i })).toBeNull();
   });
+
+  it("exposes a skip-to-content link targeting the main landmark", () => {
+    render(
+      <AppShell>
+        <h2>Portfolio content</h2>
+      </AppShell>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Skip to content" }),
+    ).toHaveAttribute("href", "#main-content");
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
+  });
 });
