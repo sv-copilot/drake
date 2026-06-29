@@ -40,6 +40,12 @@ export function evidenceSearchString(
   return search ? `?${search}` : "";
 }
 
+export function hasActiveEvidenceFilters(filters: EvidenceFilters): boolean {
+  return Boolean(
+    filters.repoId || filters.sliceId || filters.status || filters.workerId,
+  );
+}
+
 function setOptionalParam(params: URLSearchParams, key: string, value: string) {
   if (value) {
     params.set(key, value);

@@ -124,6 +124,39 @@ describe("Run history", () => {
     expect(screen.getByText("No runs match these filters.")).toBeInTheDocument();
   });
 
+  it("summarizes filtered results and clears active filters", () => {
+    function Harness() {
+      const [filters, setFilters] = useState({
+        repoId: "",
+        sliceId: "",
+        status: "",
+      });
+      return (
+        <RunHistoryContent
+          runs={runs}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    expect(screen.getByText("2 runs")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "success" },
+    });
+
+    expect(screen.getByText("Showing 1 of 2 runs")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(screen.getByText("2 runs")).toBeInTheDocument();
+    expect(screen.getByText("run-a")).toBeInTheDocument();
+  });
+
   it("encodes run links and renders fallback values for sparse runs", () => {
     render(
       <RunHistoryContent

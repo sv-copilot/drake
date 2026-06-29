@@ -181,6 +181,39 @@ describe("Dispatch log", () => {
     expect(screen.queryByText("dispatch-1")).toBeNull();
   });
 
+  it("summarizes filtered results and clears active filters", () => {
+    function Harness() {
+      const [filters, setFilters] = useState<EvidenceFilters>({
+        repoId: "",
+        sliceId: "",
+        status: "",
+        workerId: "",
+      });
+      return (
+        <DispatchLogContent
+          dispatches={dispatches}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    expect(screen.getByText("2 dispatches")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Repo"), {
+      target: { value: "drake" },
+    });
+
+    expect(screen.getByText("Showing 1 of 2 dispatches")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(screen.getByText("2 dispatches")).toBeInTheDocument();
+    expect(screen.getByText("dispatch-1")).toBeInTheDocument();
+  });
+
   it("renders the OSS-equivalent empty state", () => {
     render(<DispatchLogEmpty />);
 

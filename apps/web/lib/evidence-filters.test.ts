@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   evidenceFiltersFromSearch,
   evidenceSearchString,
+  hasActiveEvidenceFilters,
 } from "@/lib/evidence-filters";
 
 describe("evidence filter query helpers", () => {
@@ -45,6 +46,23 @@ describe("evidence filter query helpers", () => {
     expect(params.get("slice")).toBeNull();
     expect(params.get("status")).toBe("failed");
     expect(params.get("worker")).toBe("example-app-slice-pipeline");
+  });
+
+  it("detects whether any facet is active", () => {
+    expect(
+      hasActiveEvidenceFilters({ repoId: "", sliceId: "", status: "" }),
+    ).toBe(false);
+    expect(
+      hasActiveEvidenceFilters({ repoId: "drake", sliceId: "", status: "" }),
+    ).toBe(true);
+    expect(
+      hasActiveEvidenceFilters({
+        repoId: "",
+        sliceId: "",
+        status: "",
+        workerId: "w1",
+      }),
+    ).toBe(true);
   });
 
   it("clears the worker param when the facet is empty", () => {

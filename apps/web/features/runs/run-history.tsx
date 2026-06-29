@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { EvidenceResultSummary } from "@/components/evidence-result-summary";
 import { fetchRuns, type RunSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
+  hasActiveEvidenceFilters,
   type EvidenceFilters as Filters,
 } from "@/lib/evidence-filters";
 import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
@@ -72,6 +74,16 @@ export function RunHistoryContent({
         options={options}
         onChange={onFiltersChange}
       />
+
+      {runs.length > 0 ? (
+        <EvidenceResultSummary
+          filtered={filteredRuns.length}
+          total={runs.length}
+          noun="run"
+          active={hasActiveEvidenceFilters(currentFilters)}
+          onClear={() => onFiltersChange?.(EMPTY_EVIDENCE_FILTERS)}
+        />
+      ) : null}
 
       {filteredRuns.length === 0 ? (
         <RunHistoryEmpty filtered={runs.length > 0} />

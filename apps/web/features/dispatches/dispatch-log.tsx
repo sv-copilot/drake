@@ -4,10 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { EvidenceResultSummary } from "@/components/evidence-result-summary";
 import { RelativeTime } from "@/components/relative-time";
 import { fetchDispatches, type DispatchSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
+  hasActiveEvidenceFilters,
   type EvidenceFilters as Filters,
 } from "@/lib/evidence-filters";
 import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
@@ -76,6 +78,15 @@ export function DispatchLogContent({
         filters={currentFilters}
         options={options}
         onChange={onFiltersChange}
+      />
+
+      <EvidenceResultSummary
+        filtered={filteredDispatches.length}
+        total={dispatches.length}
+        noun="dispatch"
+        pluralNoun="dispatches"
+        active={hasActiveEvidenceFilters(currentFilters)}
+        onClear={() => onFiltersChange?.(EMPTY_EVIDENCE_FILTERS)}
       />
 
       {filteredDispatches.length === 0 ? (
