@@ -77,6 +77,10 @@ describe("Portfolio overview states", () => {
 
     expect(screen.getByText("Registered repos")).toBeInTheDocument();
     expect(screen.getByText("example-app")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "example-app" })).toHaveAttribute(
+      "href",
+      "/repos/example-app",
+    );
     expect(screen.getByText("example-org/example-app · ai-dev")).toBeInTheDocument();
     expect(screen.getByText("Automation off")).toBeInTheDocument();
     expect(

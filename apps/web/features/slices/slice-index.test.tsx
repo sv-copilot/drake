@@ -70,7 +70,7 @@ describe("Slice index", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "example-app" })).toHaveAttribute(
       "href",
-      "/repos/example-app/slices",
+      "/repos/example-app",
     );
     expect(screen.getAllByRole("link", { name: "Open slice board" })[1]).toHaveAttribute(
       "href",

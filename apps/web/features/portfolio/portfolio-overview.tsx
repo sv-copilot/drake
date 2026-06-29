@@ -116,7 +116,12 @@ function RepoRow({ repo }: { repo: RepoSummary }) {
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h4 className="text-lg font-semibold text-slate-950">{repo.id}</h4>
+            <Link
+              href={`/repos/${encodeURIComponent(repo.id)}`}
+              className="text-lg font-semibold text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+            >
+              {repo.id}
+            </Link>
             <StatusPill enabled={repo.automation_enabled} />
           </div>
           <p className="mt-1 font-mono text-sm text-slate-600">

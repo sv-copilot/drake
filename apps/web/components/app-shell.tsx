@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <ShellNavItem
                 key={item.href}
                 {...item}
-                active={pathname === item.href}
+                active={isNavItemActive(item.href, pathname)}
               />
             ))}
           </nav>
@@ -108,6 +108,22 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
+}
+
+export function isNavItemActive(href: string, pathname: string) {
+  if (pathname === href) {
+    return true;
+  }
+  if (href === "/portfolio" && /^\/repos\/[^/]+$/.test(pathname)) {
+    return true;
+  }
+  if (href === "/slices" && /^\/repos\/[^/]+\/slices$/.test(pathname)) {
+    return true;
+  }
+  if (href !== "/" && pathname.startsWith(`${href}/`)) {
+    return true;
+  }
+  return false;
 }
 
 type ShellNavItemProps = (typeof navItems)[number] & {

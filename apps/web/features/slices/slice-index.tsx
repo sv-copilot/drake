@@ -76,7 +76,7 @@ function SliceRepoRow({ repo }: { repo: RepoSummary }) {
       <div>
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            href={`/repos/${encodeURIComponent(repo.id)}/slices`}
+            href={`/repos/${encodeURIComponent(repo.id)}`}
             className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
           >
             {repo.id}
