@@ -1,5 +1,11 @@
-import { RunHistory } from "@/features/runs/run-history";
+import { Suspense } from "react";
+
+import { RunHistory, RunHistoryLoading } from "@/features/runs/run-history";
 
 export default function RunsPage() {
-  return <RunHistory />;
+  return (
+    <Suspense fallback={<RunHistoryLoading />}>
+      <RunHistory />
+    </Suspense>
+  );
 }

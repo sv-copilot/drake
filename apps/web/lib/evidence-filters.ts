@@ -10,8 +10,10 @@ export const EMPTY_EVIDENCE_FILTERS: EvidenceFilters = {
   status: "",
 };
 
+type SearchParamsLike = Pick<URLSearchParams, "get">;
+
 export function evidenceFiltersFromSearch(
-  search: string | URLSearchParams,
+  search: string | SearchParamsLike,
 ): EvidenceFilters {
   const params = typeof search === "string" ? new URLSearchParams(search) : search;
 

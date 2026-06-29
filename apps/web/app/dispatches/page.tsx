@@ -1,5 +1,11 @@
-import { DispatchLog } from "@/features/dispatches/dispatch-log";
+import { Suspense } from "react";
+
+import { DispatchLog, DispatchLogLoading } from "@/features/dispatches/dispatch-log";
 
 export default function DispatchesPage() {
-  return <DispatchLog />;
+  return (
+    <Suspense fallback={<DispatchLogLoading />}>
+      <DispatchLog />
+    </Suspense>
+  );
 }
