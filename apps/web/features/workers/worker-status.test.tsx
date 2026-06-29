@@ -54,7 +54,12 @@ describe("Worker status", () => {
   it("renders worker env var names without controls", () => {
     render(<WorkerStatusContent repos={repos} />);
 
-    expect(screen.getByText("example-app-slice-pipeline")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "example-app-slice-pipeline" }),
+    ).toHaveAttribute(
+      "href",
+      "/repos/example-app/workers/example-app-slice-pipeline",
+    );
     expect(screen.getByText("cursor")).toBeInTheDocument();
     expect(screen.getByText("Primary")).toBeInTheDocument();
     expect(screen.getByText("Disabled")).toBeInTheDocument();

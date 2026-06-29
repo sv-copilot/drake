@@ -120,6 +120,9 @@ export function isNavItemActive(href: string, pathname: string) {
   if (href === "/slices" && /^\/repos\/[^/]+\/slices$/.test(pathname)) {
     return true;
   }
+  if (href === "/workers" && /^\/repos\/[^/]+\/workers\/[^/]+$/.test(pathname)) {
+    return true;
+  }
   if (href !== "/" && pathname.startsWith(`${href}/`)) {
     return true;
   }

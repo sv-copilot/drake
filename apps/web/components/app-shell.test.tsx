@@ -13,6 +13,9 @@ describe("AppShell", () => {
     expect(isNavItemActive("/slices", "/repos/example-app/slices")).toBe(true);
     expect(isNavItemActive("/runs", "/runs/run-1")).toBe(true);
     expect(isNavItemActive("/dispatches", "/dispatches/dispatch-1")).toBe(true);
+    expect(
+      isNavItemActive("/workers", "/repos/example-app/workers/w1"),
+    ).toBe(true);
     expect(isNavItemActive("/portfolio", "/repos/example-app/slices")).toBe(false);
   });
 

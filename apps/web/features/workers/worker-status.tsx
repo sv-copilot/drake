@@ -129,7 +129,12 @@ function WorkerRow({
     <article className="grid grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 px-5 py-5 text-sm">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium text-slate-950">{worker.worker_id}</p>
+          <Link
+            href={`/repos/${encodeURIComponent(repo.id)}/workers/${encodeURIComponent(worker.worker_id)}`}
+            className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+          >
+            {worker.worker_id}
+          </Link>
           {worker.primary ? (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
               Primary

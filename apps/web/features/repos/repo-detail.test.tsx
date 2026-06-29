@@ -56,7 +56,12 @@ describe("Repo detail", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Automation off")).toBeInTheDocument();
     expect(screen.getByText("worker manual test")).toBeInTheDocument();
-    expect(screen.getByText("example-app-slice-pipeline")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "example-app-slice-pipeline" }),
+    ).toHaveAttribute(
+      "href",
+      "/repos/example-app/workers/example-app-slice-pipeline",
+    );
     expect(screen.getByText("EXAMPLE_SLICE_PIPELINE_WEBHOOK_URL")).toBeInTheDocument();
     expect(screen.getByText("GH_TOKEN")).toBeInTheDocument();
     expect(

@@ -128,7 +128,7 @@ export function RepoDetailContent({ repo }: { repo: RepoSummary }) {
               </p>
             ) : (
               repo.workers.map((worker) => (
-                <WorkerCard key={worker.worker_id} worker={worker} />
+                <WorkerCard key={worker.worker_id} repoId={repo.id} worker={worker} />
               ))
             )}
           </div>
@@ -181,7 +181,7 @@ function DetailLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function WorkerCard({ worker }: { worker: WorkerSummary }) {
+function WorkerCard({ repoId, worker }: { repoId: string; worker: WorkerSummary }) {
   const webhookNames = Object.values(worker.webhook_env_names ?? {});
   const credentialRefs = worker.credential_ref_names ?? [];
   const envNames = [...webhookNames, ...credentialRefs];
@@ -189,7 +189,12 @@ function WorkerCard({ worker }: { worker: WorkerSummary }) {
   return (
     <article className="px-5 py-5 text-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="font-medium text-slate-950">{worker.worker_id}</p>
+        <Link
+          href={`/repos/${encodeURIComponent(repoId)}/workers/${encodeURIComponent(worker.worker_id)}`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {worker.worker_id}
+        </Link>
         {worker.primary ? (
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
             Primary
