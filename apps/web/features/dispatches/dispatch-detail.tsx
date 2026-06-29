@@ -92,7 +92,7 @@ function DetailTerm({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white p-5">
       <dt className="text-sm text-slate-600">{label}</dt>
-      <dd className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+      <dd className="mt-2 break-words text-xl font-semibold leading-7 tracking-tight text-slate-950">
         {value}
       </dd>
     </div>
