@@ -66,6 +66,12 @@ describe("Worker status", () => {
       "href",
       "/repos/example-app",
     );
+    expect(
+      screen.getByRole("link", { name: "View dispatches" }),
+    ).toHaveAttribute(
+      "href",
+      "/dispatches?repo=example-app&worker=example-app-slice-pipeline",
+    );
     expect(screen.queryByRole("button", { name: /enable|disable/i })).toBeNull();
   });
 

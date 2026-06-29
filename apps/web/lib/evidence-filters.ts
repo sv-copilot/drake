@@ -2,12 +2,14 @@ export type EvidenceFilters = {
   repoId: string;
   sliceId: string;
   status: string;
+  workerId?: string;
 };
 
 export const EMPTY_EVIDENCE_FILTERS: EvidenceFilters = {
   repoId: "",
   sliceId: "",
   status: "",
+  workerId: "",
 };
 
 type SearchParamsLike = Pick<URLSearchParams, "get">;
@@ -21,6 +23,7 @@ export function evidenceFiltersFromSearch(
     repoId: params.get("repo") ?? "",
     sliceId: params.get("slice") ?? "",
     status: params.get("status") ?? "",
+    workerId: params.get("worker") ?? "",
   };
 }
 
@@ -32,6 +35,7 @@ export function evidenceSearchString(
   setOptionalParam(params, "repo", filters.repoId);
   setOptionalParam(params, "slice", filters.sliceId);
   setOptionalParam(params, "status", filters.status);
+  setOptionalParam(params, "worker", filters.workerId ?? "");
   const search = params.toString();
   return search ? `?${search}` : "";
 }

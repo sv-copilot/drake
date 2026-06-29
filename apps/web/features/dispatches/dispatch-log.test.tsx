@@ -56,8 +56,20 @@ describe("Dispatch log", () => {
     expect(dispatchFilterOptions(dispatches)).toEqual({
       repoIds: ["drake", "example-app"],
       sliceIds: ["HOSTED-ARCH-1", "SMOKE-1"],
+      workerIds: ["drake-slice-pipeline", "example-app-slice-pipeline"],
       statuses: ["accepted", "failed"],
     });
+  });
+
+  it("filters dispatches by worker", () => {
+    expect(
+      filterDispatches(dispatches, {
+        repoId: "",
+        sliceId: "",
+        status: "",
+        workerId: "drake-slice-pipeline",
+      }),
+    ).toEqual([dispatches[1]]);
   });
 
   it("maps statuses to badge tones", () => {
@@ -140,6 +152,33 @@ describe("Dispatch log", () => {
     });
 
     expect(screen.getByText("No dispatches match these filters.")).toBeInTheDocument();
+  });
+
+  it("filters through the visible worker select", () => {
+    function Harness() {
+      const [filters, setFilters] = useState<EvidenceFilters>({
+        repoId: "",
+        sliceId: "",
+        status: "",
+        workerId: "",
+      });
+      return (
+        <DispatchLogContent
+          dispatches={dispatches}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    fireEvent.change(screen.getByLabelText("Worker"), {
+      target: { value: "drake-slice-pipeline" },
+    });
+
+    expect(screen.getByText("dispatch-2")).toBeInTheDocument();
+    expect(screen.queryByText("dispatch-1")).toBeNull();
   });
 
   it("renders the OSS-equivalent empty state", () => {

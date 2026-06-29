@@ -108,7 +108,7 @@ function DispatchFilters({
   onChange?: (filters: Filters) => void;
 }) {
   return (
-    <div className="mt-10 grid gap-3 rounded-xl border border-stone-200 bg-white p-4 md:grid-cols-3">
+    <div className="mt-10 grid gap-3 rounded-xl border border-stone-200 bg-white p-4 md:grid-cols-2 lg:grid-cols-4">
       <FilterSelect
         label="Repo"
         value={filters.repoId}
@@ -120,6 +120,12 @@ function DispatchFilters({
         value={filters.sliceId}
         options={options.sliceIds}
         onChange={(value) => onChange?.({ ...filters, sliceId: value })}
+      />
+      <FilterSelect
+        label="Worker"
+        value={filters.workerId ?? ""}
+        options={options.workerIds}
+        onChange={(value) => onChange?.({ ...filters, workerId: value })}
       />
       <FilterSelect
         label="Status"
@@ -252,6 +258,9 @@ export function filterDispatches(
     if (filters.sliceId && dispatch.slice_id !== filters.sliceId) {
       return false;
     }
+    if (filters.workerId && dispatch.worker_id !== filters.workerId) {
+      return false;
+    }
     if (filters.status && dispatch.status !== filters.status) {
       return false;
     }
@@ -263,6 +272,7 @@ export function dispatchFilterOptions(dispatches: DispatchSummary[]) {
   return {
     repoIds: sortedUnique(dispatches.map((dispatch) => dispatch.repo_id)),
     sliceIds: sortedUnique(dispatches.map((dispatch) => dispatch.slice_id)),
+    workerIds: sortedUnique(dispatches.map((dispatch) => dispatch.worker_id)),
     statuses: sortedUnique(dispatches.map((dispatch) => dispatch.status)),
   };
 }

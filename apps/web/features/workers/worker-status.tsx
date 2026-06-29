@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import { fetchRepos, type RepoSummary, type WorkerSummary } from "@/lib/api-client";
-import { EMPTY_EVIDENCE_FILTERS } from "@/lib/evidence-filters";
+import {
+  EMPTY_EVIDENCE_FILTERS,
+  evidenceSearchString,
+} from "@/lib/evidence-filters";
 import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +145,17 @@ function WorkerRow({
           </Link>{" "}
           · {worker.role}
         </p>
+        <Link
+          href={`/dispatches${evidenceSearchString({
+            repoId: repo.id,
+            sliceId: "",
+            status: "",
+            workerId: worker.worker_id,
+          })}`}
+          className="mt-2 inline-flex text-xs font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          View dispatches
+        </Link>
       </div>
       <div>
         <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-800">
