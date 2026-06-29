@@ -53,12 +53,14 @@ TEST_PATHS = [
 
 INCLUDE_FILES = [
     ".cursor/hooks.json",
+    ".docs/hosted-ip-staging.md",
     ".docs/hosted_api_sketch.schema.json",
     ".docs/mcp_environment_profile.schema.json",
     ".docs/slice_dependency_tree.schema.json",
     "SECRETS.example.md",
     ".gitignore",
     "scripts/dev-hosted.sh",
+    "scripts/hosted-ip-staging.sh",
 ]
 
 SCRIPT_ALLOWLIST = [

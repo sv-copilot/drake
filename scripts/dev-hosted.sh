@@ -19,6 +19,7 @@ Environment variable names:
   HOSTED_API_PORT       default 8000
   HOSTED_WEB_HOST       default 127.0.0.1
   HOSTED_WEB_PORT       default 3000
+  HOSTED_WEB_ORIGIN     optional CORS origin for the API process
   NEXT_PUBLIC_API_URL   default http://127.0.0.1:8000
   GH_TOKEN              optional GitHub read token name for API sync
   GITHUB_TOKEN          optional GitHub read token name for API sync

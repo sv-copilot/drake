@@ -36,6 +36,8 @@ def test_export_writes_tree(tmp_path: Path) -> None:
     assert (output / "docs/getting-started.md").is_file()
     assert (output / "adapters/cursor/CURSOR-ADAPTER.md").is_file()
     assert (output / "scripts/dev-hosted.sh").is_file()
+    assert (output / "scripts/hosted-ip-staging.sh").is_file()
+    assert (output / ".docs/hosted-ip-staging.md").is_file()
     assert (output / ".docs/hosted_api_sketch.schema.json").is_file()
     assert (output / ".docs/mcp_environment_profile.schema.json").is_file()
     assert (output / ".docs/slice_dependency_tree.schema.json").is_file()
@@ -67,3 +69,60 @@ def test_current_tree_passes_scrub_validator() -> None:
     )
 
     assert result.returncode == 0, result.stderr or result.stdout
+
+
+def test_hosted_ip_staging_check_requires_staging_host() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/hosted-ip-staging.sh", "--check"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "STAGING_HOST is required" in result.stderr
+
+
+def test_hosted_ip_staging_check_prints_urls() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/hosted-ip-staging.sh", "--check"],
+        cwd=REPO_ROOT,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "STAGING_HOST": "203.0.113.10",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert "web: http://203.0.113.10:3000" in result.stdout
+    assert "api: http://203.0.113.10:8000" in result.stdout
+    assert "HOSTED_WEB_ORIGIN=http://203.0.113.10:3000" in result.stdout
+    assert "NEXT_PUBLIC_API_URL=http://203.0.113.10:8000" in result.stdout
+    assert "HTTP-only and unauthenticated" in result.stdout
+
+
+def test_hosted_ip_staging_print_launch_uses_overrides() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/hosted-ip-staging.sh", "--print-launch"],
+        cwd=REPO_ROOT,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "STAGING_HOST": "203.0.113.10",
+            "HOSTED_API_PORT": "18000",
+            "HOSTED_WEB_PORT": "13000",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert "HOSTED_API_HOST=0.0.0.0" in result.stdout
+    assert "HOSTED_WEB_HOST=0.0.0.0" in result.stdout
+    assert "HOSTED_WEB_ORIGIN=http://203.0.113.10:13000" in result.stdout
+    assert "NEXT_PUBLIC_API_URL=http://203.0.113.10:18000" in result.stdout
+    assert "bash scripts/dev-hosted.sh" in result.stdout

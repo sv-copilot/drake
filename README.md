@@ -86,6 +86,13 @@ Defaults:
 `GH_TOKEN` or `GITHUB_TOKEN` from the environment; committed docs and examples
 must contain env var names only, never token values.
 
+For a temporary no-DNS staging smoke on `http://<ip>:<port>`, see
+[Temporary hosted IP staging](.docs/hosted-ip-staging.md):
+
+```bash
+STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
+```
+
 ## Repo Layout
 
 | Directory | Purpose |
