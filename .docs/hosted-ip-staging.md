@@ -41,11 +41,21 @@ To print the exact launch command without starting services:
 STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --print-launch
 ```
 
+To print smoke-test commands without contacting the host:
+
+```bash
+STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --print-smoke
+```
+
 ## Run
 
 ```bash
 STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --run
 ```
+
+`--run` defaults to `HOSTED_STAGING_MODE=production`: it starts the FastAPI API,
+builds the Next.js app with `NEXT_PUBLIC_API_URL`, then serves it with
+`next start`. For temporary debugging only, use `HOSTED_STAGING_MODE=dev`.
 
 Equivalent explicit environment:
 
@@ -57,7 +67,8 @@ HOSTED_WEB_HOST=0.0.0.0 \
 HOSTED_WEB_PORT=3000 \
 HOSTED_WEB_ORIGIN=http://<server-ip>:3000 \
 NEXT_PUBLIC_API_URL=http://<server-ip>:8000 \
-bash scripts/dev-hosted.sh
+HOSTED_STAGING_MODE=production \
+bash scripts/hosted-ip-staging.sh --run
 ```
 
 ## Smoke checks

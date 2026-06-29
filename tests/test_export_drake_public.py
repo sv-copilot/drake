@@ -102,6 +102,7 @@ def test_hosted_ip_staging_check_prints_urls() -> None:
     assert "api: http://203.0.113.10:8000" in result.stdout
     assert "HOSTED_WEB_ORIGIN=http://203.0.113.10:3000" in result.stdout
     assert "NEXT_PUBLIC_API_URL=http://203.0.113.10:8000" in result.stdout
+    assert "HOSTED_STAGING_MODE=production" in result.stdout
     assert "HTTP-only and unauthenticated" in result.stdout
 
 
@@ -125,4 +126,42 @@ def test_hosted_ip_staging_print_launch_uses_overrides() -> None:
     assert "HOSTED_WEB_HOST=0.0.0.0" in result.stdout
     assert "HOSTED_WEB_ORIGIN=http://203.0.113.10:13000" in result.stdout
     assert "NEXT_PUBLIC_API_URL=http://203.0.113.10:18000" in result.stdout
-    assert "bash scripts/dev-hosted.sh" in result.stdout
+    assert "HOSTED_STAGING_MODE=production" in result.stdout
+    assert "bash scripts/hosted-ip-staging.sh --run" in result.stdout
+
+
+def test_hosted_ip_staging_print_smoke_outputs_review_commands() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/hosted-ip-staging.sh", "--print-smoke"],
+        cwd=REPO_ROOT,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "STAGING_HOST": "203.0.113.10",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert "curl http://203.0.113.10:8000/health" in result.stdout
+    assert "curl http://203.0.113.10:8000/api/v1/portfolio" in result.stdout
+    assert "open http://203.0.113.10:3000" in result.stdout
+
+
+def test_hosted_ip_staging_rejects_unknown_mode() -> None:
+    result = subprocess.run(
+        ["bash", "scripts/hosted-ip-staging.sh", "--check"],
+        cwd=REPO_ROOT,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "STAGING_HOST": "203.0.113.10",
+            "HOSTED_STAGING_MODE": "debug",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "HOSTED_STAGING_MODE must be production or dev" in result.stderr
