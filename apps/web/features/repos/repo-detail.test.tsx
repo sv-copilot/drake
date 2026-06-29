@@ -74,6 +74,10 @@ describe("Repo detail", () => {
       "href",
       "/dispatches?repo=example-app",
     );
+    expect(screen.getByRole("link", { name: "Workers" })).toHaveAttribute(
+      "href",
+      "/workers?repo=example-app",
+    );
     expect(screen.queryByText(/https?:\/\//i)).toBeNull();
     expect(screen.queryByRole("button", { name: /dispatch|edit|enable/i })).toBeNull();
   });

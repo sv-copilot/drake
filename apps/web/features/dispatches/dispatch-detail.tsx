@@ -46,7 +46,7 @@ export function DispatchDetailContent({
 }) {
   const repoHref = `/repos/${encodeURIComponent(dispatch.repo_id)}`;
   const sliceBoardHref = `/repos/${encodeURIComponent(dispatch.repo_id)}/slices`;
-  const workersHref = `/repos/${encodeURIComponent(dispatch.repo_id)}`;
+  const workersHref = `/workers?repo=${encodeURIComponent(dispatch.repo_id)}`;
 
   return (
     <section className="max-w-4xl">

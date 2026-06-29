@@ -1,8 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { useMemo } from "react";
 
 import { fetchRepos, type RepoSummary, type WorkerSummary } from "@/lib/api-client";
+import { EMPTY_EVIDENCE_FILTERS } from "@/lib/evidence-filters";
+import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
 import { cn } from "@/lib/utils";
 
 export function WorkerStatus() {
@@ -10,6 +14,7 @@ export function WorkerStatus() {
     queryKey: ["repos"],
     queryFn: fetchRepos,
   });
+  const [filters, setFilters] = useEvidenceUrlFilters();
 
   if (reposQuery.isLoading) {
     return <WorkerStatusLoading />;
@@ -19,15 +24,39 @@ export function WorkerStatus() {
     return <WorkerStatusError />;
   }
 
-  return <WorkerStatusContent repos={reposQuery.data ?? []} />;
+  return (
+    <WorkerStatusContent
+      repos={reposQuery.data ?? []}
+      repoId={filters.repoId}
+      onRepoChange={(repoId) =>
+        setFilters({ ...EMPTY_EVIDENCE_FILTERS, repoId })
+      }
+    />
+  );
 }
 
-export function WorkerStatusContent({ repos }: { repos: RepoSummary[] }) {
-  const rows = workerRows(repos);
+export function WorkerStatusContent({
+  repos,
+  repoId = "",
+  onRepoChange,
+}: {
+  repos: RepoSummary[];
+  repoId?: string;
+  onRepoChange?: (repoId: string) => void;
+}) {
+  const allRows = useMemo(() => workerRows(repos), [repos]);
+  const repoOptions = useMemo(
+    () => [...new Set(repos.map((repo) => repo.id))].sort(),
+    [repos],
+  );
 
-  if (rows.length === 0) {
+  if (allRows.length === 0) {
     return <WorkerStatusEmpty />;
   }
+
+  const rows = repoId
+    ? allRows.filter((row) => row.repo.id === repoId)
+    : allRows;
 
   return (
     <section>
@@ -44,19 +73,41 @@ export function WorkerStatusContent({ repos }: { repos: RepoSummary[] }) {
         </p>
       </div>
 
-      <div className="mt-10 overflow-hidden rounded-xl border border-stone-200 bg-white">
-        <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 border-b border-stone-200 px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
-          <span>Worker</span>
-          <span>Adapter</span>
-          <span>Status</span>
-          <span>Env names</span>
-        </div>
-        <div className="divide-y divide-stone-200">
-          {rows.map((row) => (
-            <WorkerRow key={`${row.repo.id}:${row.worker.worker_id}`} {...row} />
-          ))}
-        </div>
+      <div className="mt-10 grid gap-3 rounded-xl border border-stone-200 bg-white p-4 md:max-w-xs">
+        <label className="text-sm">
+          <span className="font-medium text-slate-950">Repo</span>
+          <select
+            value={repoId}
+            onChange={(event) => onRepoChange?.(event.target.value)}
+            className="mt-2 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-slate-950"
+          >
+            <option value="">All</option>
+            {repoOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
+
+      {rows.length === 0 ? (
+        <WorkerStatusEmpty filtered repoId={repoId} />
+      ) : (
+        <div className="mt-8 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 border-b border-stone-200 px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <span>Worker</span>
+            <span>Adapter</span>
+            <span>Status</span>
+            <span>Env names</span>
+          </div>
+          <div className="divide-y divide-stone-200">
+            {rows.map((row) => (
+              <WorkerRow key={`${row.repo.id}:${row.worker.worker_id}`} {...row} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -83,7 +134,13 @@ function WorkerRow({
           ) : null}
         </div>
         <p className="mt-1 font-mono text-xs text-slate-500">
-          {repo.id} · {worker.role}
+          <Link
+            href={`/repos/${encodeURIComponent(repo.id)}`}
+            className="underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+          >
+            {repo.id}
+          </Link>{" "}
+          · {worker.role}
         </p>
       </div>
       <div>
@@ -136,18 +193,27 @@ export function WorkerStatusLoading() {
   );
 }
 
-export function WorkerStatusEmpty() {
+export function WorkerStatusEmpty({
+  filtered = false,
+  repoId = "",
+}: {
+  filtered?: boolean;
+  repoId?: string;
+}) {
   return (
-    <section className="max-w-3xl rounded-xl border border-stone-200 bg-white p-8">
+    <section className="mt-8 max-w-3xl rounded-xl border border-stone-200 bg-white p-8">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
         Workers
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-slate-950">
-        No workers configured.
+        {filtered
+          ? `No workers declared for ${repoId || "this repo"}.`
+          : "No workers configured."}
       </h2>
       <p className="mt-3 text-slate-600">
-        Add registry worker declarations before this view can report adapter
-        status.
+        {filtered
+          ? "Clear the repo filter to see workers across all registered repositories."
+          : "Add registry worker declarations before this view can report adapter status."}
       </p>
     </section>
   );

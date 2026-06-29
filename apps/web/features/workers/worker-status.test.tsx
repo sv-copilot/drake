@@ -62,7 +62,53 @@ describe("Worker status", () => {
     expect(
       screen.getByText("EXAMPLE_SLICE_PIPELINE_WEBHOOK_URL"),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "example-app" })).toHaveAttribute(
+      "href",
+      "/repos/example-app",
+    );
     expect(screen.queryByRole("button", { name: /enable|disable/i })).toBeNull();
+  });
+
+  it("filters worker rows by the selected repo", () => {
+    const multiRepos: RepoSummary[] = [
+      repos[0],
+      {
+        ...repos[0],
+        id: "drake",
+        github_slug: "sv-copilot/drake",
+        workers: [
+          {
+            ...repos[0].workers[0],
+            worker_id: "drake-slice-pipeline",
+          },
+        ],
+      },
+    ];
+
+    render(<WorkerStatusContent repos={multiRepos} repoId="drake" />);
+
+    expect(screen.getByText("drake-slice-pipeline")).toBeInTheDocument();
+    expect(
+      screen.queryByText("example-app-slice-pipeline"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a filtered empty state for a repo without workers", () => {
+    const multiRepos: RepoSummary[] = [
+      repos[0],
+      {
+        ...repos[0],
+        id: "drake",
+        github_slug: "sv-copilot/drake",
+        workers: [],
+      },
+    ];
+
+    render(<WorkerStatusContent repos={multiRepos} repoId="drake" />);
+
+    expect(
+      screen.getByText("No workers declared for drake."),
+    ).toBeInTheDocument();
   });
 
   it("renders only declared env names and no webhook values or mutation controls", () => {

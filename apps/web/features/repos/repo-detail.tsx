@@ -101,6 +101,7 @@ export function RepoDetailContent({ repo }: { repo: RepoSummary }) {
           <div className="mt-4 space-y-3 text-sm">
             <DetailLink href={`/runs${repoEvidenceSearch}`} label="Run history" />
             <DetailLink href={`/dispatches${repoEvidenceSearch}`} label="Dispatch log" />
+            <DetailLink href={`/workers${repoEvidenceSearch}`} label="Workers" />
             <DetailLink
               href={`/repos/${encodeURIComponent(repo.id)}/slices`}
               label="Slice board"

@@ -44,6 +44,9 @@ describe("Dispatch detail", () => {
       "href",
       "/repos/example-app/slices",
     );
+    expect(
+      screen.getByRole("link", { name: "example-app-slice-pipeline" }),
+    ).toHaveAttribute("href", "/workers?repo=example-app");
     expect(screen.getByText("No correlated runs.")).toBeInTheDocument();
   });
 

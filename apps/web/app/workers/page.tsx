@@ -1,5 +1,11 @@
-import { WorkerStatus } from "@/features/workers/worker-status";
+import { Suspense } from "react";
+
+import { WorkerStatus, WorkerStatusLoading } from "@/features/workers/worker-status";
 
 export default function WorkersPage() {
-  return <WorkerStatus />;
+  return (
+    <Suspense fallback={<WorkerStatusLoading />}>
+      <WorkerStatus />
+    </Suspense>
+  );
 }
