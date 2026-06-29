@@ -19,6 +19,7 @@ def test_read_endpoints_return_example_portfolio_projection() -> None:
     repos = client.get("/api/v1/repos")
     slices = client.get("/api/v1/repos/example-app/slices")
     runs = client.get("/api/v1/runs")
+    dispatches = client.get("/api/v1/dispatches")
 
     assert portfolio.status_code == 200
     assert portfolio.json() == {
@@ -44,6 +45,10 @@ def test_read_endpoints_return_example_portfolio_projection() -> None:
 
     assert runs.status_code == 200
     assert runs.json() == []
+
+    assert dispatches.status_code == 200
+    assert dispatches.json()[0]["dispatch_id"] == "dispatch-20260621-001"
+    assert dispatches.json()[0]["webhook_url_env_name"].endswith("_WEBHOOK_URL")
 
 
 def test_read_endpoints_return_404_for_unknown_resources() -> None:

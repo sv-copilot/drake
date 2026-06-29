@@ -15,6 +15,7 @@ from hosted_api.sync.github import (
 REPO_ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE_REGISTRY = REPO_ROOT / ".docs/examples/projects-registry.example.json"
 EXAMPLE_TREE = REPO_ROOT / ".docs/examples/slice_dependency_tree.example.json"
+EXAMPLE_HOSTED_API = REPO_ROOT / ".docs/examples/hosted_api_sketch.example.json"
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,26 @@ def build_dashboard(snapshot: SyncSnapshot) -> DashboardProjection:
         slices=slices,
         runs=[],
     )
+
+
+def dispatches_from_examples() -> list[dict[str, Any]]:
+    document = _load_json(EXAMPLE_HOSTED_API)
+    dispatches = document.get("views", {}).get("dispatch", {}).get(
+        "webhook_dispatches",
+        [],
+    )
+    return [_sanitize_dispatch(dispatch) for dispatch in dispatches]
+
+
+def _sanitize_dispatch(dispatch: dict[str, Any]) -> dict[str, Any]:
+    sanitized = dict(dispatch)
+    env_name = sanitized.get("webhook_url_env_name")
+    if isinstance(env_name, str):
+        sanitized["webhook_url_env_name"] = (
+            env_name.replace("SIMON_PROJECTS", "EXAMPLE_PORTFOLIO")
+            .replace("RESEARCH_SERVICE", "EXAMPLE_APP")
+        )
+    return sanitized
 
 
 def _load_json(path: Path) -> dict[str, Any]:

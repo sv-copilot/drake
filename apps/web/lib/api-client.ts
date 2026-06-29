@@ -54,6 +54,22 @@ export type SliceSummary = {
   repo_native_path: string;
 };
 
+export type DispatchSummary = {
+  dispatch_id: string;
+  orchestrator_run_id: string;
+  repo_id: string;
+  worker_id: string;
+  slice_id: string;
+  adapter_type?: string;
+  status: string;
+  dispatched_at: string;
+  webhook_url_env_name?: string;
+  chain_back?: boolean;
+  retry_count: number;
+  task_packet_id?: string;
+  error_summary?: string;
+};
+
 const DEFAULT_API_URL = "http://127.0.0.1:8000";
 
 export function getApiBaseUrl() {
@@ -97,4 +113,8 @@ export function fetchRepo(repoId: string) {
 
 export function fetchRepoSlices(repoId: string) {
   return apiGet<SliceSummary[]>(`/api/v1/repos/${repoId}/slices`);
+}
+
+export function fetchDispatches() {
+  return apiGet<DispatchSummary[]>("/api/v1/dispatches");
 }

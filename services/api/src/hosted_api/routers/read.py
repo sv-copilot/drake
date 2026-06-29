@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from hosted_api.read_models import (
     DashboardProjection,
     build_dashboard,
+    dispatches_from_examples,
     snapshot_from_examples,
 )
 from hosted_api.sync.github import GitHubSyncService, InMemorySyncCache, SyncSnapshot
@@ -57,6 +58,22 @@ class RunResponse(BaseModel):
     started_at: str
 
 
+class DispatchResponse(BaseModel):
+    dispatch_id: str
+    orchestrator_run_id: str
+    repo_id: str
+    worker_id: str
+    slice_id: str
+    adapter_type: str | None = None
+    status: str
+    dispatched_at: str
+    webhook_url_env_name: str | None = None
+    chain_back: bool | None = None
+    retry_count: int = 0
+    task_packet_id: str | None = None
+    error_summary: str | None = None
+
+
 @router.get("/portfolio", response_model=PortfolioResponse)
 def portfolio(request: Request) -> dict[str, Any]:
     return _dashboard(request).portfolio
@@ -94,6 +111,11 @@ def run_detail(run_id: str, request: Request) -> dict[str, Any]:
         if run["run_id"] == run_id:
             return run
     raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+
+
+@router.get("/dispatches", response_model=list[DispatchResponse])
+def dispatches() -> list[dict[str, Any]]:
+    return dispatches_from_examples()
 
 
 def _dashboard(request: Request) -> DashboardProjection:
