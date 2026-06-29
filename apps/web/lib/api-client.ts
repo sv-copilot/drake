@@ -93,20 +93,26 @@ export function getApiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 }
 
+export function apiUrl(path: string) {
+  const baseUrl = getApiBaseUrl().replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${baseUrl}${normalizedPath}`;
+}
+
 export async function apiGet<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  const headers = new Headers(init.headers);
+  headers.set("Accept", "application/json");
+
+  const response = await fetch(apiUrl(path), {
     ...init,
-    headers: {
-      Accept: "application/json",
-      ...init.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new Error(`API request failed: ${response.status} ${path}`);
   }
 
   return response.json() as Promise<T>;

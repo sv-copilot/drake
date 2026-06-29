@@ -244,6 +244,9 @@ def test_cache_backed_read_projection_counts_multiple_repos_and_missing_trees() 
     }
     assert client.get("/api/v1/repos/beta/slices").json() == []
     assert client.get("/api/v1/repos/missing/slices").status_code == 404
+    assert client.get("/api/v1/runs").json() == []
+    assert client.get("/api/v1/dispatches").json() == []
+    assert client.get("/api/v1/runs/2026-06-21T16-00-00Z-rs-slice").status_code == 404
 
 
 def test_read_endpoints_reject_mutation_methods() -> None:

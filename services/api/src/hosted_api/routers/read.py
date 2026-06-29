@@ -8,8 +8,6 @@ from pydantic import BaseModel
 from hosted_api.read_models import (
     DashboardProjection,
     build_dashboard,
-    dispatches_from_examples,
-    runs_from_examples,
     snapshot_from_examples,
 )
 from hosted_api.sync.github import GitHubSyncService, InMemorySyncCache, SyncSnapshot
@@ -96,7 +94,8 @@ def repos(request: Request) -> list[dict[str, Any]]:
 
 @router.get("/repos/{repo_id}", response_model=RepoResponse)
 def repo_detail(repo_id: str, request: Request) -> dict[str, Any]:
-    for repo in _dashboard(request).repos:
+    dashboard = _dashboard(request)
+    for repo in dashboard.repos:
         if repo["id"] == repo_id:
             return repo
     raise HTTPException(status_code=404, detail=f"repo not found: {repo_id}")
@@ -104,20 +103,21 @@ def repo_detail(repo_id: str, request: Request) -> dict[str, Any]:
 
 @router.get("/repos/{repo_id}/slices", response_model=list[SliceResponse])
 def repo_slices(repo_id: str, request: Request) -> list[dict[str, Any]]:
-    matches = [item for item in _dashboard(request).slices if item["repo_id"] == repo_id]
-    if not matches and not any(repo["id"] == repo_id for repo in _dashboard(request).repos):
+    dashboard = _dashboard(request)
+    matches = [item for item in dashboard.slices if item["repo_id"] == repo_id]
+    if not matches and not any(repo["id"] == repo_id for repo in dashboard.repos):
         raise HTTPException(status_code=404, detail=f"repo not found: {repo_id}")
     return matches
 
 
 @router.get("/runs", response_model=list[RunResponse], response_model_exclude_none=True)
-def runs() -> list[dict[str, Any]]:
-    return runs_from_examples()
+def runs(request: Request) -> list[dict[str, Any]]:
+    return _dashboard(request).runs
 
 
 @router.get("/runs/{run_id}", response_model=RunResponse, response_model_exclude_none=True)
-def run_detail(run_id: str) -> dict[str, Any]:
-    for run in runs_from_examples():
+def run_detail(run_id: str, request: Request) -> dict[str, Any]:
+    for run in _dashboard(request).runs:
         if run["run_id"] == run_id:
             return run
     raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
@@ -128,12 +128,16 @@ def run_detail(run_id: str) -> dict[str, Any]:
     response_model=list[DispatchResponse],
     response_model_exclude_none=True,
 )
-def dispatches() -> list[dict[str, Any]]:
-    return dispatches_from_examples()
+def dispatches(request: Request) -> list[dict[str, Any]]:
+    return _dashboard(request).dispatches
 
 
 def _dashboard(request: Request) -> DashboardProjection:
-    return build_dashboard(_snapshot(request))
+    snapshot = _snapshot(request)
+    return build_dashboard(
+        snapshot,
+        include_example_runtime=_is_example_snapshot(snapshot),
+    )
 
 
 def _snapshot(request: Request) -> SyncSnapshot:
@@ -146,3 +150,9 @@ def _snapshot(request: Request) -> SyncSnapshot:
         return cache.snapshot
 
     return snapshot_from_examples()
+
+
+def _is_example_snapshot(snapshot: SyncSnapshot) -> bool:
+    return bool(snapshot.files) and all(
+        file.source == "example_fixture" for file in snapshot.files
+    )

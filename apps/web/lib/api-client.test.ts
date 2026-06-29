@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   apiGet,
+  apiUrl,
   fetchRepo,
   fetchRepoSlices,
   fetchRun,
@@ -25,11 +26,11 @@ describe("api client", () => {
     await apiGet("/health");
 
     expect(getApiBaseUrl()).toBe("https://api.example.test");
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/health",
-      expect.objectContaining({
-        headers: expect.objectContaining({ Accept: "application/json" }),
-      }),
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example.test/health", {
+      headers: expect.any(Headers),
+    });
+    expect(fetchMock.mock.calls[0][1].headers.get("Accept")).toBe(
+      "application/json",
     );
   });
 
@@ -42,7 +43,33 @@ describe("api client", () => {
       }),
     );
 
-    await expect(apiGet("/health")).rejects.toThrow("API request failed: 503");
+    await expect(apiGet("/health")).rejects.toThrow(
+      "API request failed: 503 /health",
+    );
+  });
+
+  it("normalizes base URLs, paths, and request headers", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test///");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ok: true }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(apiUrl("health")).toBe("https://api.example.test/health");
+    await apiGet("health", {
+      headers: new Headers({
+        "x-trace-id": "trace-1",
+      }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example.test/health", {
+      headers: expect.any(Headers),
+    });
+    expect(fetchMock.mock.calls[0][1].headers.get("Accept")).toBe(
+      "application/json",
+    );
+    expect(fetchMock.mock.calls[0][1].headers.get("x-trace-id")).toBe("trace-1");
   });
 
   it("encodes path identifiers before requesting repo and run details", async () => {

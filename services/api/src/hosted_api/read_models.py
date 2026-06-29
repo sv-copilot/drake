@@ -24,6 +24,7 @@ class DashboardProjection:
     repos: list[dict[str, Any]]
     slices: list[dict[str, Any]]
     runs: list[dict[str, Any]]
+    dispatches: list[dict[str, Any]]
 
 
 def snapshot_from_examples() -> SyncSnapshot:
@@ -66,7 +67,11 @@ def snapshot_from_examples() -> SyncSnapshot:
     )
 
 
-def build_dashboard(snapshot: SyncSnapshot) -> DashboardProjection:
+def build_dashboard(
+    snapshot: SyncSnapshot,
+    *,
+    include_example_runtime: bool = False,
+) -> DashboardProjection:
     registry = snapshot.registry
     projects = registry.get("projects", [])
     slices = _slice_rows(snapshot)
@@ -76,7 +81,8 @@ def build_dashboard(snapshot: SyncSnapshot) -> DashboardProjection:
         portfolio=portfolio,
         repos=repos,
         slices=slices,
-        runs=[],
+        runs=runs_from_examples() if include_example_runtime else [],
+        dispatches=dispatches_from_examples() if include_example_runtime else [],
     )
 
 
