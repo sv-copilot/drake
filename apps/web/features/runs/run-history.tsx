@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import { EvidenceResultSummary } from "@/components/evidence-result-summary";
+import { RelativeTime } from "@/components/relative-time";
 import { fetchRuns, type RunSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
@@ -180,6 +181,9 @@ function RunRow({ run }: { run: RunSummary }) {
           {run.run_id}
         </Link>
         <p className="mt-1 font-mono text-xs text-slate-500">{run.task_id}</p>
+        <p className="mt-1 text-xs text-slate-500">
+          <RelativeTime iso={run.started_at} />
+        </p>
       </div>
       <div>
         <Link

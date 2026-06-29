@@ -57,6 +57,10 @@ describe("Sync status", () => {
     expect(screen.getByText(".docs/projects-registry.json")).toBeInTheDocument();
     expect(screen.getByText("abc123")).toBeInTheDocument();
     expect(screen.queryByText(/https?:\/\//i)).toBeNull();
+
+    const lastSynced = document.querySelector("time");
+    expect(lastSynced).not.toBeNull();
+    expect(lastSynced).toHaveAttribute("title", "2026-06-29T18:00:00Z");
   });
 
   it("renders empty and loading states", () => {

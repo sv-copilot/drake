@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { RelativeTime } from "@/components/relative-time";
 import { fetchSyncStatus, type SyncStatusSummary } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +65,12 @@ export function SyncStatusContent({ status }: { status: SyncStatusSummary }) {
           </span>
         </div>
         <p className="mt-4 text-sm text-slate-600">
-          Last synced: {status.last_synced_at ?? "not synced yet"}
+          Last synced:{" "}
+          {status.last_synced_at ? (
+            <RelativeTime iso={status.last_synced_at} />
+          ) : (
+            "not synced yet"
+          )}
         </p>
       </div>
 
