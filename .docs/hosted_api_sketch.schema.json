@@ -1,0 +1,360 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sv-copilot.github.io/drake/schemas/hosted_api_sketch.schema.json",
+  "title": "Hosted Portfolio API Sketch",
+  "description": "Sketch-level JSON shapes for hosted portfolio UI and webhook control plane API resources. Direction only — not a production API contract.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "views"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Sketch schema version."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this sketch document was produced."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional human note about the sketch scope."
+    },
+    "views": {
+      "type": "object",
+      "required": ["dashboard", "dispatch"],
+      "additionalProperties": false,
+      "properties": {
+        "dashboard": {
+          "$ref": "#/$defs/dashboard_view"
+        },
+        "dispatch": {
+          "$ref": "#/$defs/dispatch_view"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bootstrap_alignment": { "type": "boolean" },
+        "ci_green": { "type": "boolean" },
+        "smoke_slice_ready": { "type": "boolean" },
+        "worker_manual_test": { "type": "boolean" },
+        "sdk_dry_run": { "type": "boolean" },
+        "automation_safe": { "type": "boolean" }
+      }
+    },
+    "worker_summary": {
+      "type": "object",
+      "required": ["worker_id", "adapter_type", "role", "enabled", "primary"],
+      "additionalProperties": false,
+      "properties": {
+        "worker_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "adapter_type": {
+          "type": "string",
+          "enum": ["cursor", "cline", "openhands", "aider", "opencode", "custom"]
+        },
+        "role": {
+          "type": "string",
+          "enum": ["slice_pipeline", "plan_next_slice"]
+        },
+        "enabled": { "type": "boolean" },
+        "primary": { "type": "boolean" },
+        "model_slug": { "type": "string" },
+        "credential_ref_names": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Env var names only — never secret values."
+        },
+        "webhook_env_names": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": { "type": "string", "minLength": 1 },
+            "token": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "repo": {
+      "type": "object",
+      "required": [
+        "id",
+        "github_slug",
+        "integration_branch",
+        "automation_enabled",
+        "readiness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "github_slug": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "integration_branch": { "type": "string", "minLength": 1 },
+        "automation_enabled": { "type": "boolean" },
+        "priority": { "type": "integer", "minimum": 1 },
+        "readiness": { "$ref": "#/$defs/readiness" },
+        "repo_native_paths": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "registry_project_id": { "type": "string" },
+            "slice_backlog": { "type": "string" },
+            "dependency_tree": { "type": "string" },
+            "agent_automations": { "type": "string" }
+          }
+        },
+        "workers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/worker_summary" }
+        },
+        "slice_summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ready_count": { "type": "integer", "minimum": 0 },
+            "running_count": { "type": "integer", "minimum": 0 },
+            "blocked_count": { "type": "integer", "minimum": 0 },
+            "validated_count": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "required": [
+        "slice_id",
+        "slice_number",
+        "title",
+        "state",
+        "repo_id",
+        "automation_eligible"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slice_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "slice_number": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "state": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "shaped",
+            "ready",
+            "gated",
+            "running",
+            "blocked",
+            "review",
+            "validated",
+            "promoted",
+            "released",
+            "archived"
+          ]
+        },
+        "repo_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "github_slug": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "automation_eligible": { "type": "boolean" },
+        "operator_gates": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "repo_native_path": {
+          "type": "string",
+          "description": "Path to slice detail or tree entry in the repo."
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "repo_id",
+        "runtime",
+        "status",
+        "started_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "repo_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "slice_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "task_id": { "type": "string" },
+        "runtime": {
+          "type": "string",
+          "enum": ["local", "cloud", "hosted"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "running", "success", "failure", "partial", "blocked", "cancelled"]
+        },
+        "started_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "model_slug": { "type": "string" },
+        "artifact_source": {
+          "type": "string",
+          "enum": ["local_automation_runs", "hosted_storage", "worker_callback"]
+        },
+        "repo_native_artifact_path": {
+          "type": "string",
+          "description": "Example: .cursor/automation-runs/<run-id>/"
+        },
+        "evidence_status": {
+          "type": "string",
+          "enum": ["success", "failure", "partial", "blocked", "skipped", "cancelled"]
+        },
+        "pr_url": { "type": "string", "format": "uri" },
+        "handoff_path": {
+          "type": "string",
+          "enum": ["A", "B", "STOP"]
+        }
+      }
+    },
+    "webhook_dispatch": {
+      "type": "object",
+      "required": [
+        "dispatch_id",
+        "orchestrator_run_id",
+        "repo_id",
+        "worker_id",
+        "slice_id",
+        "status",
+        "dispatched_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dispatch_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "orchestrator_run_id": { "type": "string", "minLength": 1 },
+        "repo_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "worker_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "slice_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "adapter_type": {
+          "type": "string",
+          "enum": ["cursor", "cline", "openhands", "aider", "opencode", "custom"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "dispatched", "accepted", "completed", "failed", "retrying", "cancelled"]
+        },
+        "dispatched_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "webhook_url_env_name": {
+          "type": "string",
+          "description": "Orchestrator-side env var name for worker URL — not the URL value."
+        },
+        "chain_back": {
+          "type": "boolean",
+          "description": "Whether worker should callback orchestrator/control plane on completion."
+        },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "task_packet_id": { "type": "string" },
+        "error_summary": { "type": "string" }
+      }
+    },
+    "portfolio_summary": {
+      "type": "object",
+      "required": ["global_fanout_limit", "repo_count"],
+      "additionalProperties": false,
+      "properties": {
+        "global_fanout_limit": { "type": "integer", "minimum": 1 },
+        "same_repo_max_when_others_idle": { "type": "integer", "minimum": 1 },
+        "repo_count": { "type": "integer", "minimum": 0 },
+        "automation_enabled_count": { "type": "integer", "minimum": 0 },
+        "ready_slice_count": { "type": "integer", "minimum": 0 },
+        "running_slice_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "dashboard_view": {
+      "type": "object",
+      "required": ["portfolio", "repos", "slices", "runs"],
+      "additionalProperties": false,
+      "properties": {
+        "portfolio": { "$ref": "#/$defs/portfolio_summary" },
+        "repos": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/repo" }
+        },
+        "slices": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/slice" }
+        },
+        "runs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/run" }
+        }
+      }
+    },
+    "dispatch_view": {
+      "type": "object",
+      "required": ["webhook_dispatches"],
+      "additionalProperties": false,
+      "properties": {
+        "orchestrator_run_id": { "type": "string" },
+        "trigger_reason": {
+          "type": "string",
+          "enum": ["hourly_schedule", "worker_chain", "manual", "retry"]
+        },
+        "webhook_dispatches": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/webhook_dispatch" }
+        },
+        "related_runs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/run" }
+        }
+      }
+    }
+  }
+}
+

@@ -67,6 +67,18 @@ curl http://127.0.0.1:8000/api/v1/sync/status
 Live GitHub reads may use `GH_TOKEN` or `GITHUB_TOKEN` from the environment.
 Only env var names belong in committed docs; never commit token values.
 
+## Read endpoints
+
+Phase 1 read endpoints project the current sync cache. Before the first sync,
+they return fictional example data from `.docs/examples/`.
+
+```bash
+curl http://127.0.0.1:8000/api/v1/portfolio
+curl http://127.0.0.1:8000/api/v1/repos
+curl http://127.0.0.1:8000/api/v1/repos/example-app/slices
+curl http://127.0.0.1:8000/api/v1/runs
+```
+
 ## Current non-goals
 
 - No dispatch controls.
