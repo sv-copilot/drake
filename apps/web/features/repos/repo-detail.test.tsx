@@ -51,7 +51,9 @@ describe("Repo detail", () => {
   it("renders readiness, workers, sources, and read-only evidence links", () => {
     render(<RepoDetailContent repo={repo} />);
 
-    expect(screen.getByText("example-app")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "example-app" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Automation off")).toBeInTheDocument();
     expect(screen.getByText("worker manual test")).toBeInTheDocument();
     expect(screen.getByText("example-app-slice-pipeline")).toBeInTheDocument();
