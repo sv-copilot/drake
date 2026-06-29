@@ -41,6 +41,19 @@ export type RepoSummary = {
   };
 };
 
+export type SliceSummary = {
+  slice_id: string;
+  slice_number: number;
+  title: string;
+  state: string;
+  repo_id: string;
+  github_slug?: string;
+  automation_eligible: boolean;
+  operator_gates: string[];
+  dependencies: number[];
+  repo_native_path: string;
+};
+
 const DEFAULT_API_URL = "http://127.0.0.1:8000";
 
 export function getApiBaseUrl() {
@@ -76,4 +89,12 @@ export function fetchPortfolio() {
 
 export function fetchRepos() {
   return apiGet<RepoSummary[]>("/api/v1/repos");
+}
+
+export function fetchRepo(repoId: string) {
+  return apiGet<RepoSummary>(`/api/v1/repos/${repoId}`);
+}
+
+export function fetchRepoSlices(repoId: string) {
+  return apiGet<SliceSummary[]>(`/api/v1/repos/${repoId}/slices`);
 }

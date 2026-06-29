@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 
 import {
   fetchPortfolio,
@@ -173,6 +174,12 @@ function RepoRow({ repo }: { repo: RepoSummary }) {
           {repo.repo_native_paths.dependency_tree}
         </p>
       </div>
+      <Link
+        href={`/repos/${repo.id}/slices`}
+        className="mt-5 inline-flex text-sm font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+      >
+        Open slice board
+      </Link>
     </article>
   );
 }
