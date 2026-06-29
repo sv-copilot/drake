@@ -9,6 +9,7 @@ import {
   type DispatchSummary,
   type RunSummary,
 } from "@/lib/api-client";
+import { RelativeTime } from "@/components/relative-time";
 import { runsForDispatch } from "@/lib/evidence-correlation";
 
 export function DispatchDetail({ dispatchId }: { dispatchId: string }) {
@@ -94,7 +95,14 @@ export function DispatchDetailContent({
               label="Webhook env"
               value={dispatch.webhook_url_env_name ?? "not declared"}
             />
-            <DetailLine label="Dispatched at" value={dispatch.dispatched_at} />
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-slate-500">
+                Dispatched at
+              </dt>
+              <dd className="mt-1 font-mono text-slate-700">
+                <RelativeTime iso={dispatch.dispatched_at} />
+              </dd>
+            </div>
             <DetailLine
               label="Error summary"
               value={dispatch.error_summary ?? "none"}

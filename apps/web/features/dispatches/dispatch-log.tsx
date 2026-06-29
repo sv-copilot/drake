@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { RelativeTime } from "@/components/relative-time";
 import { fetchDispatches, type DispatchSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
@@ -181,7 +182,7 @@ function DispatchRow({ dispatch }: { dispatch: DispatchSummary }) {
           {dispatch.orchestrator_run_id}
         </p>
         <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">
-          {dispatch.dispatched_at}
+          <RelativeTime iso={dispatch.dispatched_at} />
         </p>
       </div>
       <div>

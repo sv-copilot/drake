@@ -9,6 +9,7 @@ import {
   type DispatchSummary,
   type RunSummary,
 } from "@/lib/api-client";
+import { RelativeTime } from "@/components/relative-time";
 import { dispatchesForRun } from "@/lib/evidence-correlation";
 import { evidenceSearchString } from "@/lib/evidence-filters";
 
@@ -91,8 +92,14 @@ export function RunDetailContent({
       <div className="mt-8 rounded-xl border border-stone-200 bg-white p-5">
         <h3 className="font-medium text-slate-950">Timeline</h3>
         <div className="mt-4 space-y-3 text-sm text-slate-600">
-          <p>Started: {run.started_at}</p>
-          {run.completed_at ? <p>Completed: {run.completed_at}</p> : null}
+          <p>
+            Started: <RelativeTime iso={run.started_at} />
+          </p>
+          {run.completed_at ? (
+            <p>
+              Completed: <RelativeTime iso={run.completed_at} />
+            </p>
+          ) : null}
         </div>
       </div>
 
