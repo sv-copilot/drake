@@ -2,29 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { fetchRuns, type RunSummary } from "@/lib/api-client";
+import {
+  EMPTY_EVIDENCE_FILTERS,
+  type EvidenceFilters as Filters,
+} from "@/lib/evidence-filters";
+import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
 import { cn } from "@/lib/utils";
-
-type Filters = {
-  repoId: string;
-  sliceId: string;
-  status: string;
-};
-
-const EMPTY_FILTERS: Filters = {
-  repoId: "",
-  sliceId: "",
-  status: "",
-};
 
 export function RunHistory() {
   const runsQuery = useQuery({
     queryKey: ["runs"],
     queryFn: fetchRuns,
   });
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useEvidenceUrlFilters();
 
   if (runsQuery.isLoading) {
     return <RunHistoryLoading />;
@@ -52,7 +45,7 @@ export function RunHistoryContent({
   filters?: Filters;
   onFiltersChange?: (filters: Filters) => void;
 }) {
-  const currentFilters = filters ?? EMPTY_FILTERS;
+  const currentFilters = filters ?? EMPTY_EVIDENCE_FILTERS;
   const filteredRuns = useMemo(
     () => filterRuns(runs, currentFilters),
     [runs, currentFilters],

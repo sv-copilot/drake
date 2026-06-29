@@ -68,7 +68,11 @@ describe("Repo detail", () => {
     );
     expect(screen.getByRole("link", { name: "Run history" })).toHaveAttribute(
       "href",
-      "/runs",
+      "/runs?repo=example-app",
+    );
+    expect(screen.getByRole("link", { name: "Dispatch log" })).toHaveAttribute(
+      "href",
+      "/dispatches?repo=example-app",
     );
     expect(screen.queryByText(/https?:\/\//i)).toBeNull();
     expect(screen.queryByRole("button", { name: /dispatch|edit|enable/i })).toBeNull();

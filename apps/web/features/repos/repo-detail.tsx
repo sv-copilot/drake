@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { fetchRepo, type RepoSummary, type WorkerSummary } from "@/lib/api-client";
+import { evidenceSearchString } from "@/lib/evidence-filters";
 import { cn } from "@/lib/utils";
 
 export function RepoDetail({ repoId }: { repoId: string }) {
@@ -26,6 +27,11 @@ export function RepoDetail({ repoId }: { repoId: string }) {
 export function RepoDetailContent({ repo }: { repo: RepoSummary }) {
   const readinessEntries = Object.entries(repo.readiness);
   const sourceEntries = Object.entries(repo.repo_native_paths);
+  const repoEvidenceSearch = evidenceSearchString({
+    repoId: repo.id,
+    sliceId: "",
+    status: "",
+  });
 
   return (
     <section>
@@ -93,8 +99,8 @@ export function RepoDetailContent({ repo }: { repo: RepoSummary }) {
         <section className="rounded-xl border border-stone-200 bg-white p-5">
           <h3 className="font-medium text-slate-950">Evidence links</h3>
           <div className="mt-4 space-y-3 text-sm">
-            <DetailLink href="/runs" label="Run history" />
-            <DetailLink href="/dispatches" label="Dispatch log" />
+            <DetailLink href={`/runs${repoEvidenceSearch}`} label="Run history" />
+            <DetailLink href={`/dispatches${repoEvidenceSearch}`} label="Dispatch log" />
             <DetailLink
               href={`/repos/${encodeURIComponent(repo.id)}/slices`}
               label="Slice board"

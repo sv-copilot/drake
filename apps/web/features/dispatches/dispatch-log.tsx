@@ -2,8 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { fetchDispatches, type DispatchSummary } from "@/lib/api-client";
+import {
+  EMPTY_EVIDENCE_FILTERS,
+  type EvidenceFilters as Filters,
+} from "@/lib/evidence-filters";
+import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
 import { cn } from "@/lib/utils";
 
 export function DispatchLog() {
@@ -11,6 +17,7 @@ export function DispatchLog() {
     queryKey: ["dispatches"],
     queryFn: fetchDispatches,
   });
+  const [filters, setFilters] = useEvidenceUrlFilters();
 
   if (dispatchesQuery.isLoading) {
     return <DispatchLogLoading />;
@@ -20,14 +27,31 @@ export function DispatchLog() {
     return <DispatchLogError />;
   }
 
-  return <DispatchLogContent dispatches={dispatchesQuery.data ?? []} />;
+  return (
+    <DispatchLogContent
+      dispatches={dispatchesQuery.data ?? []}
+      filters={filters}
+      onFiltersChange={setFilters}
+    />
+  );
 }
 
 export function DispatchLogContent({
   dispatches,
+  filters,
+  onFiltersChange,
 }: {
   dispatches: DispatchSummary[];
+  filters?: Filters;
+  onFiltersChange?: (filters: Filters) => void;
 }) {
+  const currentFilters = filters ?? EMPTY_EVIDENCE_FILTERS;
+  const filteredDispatches = useMemo(
+    () => filterDispatches(dispatches, currentFilters),
+    [dispatches, currentFilters],
+  );
+  const options = useMemo(() => dispatchFilterOptions(dispatches), [dispatches]);
+
   if (dispatches.length === 0) {
     return <DispatchLogEmpty />;
   }
@@ -47,20 +71,93 @@ export function DispatchLogContent({
         </p>
       </div>
 
-      <div className="mt-10 overflow-hidden rounded-xl border border-stone-200 bg-white">
-        <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 border-b border-stone-200 px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
-          <span>Dispatch</span>
-          <span>Target</span>
-          <span>Status</span>
-          <span>Webhook env</span>
+      <DispatchFilters
+        filters={currentFilters}
+        options={options}
+        onChange={onFiltersChange}
+      />
+
+      {filteredDispatches.length === 0 ? (
+        <DispatchLogEmpty filtered />
+      ) : (
+        <div className="mt-8 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr] gap-4 border-b border-stone-200 px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <span>Dispatch</span>
+            <span>Target</span>
+            <span>Status</span>
+            <span>Webhook env</span>
+          </div>
+          <div className="divide-y divide-stone-200">
+            {filteredDispatches.map((dispatch) => (
+              <DispatchRow key={dispatch.dispatch_id} dispatch={dispatch} />
+            ))}
+          </div>
         </div>
-        <div className="divide-y divide-stone-200">
-          {dispatches.map((dispatch) => (
-            <DispatchRow key={dispatch.dispatch_id} dispatch={dispatch} />
-          ))}
-        </div>
-      </div>
+      )}
     </section>
+  );
+}
+
+function DispatchFilters({
+  filters,
+  options,
+  onChange,
+}: {
+  filters: Filters;
+  options: ReturnType<typeof dispatchFilterOptions>;
+  onChange?: (filters: Filters) => void;
+}) {
+  return (
+    <div className="mt-10 grid gap-3 rounded-xl border border-stone-200 bg-white p-4 md:grid-cols-3">
+      <FilterSelect
+        label="Repo"
+        value={filters.repoId}
+        options={options.repoIds}
+        onChange={(value) => onChange?.({ ...filters, repoId: value })}
+      />
+      <FilterSelect
+        label="Slice"
+        value={filters.sliceId}
+        options={options.sliceIds}
+        onChange={(value) => onChange?.({ ...filters, sliceId: value })}
+      />
+      <FilterSelect
+        label="Status"
+        value={filters.status}
+        options={options.statuses}
+        onChange={(value) => onChange?.({ ...filters, status: value })}
+      />
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-sm">
+      <span className="font-medium text-slate-950">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-slate-950"
+      >
+        <option value="">All</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -139,6 +236,36 @@ export function statusTone(status: string) {
   return "neutral";
 }
 
+export function filterDispatches(
+  dispatches: DispatchSummary[],
+  filters: Filters,
+) {
+  return dispatches.filter((dispatch) => {
+    if (filters.repoId && dispatch.repo_id !== filters.repoId) {
+      return false;
+    }
+    if (filters.sliceId && dispatch.slice_id !== filters.sliceId) {
+      return false;
+    }
+    if (filters.status && dispatch.status !== filters.status) {
+      return false;
+    }
+    return true;
+  });
+}
+
+export function dispatchFilterOptions(dispatches: DispatchSummary[]) {
+  return {
+    repoIds: sortedUnique(dispatches.map((dispatch) => dispatch.repo_id)),
+    sliceIds: sortedUnique(dispatches.map((dispatch) => dispatch.slice_id)),
+    statuses: sortedUnique(dispatches.map((dispatch) => dispatch.status)),
+  };
+}
+
+function sortedUnique(values: Array<string | undefined>) {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))].sort();
+}
+
 export function DispatchLogLoading() {
   return (
     <section aria-label="Loading dispatches" className="max-w-4xl">
@@ -149,18 +276,19 @@ export function DispatchLogLoading() {
   );
 }
 
-export function DispatchLogEmpty() {
+export function DispatchLogEmpty({ filtered = false }: { filtered?: boolean }) {
   return (
     <section className="max-w-3xl rounded-xl border border-stone-200 bg-white p-8">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
         Dispatches
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-slate-950">
-        No dispatch attempts yet.
+        {filtered ? "No dispatches match these filters." : "No dispatch attempts yet."}
       </h2>
       <p className="mt-3 text-slate-600">
-        OSS equivalent: inspect orchestrator run artifacts and manual webhook
-        POST logs until hosted dispatch is enabled.
+        {filtered
+          ? "Adjust repo, slice, or status filters to widen the dispatch log."
+          : "OSS equivalent: inspect orchestrator run artifacts and manual webhook POST logs until hosted dispatch is enabled."}
       </p>
     </section>
   );

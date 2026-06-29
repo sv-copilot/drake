@@ -1,11 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import {
   DispatchLogContent,
   DispatchLogEmpty,
+  dispatchFilterOptions,
+  filterDispatches,
   statusTone,
 } from "@/features/dispatches/dispatch-log";
+import type { EvidenceFilters } from "@/lib/evidence-filters";
 import type { DispatchSummary } from "@/lib/api-client";
 
 const dispatches: DispatchSummary[] = [
@@ -24,9 +28,38 @@ const dispatches: DispatchSummary[] = [
     task_packet_id: "hourly-1/1",
     error_summary: "Webhook returned 500",
   },
+  {
+    dispatch_id: "dispatch-2",
+    orchestrator_run_id: "hourly-2",
+    repo_id: "drake",
+    worker_id: "drake-slice-pipeline",
+    slice_id: "HOSTED-ARCH-1",
+    adapter_type: "cursor",
+    status: "accepted",
+    dispatched_at: "2026-06-21T18:30:05Z",
+    webhook_url_env_name: "EXAMPLE_PORTFOLIO_WEBHOOK_URL",
+    chain_back: true,
+    retry_count: 0,
+    task_packet_id: "hourly-2/1",
+  },
 ];
 
 describe("Dispatch log", () => {
+  it("filters dispatches and builds unique filter options", () => {
+    expect(
+      filterDispatches(dispatches, {
+        repoId: "example-app",
+        sliceId: "",
+        status: "failed",
+      }),
+    ).toEqual([dispatches[0]]);
+    expect(dispatchFilterOptions(dispatches)).toEqual({
+      repoIds: ["drake", "example-app"],
+      sliceIds: ["HOSTED-ARCH-1", "SMOKE-1"],
+      statuses: ["accepted", "failed"],
+    });
+  });
+
   it("maps statuses to badge tones", () => {
     expect(statusTone("accepted")).toBe("success");
     expect(statusTone("completed")).toBe("success");
@@ -71,6 +104,38 @@ describe("Dispatch log", () => {
     expect(screen.getByText("Env var name only")).toBeInTheDocument();
     expect(screen.queryByText(/https?:\/\//i)).toBeNull();
     expect(screen.queryByRole("button", { name: /retry|dispatch|edit/i })).toBeNull();
+  });
+
+  it("filters through visible selects and shows filtered empty state", () => {
+    function Harness() {
+      const [filters, setFilters] = useState<EvidenceFilters>({
+        repoId: "",
+        sliceId: "",
+        status: "",
+      });
+      return (
+        <DispatchLogContent
+          dispatches={dispatches}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    fireEvent.change(screen.getByLabelText("Repo"), {
+      target: { value: "drake" },
+    });
+
+    expect(screen.getByText("dispatch-2")).toBeInTheDocument();
+    expect(screen.queryByText("dispatch-1")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "failed" },
+    });
+
+    expect(screen.getByText("No dispatches match these filters.")).toBeInTheDocument();
   });
 
   it("renders the OSS-equivalent empty state", () => {
