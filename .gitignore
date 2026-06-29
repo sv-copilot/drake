@@ -25,6 +25,12 @@ tools/**/node_modules/
 tools/**/dist/
 scripts/**/__pycache__/
 
+# Hosted service local Python artifacts
+services/**/.venv/
+services/**/.pytest_cache/
+services/**/__pycache__/
+services/**/*.egg-info/
+
 # Keep future project symlinks/repos out of portfolio git
 projects/*
 !projects/README.md
