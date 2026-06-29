@@ -76,11 +76,16 @@ bash scripts/hosted-ip-staging.sh --run
 From a reviewer machine allowed by the firewall:
 
 ```bash
-curl http://<server-ip>:8000/health
-curl http://<server-ip>:8000/api/v1/portfolio
+STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --smoke
 ```
 
-Then open:
+The smoke check verifies:
+
+- `GET /health` returns `status=ok` for `hosted-api`.
+- `GET /api/v1/portfolio` returns a portfolio object with `repo_count`.
+- The web shell responds on `http://<server-ip>:3000`.
+
+Then manually open:
 
 ```text
 http://<server-ip>:3000

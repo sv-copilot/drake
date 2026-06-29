@@ -17,6 +17,7 @@ Usage:
   STAGING_HOST=<ip-or-hostname> scripts/hosted-ip-staging.sh --check
   STAGING_HOST=<ip-or-hostname> scripts/hosted-ip-staging.sh --print-launch
   STAGING_HOST=<ip-or-hostname> scripts/hosted-ip-staging.sh --print-smoke
+  STAGING_HOST=<ip-or-hostname> scripts/hosted-ip-staging.sh --smoke
   STAGING_HOST=<ip-or-hostname> scripts/hosted-ip-staging.sh --run
 
 Environment variable names:
@@ -28,6 +29,7 @@ Environment variable names:
   HOSTED_WEB_ORIGIN     default http://${STAGING_HOST}:${HOSTED_WEB_PORT}
   NEXT_PUBLIC_API_URL   default http://${STAGING_HOST}:${HOSTED_API_PORT}
   HOSTED_STAGING_MODE   default production; allowed production or dev
+  HOSTED_SMOKE_TIMEOUT  default 10 seconds per HTTP request
   GH_TOKEN              optional GitHub read token name for API sync
   GITHUB_TOKEN          optional GitHub read token name for API sync
 EOF
@@ -88,7 +90,67 @@ print_smoke() {
 curl http://${staging_host}:${api_port}/health
 curl http://${staging_host}:${api_port}/api/v1/portfolio
 open http://${staging_host}:${web_port}
+bash scripts/hosted-ip-staging.sh --smoke
 EOF
+}
+
+run_smoke() {
+  check_staging_stack
+  python3 - "$api_url" "http://${staging_host}:${web_port}" "${HOSTED_SMOKE_TIMEOUT:-10}" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+import urllib.error
+import urllib.request
+
+
+api_url = sys.argv[1].rstrip("/")
+web_url = sys.argv[2].rstrip("/")
+timeout = float(sys.argv[3])
+
+
+def fetch(url: str) -> tuple[int, str]:
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            return response.status, response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"{url} returned HTTP {exc.code}: {body}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"{url} failed: {exc.reason}") from exc
+
+
+def fetch_json(url: str) -> dict[str, object]:
+    status, body = fetch(url)
+    if status != 200:
+        raise RuntimeError(f"{url} returned HTTP {status}")
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{url} did not return JSON") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"{url} did not return a JSON object")
+    return payload
+
+
+health = fetch_json(f"{api_url}/health")
+if health.get("status") != "ok" or health.get("service") != "hosted-api":
+    raise RuntimeError(f"unexpected health payload: {health!r}")
+print(f"smoke ok: {api_url}/health")
+
+portfolio = fetch_json(f"{api_url}/api/v1/portfolio")
+if "repo_count" not in portfolio:
+    raise RuntimeError(f"portfolio payload missing repo_count: {portfolio!r}")
+print(f"smoke ok: {api_url}/api/v1/portfolio")
+
+status, web_body = fetch(web_url)
+if status != 200:
+    raise RuntimeError(f"{web_url} returned HTTP {status}")
+if "<html" not in web_body.lower() and "Software operations" not in web_body:
+    raise RuntimeError(f"{web_url} did not look like the hosted web shell")
+print(f"smoke ok: {web_url}")
+PY
 }
 
 check_staging_stack() {
@@ -147,6 +209,9 @@ case "${1:-}" in
   --print-smoke)
     check_staging_stack
     print_smoke
+    ;;
+  --smoke)
+    run_smoke
     ;;
   --run)
     run_staging_stack

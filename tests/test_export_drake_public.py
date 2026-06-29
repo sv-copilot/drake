@@ -1,16 +1,72 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import socket
 import subprocess
 import sys
+import threading
 from pathlib import Path
-
-import pytest
 
 from scripts.validate_drake_export import validate_tree
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXPORT_SCRIPT = REPO_ROOT / "scripts/export_drake_public.py"
 VALIDATE_SCRIPT = REPO_ROOT / "scripts/validate_drake_export.py"
+
+
+def free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+@contextmanager
+def fake_hosted_server(port: int, *, api: bool) -> Iterator[None]:
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802
+            if api and self.path == "/health":
+                self._send_json({"status": "ok", "service": "hosted-api"})
+                return
+            if api and self.path == "/api/v1/portfolio":
+                self._send_json({"repo_count": 1})
+                return
+            if not api and self.path == "/":
+                self._send_text("<html><body>Software operations</body></html>")
+                return
+            self.send_response(404)
+            self.end_headers()
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+        def _send_json(self, payload: dict[str, object]) -> None:
+            body = json.dumps(payload).encode("utf-8")
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _send_text(self, body: str) -> None:
+            encoded = body.encode("utf-8")
+            self.send_response(200)
+            self.send_header("content-type", "text/html")
+            self.send_header("content-length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 def run_export(output: Path, *, dry_run: bool = False) -> subprocess.CompletedProcess[str]:
@@ -147,6 +203,57 @@ def test_hosted_ip_staging_print_smoke_outputs_review_commands() -> None:
     assert "curl http://203.0.113.10:8000/health" in result.stdout
     assert "curl http://203.0.113.10:8000/api/v1/portfolio" in result.stdout
     assert "open http://203.0.113.10:3000" in result.stdout
+    assert "bash scripts/hosted-ip-staging.sh --smoke" in result.stdout
+
+
+def test_hosted_ip_staging_smoke_checks_api_and_web() -> None:
+    api_port = free_port()
+    web_port = free_port()
+
+    with fake_hosted_server(api_port, api=True), fake_hosted_server(web_port, api=False):
+        result = subprocess.run(
+            ["bash", "scripts/hosted-ip-staging.sh", "--smoke"],
+            cwd=REPO_ROOT,
+            env={
+                "PATH": "/usr/bin:/bin",
+                "STAGING_HOST": "127.0.0.1",
+                "HOSTED_API_PORT": str(api_port),
+                "HOSTED_WEB_PORT": str(web_port),
+                "HOSTED_SMOKE_TIMEOUT": "2",
+            },
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert f"smoke ok: http://127.0.0.1:{api_port}/health" in result.stdout
+    assert f"smoke ok: http://127.0.0.1:{api_port}/api/v1/portfolio" in result.stdout
+    assert f"smoke ok: http://127.0.0.1:{web_port}" in result.stdout
+
+
+def test_hosted_ip_staging_smoke_fails_when_api_is_unreachable() -> None:
+    api_port = free_port()
+    web_port = free_port()
+
+    with fake_hosted_server(web_port, api=False):
+        result = subprocess.run(
+            ["bash", "scripts/hosted-ip-staging.sh", "--smoke"],
+            cwd=REPO_ROOT,
+            env={
+                "PATH": "/usr/bin:/bin",
+                "STAGING_HOST": "127.0.0.1",
+                "HOSTED_API_PORT": str(api_port),
+                "HOSTED_WEB_PORT": str(web_port),
+                "HOSTED_SMOKE_TIMEOUT": "1",
+            },
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+    assert result.returncode == 1
+    assert "/health failed" in result.stderr
 
 
 def test_hosted_ip_staging_rejects_unknown_mode() -> None:
