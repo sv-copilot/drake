@@ -89,6 +89,11 @@ def dispatches_from_examples() -> list[dict[str, Any]]:
     return [_sanitize_dispatch(dispatch) for dispatch in dispatches]
 
 
+def runs_from_examples() -> list[dict[str, Any]]:
+    document = _load_json(EXAMPLE_HOSTED_API)
+    return document.get("views", {}).get("dashboard", {}).get("runs", [])
+
+
 def _sanitize_dispatch(dispatch: dict[str, Any]) -> dict[str, Any]:
     sanitized = dict(dispatch)
     env_name = sanitized.get("webhook_url_env_name")

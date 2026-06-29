@@ -44,7 +44,8 @@ def test_read_endpoints_return_example_portfolio_projection() -> None:
     assert slices.json()[0]["operator_gates"] == []
 
     assert runs.status_code == 200
-    assert runs.json() == []
+    assert runs.json()[0]["run_id"] == "2026-06-21T17-30-00Z-hosted-arch-1"
+    assert runs.json()[0]["artifact_source"] == "local_automation_runs"
 
     assert dispatches.status_code == 200
     assert dispatches.json()[0]["dispatch_id"] == "dispatch-20260621-001"
@@ -57,6 +58,16 @@ def test_read_endpoints_return_404_for_unknown_resources() -> None:
     assert client.get("/api/v1/repos/missing").status_code == 404
     assert client.get("/api/v1/repos/missing/slices").status_code == 404
     assert client.get("/api/v1/runs/missing").status_code == 404
+
+
+def test_run_detail_returns_fixture_run() -> None:
+    client = TestClient(create_app())
+
+    response = client.get("/api/v1/runs/2026-06-21T16-00-00Z-rs-slice")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["pr_url"] == "https://github.com/sv-copilot/example-app/pull/42"
 
 
 def test_hosted_api_sketch_example_validates_locally() -> None:

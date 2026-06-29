@@ -9,6 +9,7 @@ from hosted_api.read_models import (
     DashboardProjection,
     build_dashboard,
     dispatches_from_examples,
+    runs_from_examples,
     snapshot_from_examples,
 )
 from hosted_api.sync.github import GitHubSyncService, InMemorySyncCache, SyncSnapshot
@@ -53,9 +54,18 @@ class SliceResponse(BaseModel):
 class RunResponse(BaseModel):
     run_id: str
     repo_id: str
+    slice_id: str | None = None
+    task_id: str | None = None
     runtime: str
     status: str
     started_at: str
+    completed_at: str | None = None
+    model_slug: str | None = None
+    artifact_source: str | None = None
+    repo_native_artifact_path: str | None = None
+    evidence_status: str | None = None
+    pr_url: str | None = None
+    handoff_path: str | None = None
 
 
 class DispatchResponse(BaseModel):
@@ -100,14 +110,14 @@ def repo_slices(repo_id: str, request: Request) -> list[dict[str, Any]]:
     return matches
 
 
-@router.get("/runs", response_model=list[RunResponse])
-def runs(request: Request) -> list[dict[str, Any]]:
-    return _dashboard(request).runs
+@router.get("/runs", response_model=list[RunResponse], response_model_exclude_none=True)
+def runs() -> list[dict[str, Any]]:
+    return runs_from_examples()
 
 
-@router.get("/runs/{run_id}", response_model=RunResponse)
-def run_detail(run_id: str, request: Request) -> dict[str, Any]:
-    for run in _dashboard(request).runs:
+@router.get("/runs/{run_id}", response_model=RunResponse, response_model_exclude_none=True)
+def run_detail(run_id: str) -> dict[str, Any]:
+    for run in runs_from_examples():
         if run["run_id"] == run_id:
             return run
     raise HTTPException(status_code=404, detail=f"run not found: {run_id}")

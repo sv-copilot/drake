@@ -70,6 +70,23 @@ export type DispatchSummary = {
   error_summary?: string;
 };
 
+export type RunSummary = {
+  run_id: string;
+  repo_id: string;
+  slice_id?: string;
+  task_id?: string;
+  runtime: string;
+  status: string;
+  started_at: string;
+  completed_at?: string;
+  model_slug?: string;
+  artifact_source?: string;
+  repo_native_artifact_path?: string;
+  evidence_status?: string;
+  pr_url?: string;
+  handoff_path?: string;
+};
+
 const DEFAULT_API_URL = "http://127.0.0.1:8000";
 
 export function getApiBaseUrl() {
@@ -117,4 +134,12 @@ export function fetchRepoSlices(repoId: string) {
 
 export function fetchDispatches() {
   return apiGet<DispatchSummary[]>("/api/v1/dispatches");
+}
+
+export function fetchRuns() {
+  return apiGet<RunSummary[]>("/api/v1/runs");
+}
+
+export function fetchRun(runId: string) {
+  return apiGet<RunSummary>(`/api/v1/runs/${runId}`);
 }
