@@ -170,7 +170,12 @@ function RunRow({ run }: { run: RunSummary }) {
         <p className="mt-1 font-mono text-xs text-slate-500">{run.task_id}</p>
       </div>
       <div>
-        <p className="font-medium text-slate-950">{run.repo_id}</p>
+        <Link
+          href={`/repos/${encodeURIComponent(run.repo_id)}`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {run.repo_id}
+        </Link>
         <p className="mt-1 text-slate-600">{run.slice_id ?? "no slice"}</p>
       </div>
       <div>

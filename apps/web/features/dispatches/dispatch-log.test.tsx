@@ -79,6 +79,10 @@ describe("Dispatch log", () => {
       "href",
       "/dispatches/dispatch-1",
     );
+    expect(screen.getByRole("link", { name: "example-app" })).toHaveAttribute(
+      "href",
+      "/repos/example-app",
+    );
     expect(screen.getByText("Webhook returned 500")).toBeInTheDocument();
     expect(
       screen.getByText("EXAMPLE_SLICE_PIPELINE_WEBHOOK_URL"),

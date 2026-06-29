@@ -85,6 +85,10 @@ describe("Run history", () => {
     expect(screen.getByText("run-a")).toBeInTheDocument();
     expect(screen.getAllByText("HOSTED-ARCH-1")).toHaveLength(2);
     expect(screen.getByText("local_automation_runs")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "drake" })).toHaveAttribute(
+      "href",
+      "/repos/drake",
+    );
     expect(screen.queryByRole("button", { name: /dispatch/i })).toBeNull();
   });
 

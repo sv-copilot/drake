@@ -6,7 +6,7 @@ import {
   DispatchDetailError,
   DispatchDetailLoading,
 } from "@/features/dispatches/dispatch-detail";
-import type { DispatchSummary } from "@/lib/api-client";
+import type { DispatchSummary, RunSummary } from "@/lib/api-client";
 
 const dispatch: DispatchSummary = {
   dispatch_id: "dispatch-1",
@@ -35,6 +35,34 @@ describe("Dispatch detail", () => {
     expect(screen.getByText("Webhook returned 500")).toBeInTheDocument();
     expect(screen.queryByText(/https?:\/\//i)).toBeNull();
     expect(screen.queryByRole("button", { name: /retry|dispatch|edit/i })).toBeNull();
+
+    expect(screen.getByRole("link", { name: "example-app" })).toHaveAttribute(
+      "href",
+      "/repos/example-app",
+    );
+    expect(screen.getByRole("link", { name: "SMOKE-1" })).toHaveAttribute(
+      "href",
+      "/repos/example-app/slices",
+    );
+    expect(screen.getByText("No correlated runs.")).toBeInTheDocument();
+  });
+
+  it("links correlated runs by shared task packet", () => {
+    const run: RunSummary = {
+      run_id: "run-7",
+      repo_id: "example-app",
+      slice_id: "SMOKE-1",
+      task_id: "hourly-1/1",
+      runtime: "cloud",
+      status: "success",
+      started_at: "2026-06-21T17:30:00Z",
+    };
+
+    render(<DispatchDetailContent dispatch={dispatch} relatedRuns={[run]} />);
+
+    expect(
+      screen.getByRole("link", { name: "run-7 · success" }),
+    ).toHaveAttribute("href", "/runs/run-7");
   });
 
   it("renders loading and error states", () => {

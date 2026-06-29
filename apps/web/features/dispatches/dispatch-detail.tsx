@@ -3,12 +3,22 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-import { fetchDispatch, type DispatchSummary } from "@/lib/api-client";
+import {
+  fetchDispatch,
+  fetchRuns,
+  type DispatchSummary,
+  type RunSummary,
+} from "@/lib/api-client";
+import { runsForDispatch } from "@/lib/evidence-correlation";
 
 export function DispatchDetail({ dispatchId }: { dispatchId: string }) {
   const dispatchQuery = useQuery({
     queryKey: ["dispatch", dispatchId],
     queryFn: () => fetchDispatch(dispatchId),
+  });
+  const runsQuery = useQuery({
+    queryKey: ["runs"],
+    queryFn: fetchRuns,
   });
 
   if (dispatchQuery.isLoading) {
@@ -19,14 +29,25 @@ export function DispatchDetail({ dispatchId }: { dispatchId: string }) {
     return <DispatchDetailError dispatchId={dispatchId} />;
   }
 
-  return <DispatchDetailContent dispatch={dispatchQuery.data} />;
+  return (
+    <DispatchDetailContent
+      dispatch={dispatchQuery.data}
+      relatedRuns={runsForDispatch(runsQuery.data ?? [], dispatchQuery.data)}
+    />
+  );
 }
 
 export function DispatchDetailContent({
   dispatch,
+  relatedRuns = [],
 }: {
   dispatch: DispatchSummary;
+  relatedRuns?: RunSummary[];
 }) {
+  const repoHref = `/repos/${encodeURIComponent(dispatch.repo_id)}`;
+  const sliceBoardHref = `/repos/${encodeURIComponent(dispatch.repo_id)}/slices`;
+  const workersHref = `/repos/${encodeURIComponent(dispatch.repo_id)}`;
+
   return (
     <section className="max-w-4xl">
       <Link
@@ -59,9 +80,9 @@ export function DispatchDetailContent({
         <section className="rounded-xl border border-stone-200 bg-white p-5">
           <h3 className="font-medium text-slate-950">Target</h3>
           <dl className="mt-4 space-y-3 text-sm">
-            <DetailLine label="Repository" value={dispatch.repo_id} />
-            <DetailLine label="Slice" value={dispatch.slice_id} />
-            <DetailLine label="Worker" value={dispatch.worker_id} />
+            <DetailLink label="Repository" value={dispatch.repo_id} href={repoHref} />
+            <DetailLink label="Slice" value={dispatch.slice_id} href={sliceBoardHref} />
+            <DetailLink label="Worker" value={dispatch.worker_id} href={workersHref} />
             <DetailLine label="Task packet" value={dispatch.task_packet_id ?? "not declared"} />
           </dl>
         </section>
@@ -84,7 +105,53 @@ export function DispatchDetailContent({
           </p>
         </section>
       </div>
+
+      <section className="mt-8 rounded-xl border border-stone-200 bg-white p-5">
+        <h3 className="font-medium text-slate-950">Related runs</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Correlated by shared task packet identifier.
+        </p>
+        <div className="mt-4 space-y-2 text-sm">
+          {relatedRuns.length === 0 ? (
+            <p className="text-slate-500">No correlated runs.</p>
+          ) : (
+            relatedRuns.map((run) => (
+              <Link
+                key={run.run_id}
+                href={`/runs/${encodeURIComponent(run.run_id)}`}
+                className="block break-words rounded-lg border border-stone-200 px-3 py-2 font-medium text-slate-950 transition-colors hover:bg-stone-50"
+              >
+                {run.run_id} · {run.status}
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
     </section>
+  );
+}
+
+function DetailLink({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href: string;
+}) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dd className="mt-1">
+        <Link
+          href={href}
+          className="break-words font-mono text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {value}
+        </Link>
+      </dd>
+    </div>
   );
 }
 

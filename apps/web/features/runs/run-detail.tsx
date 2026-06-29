@@ -3,12 +3,23 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-import { fetchRun, type RunSummary } from "@/lib/api-client";
+import {
+  fetchDispatches,
+  fetchRun,
+  type DispatchSummary,
+  type RunSummary,
+} from "@/lib/api-client";
+import { dispatchesForRun } from "@/lib/evidence-correlation";
+import { evidenceSearchString } from "@/lib/evidence-filters";
 
 export function RunDetail({ runId }: { runId: string }) {
   const runQuery = useQuery({
     queryKey: ["run", runId],
     queryFn: () => fetchRun(runId),
+  });
+  const dispatchesQuery = useQuery({
+    queryKey: ["dispatches"],
+    queryFn: fetchDispatches,
   });
 
   if (runQuery.isLoading) {
@@ -19,10 +30,32 @@ export function RunDetail({ runId }: { runId: string }) {
     return <RunDetailError runId={runId} />;
   }
 
-  return <RunDetailContent run={runQuery.data} />;
+  return (
+    <RunDetailContent
+      run={runQuery.data}
+      relatedDispatches={dispatchesForRun(
+        dispatchesQuery.data ?? [],
+        runQuery.data,
+      )}
+    />
+  );
 }
 
-export function RunDetailContent({ run }: { run: RunSummary }) {
+export function RunDetailContent({
+  run,
+  relatedDispatches = [],
+}: {
+  run: RunSummary;
+  relatedDispatches?: DispatchSummary[];
+}) {
+  const repoHref = `/repos/${encodeURIComponent(run.repo_id)}`;
+  const sliceBoardHref = `/repos/${encodeURIComponent(run.repo_id)}/slices`;
+  const dispatchesHref = `/dispatches${evidenceSearchString({
+    repoId: run.repo_id,
+    sliceId: run.slice_id ?? "",
+    status: "",
+  })}`;
+
   return (
     <section className="max-w-4xl">
       <Link
@@ -38,7 +71,13 @@ export function RunDetailContent({ run }: { run: RunSummary }) {
         {run.run_id}
       </h2>
       <p className="mt-4 text-lg leading-8 text-slate-600">
-        Evidence and provenance summary for {run.repo_id}
+        Evidence and provenance summary for{" "}
+        <Link
+          href={repoHref}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {run.repo_id}
+        </Link>
         {run.slice_id ? ` / ${run.slice_id}` : ""}.
       </p>
 
@@ -79,7 +118,53 @@ export function RunDetailContent({ run }: { run: RunSummary }) {
           </Link>
         ) : null}
       </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-stone-200 bg-white p-5">
+          <h3 className="font-medium text-slate-950">Linked work</h3>
+          <p className="mt-1 text-sm text-slate-600">Read-only navigation.</p>
+          <div className="mt-4 space-y-2 text-sm">
+            <LinkedItem href={repoHref} label={`Repository: ${run.repo_id}`} />
+            <LinkedItem
+              href={sliceBoardHref}
+              label={run.slice_id ? `Slice board: ${run.slice_id}` : "Slice board"}
+            />
+            <LinkedItem href={dispatchesHref} label="Dispatches for this slice" />
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-stone-200 bg-white p-5">
+          <h3 className="font-medium text-slate-950">Related dispatches</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Correlated by shared task packet identifier.
+          </p>
+          <div className="mt-4 space-y-2 text-sm">
+            {relatedDispatches.length === 0 ? (
+              <p className="text-slate-500">No correlated dispatches.</p>
+            ) : (
+              relatedDispatches.map((dispatch) => (
+                <LinkedItem
+                  key={dispatch.dispatch_id}
+                  href={`/dispatches/${encodeURIComponent(dispatch.dispatch_id)}`}
+                  label={`${dispatch.dispatch_id} · ${dispatch.status}`}
+                />
+              ))
+            )}
+          </div>
+        </section>
+      </div>
     </section>
+  );
+}
+
+function LinkedItem({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="block break-words rounded-lg border border-stone-200 px-3 py-2 font-medium text-slate-950 transition-colors hover:bg-stone-50"
+    >
+      {label}
+    </Link>
   );
 }
 

@@ -179,7 +179,12 @@ function DispatchRow({ dispatch }: { dispatch: DispatchSummary }) {
         </p>
       </div>
       <div>
-        <p className="font-medium text-slate-950">{dispatch.repo_id}</p>
+        <Link
+          href={`/repos/${encodeURIComponent(dispatch.repo_id)}`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {dispatch.repo_id}
+        </Link>
         <p className="mt-1 text-sm text-slate-600">{dispatch.slice_id}</p>
         <p className="mt-1 text-xs text-slate-500">{dispatch.worker_id}</p>
       </div>
