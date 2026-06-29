@@ -6,13 +6,16 @@ import { useMemo } from "react";
 
 import { EvidenceResultSummary } from "@/components/evidence-result-summary";
 import { RelativeTime } from "@/components/relative-time";
+import { SortControl } from "@/components/sort-control";
 import { fetchDispatches, type DispatchSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
   hasActiveEvidenceFilters,
   type EvidenceFilters as Filters,
 } from "@/lib/evidence-filters";
+import { sortDispatches, type SortKey } from "@/lib/evidence-sort";
 import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
+import { useSortUrlParam } from "@/lib/use-sort-url-param";
 import { cn } from "@/lib/utils";
 
 export function DispatchLog() {
@@ -21,6 +24,7 @@ export function DispatchLog() {
     queryFn: fetchDispatches,
   });
   const [filters, setFilters] = useEvidenceUrlFilters();
+  const [sort, setSort] = useSortUrlParam();
 
   if (dispatchesQuery.isLoading) {
     return <DispatchLogLoading />;
@@ -35,6 +39,8 @@ export function DispatchLog() {
       dispatches={dispatchesQuery.data ?? []}
       filters={filters}
       onFiltersChange={setFilters}
+      sort={sort}
+      onSortChange={setSort}
     />
   );
 }
@@ -43,15 +49,19 @@ export function DispatchLogContent({
   dispatches,
   filters,
   onFiltersChange,
+  sort = "newest",
+  onSortChange,
 }: {
   dispatches: DispatchSummary[];
   filters?: Filters;
   onFiltersChange?: (filters: Filters) => void;
+  sort?: SortKey;
+  onSortChange?: (sort: SortKey) => void;
 }) {
   const currentFilters = filters ?? EMPTY_EVIDENCE_FILTERS;
   const filteredDispatches = useMemo(
-    () => filterDispatches(dispatches, currentFilters),
-    [dispatches, currentFilters],
+    () => sortDispatches(filterDispatches(dispatches, currentFilters), sort),
+    [dispatches, currentFilters, sort],
   );
   const options = useMemo(() => dispatchFilterOptions(dispatches), [dispatches]);
 
@@ -87,6 +97,7 @@ export function DispatchLogContent({
         pluralNoun="dispatches"
         active={hasActiveEvidenceFilters(currentFilters)}
         onClear={() => onFiltersChange?.(EMPTY_EVIDENCE_FILTERS)}
+        control={<SortControl value={sort} onChange={onSortChange} />}
       />
 
       {filteredDispatches.length === 0 ? (

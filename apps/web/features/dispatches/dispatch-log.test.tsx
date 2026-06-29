@@ -181,6 +181,39 @@ describe("Dispatch log", () => {
     expect(screen.queryByText("dispatch-1")).toBeNull();
   });
 
+  it("reorders rows when the sort control changes", () => {
+    function Harness() {
+      const [sort, setSort] = useState<"newest" | "oldest">("newest");
+      return (
+        <DispatchLogContent
+          dispatches={dispatches}
+          sort={sort}
+          onSortChange={setSort}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    // dispatch-1 dispatched 17:30, dispatch-2 dispatched 18:30 (newer).
+    const first = screen.getByText("dispatch-1");
+    const second = screen.getByText("dispatch-2");
+    expect(
+      second.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Sort"), {
+      target: { value: "oldest" },
+    });
+
+    const firstAfter = screen.getByText("dispatch-1");
+    const secondAfter = screen.getByText("dispatch-2");
+    expect(
+      firstAfter.compareDocumentPosition(secondAfter) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("summarizes filtered results and clears active filters", () => {
     function Harness() {
       const [filters, setFilters] = useState<EvidenceFilters>({

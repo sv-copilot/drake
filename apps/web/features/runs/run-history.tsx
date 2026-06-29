@@ -6,13 +6,16 @@ import { useMemo } from "react";
 
 import { EvidenceResultSummary } from "@/components/evidence-result-summary";
 import { RelativeTime } from "@/components/relative-time";
+import { SortControl } from "@/components/sort-control";
 import { fetchRuns, type RunSummary } from "@/lib/api-client";
 import {
   EMPTY_EVIDENCE_FILTERS,
   hasActiveEvidenceFilters,
   type EvidenceFilters as Filters,
 } from "@/lib/evidence-filters";
+import { sortRuns, type SortKey } from "@/lib/evidence-sort";
 import { useEvidenceUrlFilters } from "@/lib/use-evidence-url-filters";
+import { useSortUrlParam } from "@/lib/use-sort-url-param";
 import { cn } from "@/lib/utils";
 
 export function RunHistory() {
@@ -21,6 +24,7 @@ export function RunHistory() {
     queryFn: fetchRuns,
   });
   const [filters, setFilters] = useEvidenceUrlFilters();
+  const [sort, setSort] = useSortUrlParam();
 
   if (runsQuery.isLoading) {
     return <RunHistoryLoading />;
@@ -35,6 +39,8 @@ export function RunHistory() {
       runs={runsQuery.data ?? []}
       filters={filters}
       onFiltersChange={setFilters}
+      sort={sort}
+      onSortChange={setSort}
     />
   );
 }
@@ -43,15 +49,19 @@ export function RunHistoryContent({
   runs,
   filters,
   onFiltersChange,
+  sort = "newest",
+  onSortChange,
 }: {
   runs: RunSummary[];
   filters?: Filters;
   onFiltersChange?: (filters: Filters) => void;
+  sort?: SortKey;
+  onSortChange?: (sort: SortKey) => void;
 }) {
   const currentFilters = filters ?? EMPTY_EVIDENCE_FILTERS;
   const filteredRuns = useMemo(
-    () => filterRuns(runs, currentFilters),
-    [runs, currentFilters],
+    () => sortRuns(filterRuns(runs, currentFilters), sort),
+    [runs, currentFilters, sort],
   );
   const options = useMemo(() => runFilterOptions(runs), [runs]);
 
@@ -83,6 +93,7 @@ export function RunHistoryContent({
           noun="run"
           active={hasActiveEvidenceFilters(currentFilters)}
           onClear={() => onFiltersChange?.(EMPTY_EVIDENCE_FILTERS)}
+          control={<SortControl value={sort} onChange={onSortChange} />}
         />
       ) : null}
 

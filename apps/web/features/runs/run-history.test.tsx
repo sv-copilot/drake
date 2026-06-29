@@ -124,6 +124,34 @@ describe("Run history", () => {
     expect(screen.getByText("No runs match these filters.")).toBeInTheDocument();
   });
 
+  it("reorders rows when the sort control changes", () => {
+    function Harness() {
+      const [sort, setSort] = useState<"newest" | "oldest">("newest");
+      return (
+        <RunHistoryContent runs={runs} sort={sort} onSortChange={setSort} />
+      );
+    }
+
+    render(<Harness />);
+
+    const runA = screen.getByText("run-a"); // started 17:30 (newer)
+    const runB = screen.getByText("run-b"); // started 16:00 (older)
+    expect(
+      runA.compareDocumentPosition(runB) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Sort"), {
+      target: { value: "oldest" },
+    });
+
+    const runAAfter = screen.getByText("run-a");
+    const runBAfter = screen.getByText("run-b");
+    expect(
+      runBAfter.compareDocumentPosition(runAAfter) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("summarizes filtered results and clears active filters", () => {
     function Harness() {
       const [filters, setFilters] = useState({
