@@ -88,4 +88,31 @@ describe("Portfolio overview states", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /dispatch/i })).toBeNull();
   });
+
+  it("surfaces per-repo evidence counts with repo-scoped quick links", () => {
+    render(
+      <PortfolioOverviewContent
+        portfolio={portfolio}
+        repos={repos}
+        evidenceCounts={{ "example-app": { runs: 3, dispatches: 2 } }}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Runs (3)" })).toHaveAttribute(
+      "href",
+      "/runs?repo=example-app",
+    );
+    expect(
+      screen.getByRole("link", { name: "Dispatches (2)" }),
+    ).toHaveAttribute("href", "/dispatches?repo=example-app");
+  });
+
+  it("defaults evidence counts to zero when no run/dispatch data is loaded", () => {
+    render(<PortfolioOverviewContent portfolio={portfolio} repos={repos} />);
+
+    expect(screen.getByRole("link", { name: "Runs (0)" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Dispatches (0)" }),
+    ).toBeInTheDocument();
+  });
 });

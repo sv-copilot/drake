@@ -4,11 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import {
+  fetchDispatches,
   fetchPortfolio,
   fetchRepos,
+  fetchRuns,
   type PortfolioSummary,
   type RepoSummary,
 } from "@/lib/api-client";
+import {
+  countForRepo,
+  repoEvidenceCounts,
+  type EvidenceCount,
+} from "@/lib/evidence-counts";
+import { evidenceSearchString } from "@/lib/evidence-filters";
 import { cn } from "@/lib/utils";
 
 export function PortfolioOverview() {
@@ -19,6 +27,14 @@ export function PortfolioOverview() {
   const reposQuery = useQuery({
     queryKey: ["repos"],
     queryFn: fetchRepos,
+  });
+  const runsQuery = useQuery({
+    queryKey: ["runs"],
+    queryFn: fetchRuns,
+  });
+  const dispatchesQuery = useQuery({
+    queryKey: ["dispatches"],
+    queryFn: fetchDispatches,
   });
 
   if (portfolioQuery.isLoading || reposQuery.isLoading) {
@@ -37,6 +53,10 @@ export function PortfolioOverview() {
     <PortfolioOverviewContent
       portfolio={portfolioQuery.data}
       repos={reposQuery.data ?? []}
+      evidenceCounts={repoEvidenceCounts(
+        runsQuery.data ?? [],
+        dispatchesQuery.data ?? [],
+      )}
     />
   );
 }
@@ -44,9 +64,11 @@ export function PortfolioOverview() {
 export function PortfolioOverviewContent({
   portfolio,
   repos,
+  evidenceCounts = {},
 }: {
   portfolio: PortfolioSummary;
   repos: RepoSummary[];
+  evidenceCounts?: Record<string, EvidenceCount>;
 }) {
   if (repos.length === 0) {
     return <PortfolioEmpty />;
@@ -88,7 +110,11 @@ export function PortfolioOverviewContent({
         </div>
         <div className="divide-y divide-stone-200">
           {repos.map((repo) => (
-            <RepoRow key={repo.id} repo={repo} />
+            <RepoRow
+              key={repo.id}
+              repo={repo}
+              evidence={countForRepo(evidenceCounts, repo.id)}
+            />
           ))}
         </div>
       </div>
@@ -107,9 +133,20 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
-function RepoRow({ repo }: { repo: RepoSummary }) {
+function RepoRow({
+  repo,
+  evidence,
+}: {
+  repo: RepoSummary;
+  evidence: EvidenceCount;
+}) {
   const readinessEntries = Object.entries(repo.readiness);
   const primaryWorker = repo.workers.find((worker) => worker.primary) ?? repo.workers[0];
+  const repoSearch = evidenceSearchString({
+    repoId: repo.id,
+    sliceId: "",
+    status: "",
+  });
 
   return (
     <article className="px-5 py-5">
@@ -179,12 +216,26 @@ function RepoRow({ repo }: { repo: RepoSummary }) {
           {repo.repo_native_paths.dependency_tree}
         </p>
       </div>
-      <Link
-        href={`/repos/${repo.id}/slices`}
-        className="mt-5 inline-flex text-sm font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
-      >
-        Open slice board
-      </Link>
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <Link
+          href={`/repos/${repo.id}/slices`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          Open slice board
+        </Link>
+        <Link
+          href={`/runs${repoSearch}`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          Runs ({evidence.runs})
+        </Link>
+        <Link
+          href={`/dispatches${repoSearch}`}
+          className="font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          Dispatches ({evidence.dispatches})
+        </Link>
+      </div>
     </article>
   );
 }
