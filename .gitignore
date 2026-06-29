@@ -31,6 +31,14 @@ services/**/.pytest_cache/
 services/**/__pycache__/
 services/**/*.egg-info/
 
+# Hosted web local artifacts
+apps/**/node_modules/
+apps/**/.next/
+apps/**/coverage/
+apps/**/test-results/
+apps/**/playwright-report/
+apps/**/*.tsbuildinfo
+
 # Keep future project symlinks/repos out of portfolio git
 projects/*
 !projects/README.md
