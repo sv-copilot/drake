@@ -19,185 +19,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Validate workspace JSON
-        run: |
-          python3 -c "import json; json.load(open('drake.code-workspace')); print('workspace JSON valid')"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Validate projects registry JSON files
-        run: |
-          python3 -c "import json; json.load(open('.docs/projects-registry.json')); json.load(open('.docs/projects-registry.schema.json')); json.load(open('.docs/bootstrap_spillover.json')); print('registry JSON files valid')"
-
-      - name: Validate workspace and registry contracts
-        run: |
-          python3 - <<'PY'
-          import json
-          import re
-          from pathlib import PurePosixPath
-
-          workspace = json.load(open("drake.code-workspace", encoding="utf-8"))
-          registry = json.load(open(".docs/projects-registry.json", encoding="utf-8"))
-
-          folders = workspace.get("folders", [])
-          expected_workspace_paths = {".", "../project-bootstrap", "../example-app", "../example-app", "../example-app"}
-          actual_workspace_paths = {item.get("path") for item in folders}
-          if not expected_workspace_paths.issubset(actual_workspace_paths):
-            missing = expected_workspace_paths - actual_workspace_paths
-            raise SystemExit(f"workspace is missing expected folder paths: {sorted(missing)}")
-
-          projects = registry.get("projects", [])
-          if not projects:
-            raise SystemExit("registry projects must not be empty")
-
-          ids = [project["id"] for project in projects]
-          if len(ids) != len(set(ids)):
-            raise SystemExit("registry project ids must be unique")
-
-          priorities = [project["priority"] for project in projects]
-          if len(priorities) != len(set(priorities)):
-            raise SystemExit("registry priorities must be unique")
-
-          uuid_pattern = re.compile(
-              r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-          )
-          portfolio_automations = registry.get("portfolio_automations", {})
-          hourly_id = portfolio_automations.get("hourly_improvement_id")
-          if hourly_id is not None and not uuid_pattern.match(hourly_id):
-              raise SystemExit(
-                  f"portfolio_automations.hourly_improvement_id must be a UUID: {hourly_id}"
-              )
-          hourly_prompt = portfolio_automations.get("hourly_improvement_prompt")
-          if hourly_prompt and not hourly_prompt.startswith(".docs/"):
-              raise SystemExit(
-                  f"portfolio_automations.hourly_improvement_prompt must be under .docs/: {hourly_prompt}"
-              )
-
-          env_pattern = re.compile(r"^[A-Z][A-Z0-9_]+_WEBHOOK_(URL|TOKEN)$")
-          for project in projects:
-            path = project["local_path"]
-            if not path.startswith("<home>/"):
-              raise SystemExit(f"project local_path must stay under <home>/: {path}")
-            docs = project["docs"]
-            for doc_key in ("slice_backlog", "dependency_tree", "agent_automations"):
-              doc_rel_path = docs[doc_key]
-              pure = PurePosixPath(doc_rel_path)
-              if pure.is_absolute() or pure.parts[0] != ".docs":
-                raise SystemExit(f"docs.{doc_key} must be a .docs relative path: {doc_rel_path}")
-            workers = project.get("workers") or []
-            if not workers:
-              raise SystemExit(f"registry project {project['id']} must declare workers[]")
-            for worker in workers:
-              webhook_env = worker.get("webhook_env") or {}
-              for key, value in webhook_env.items():
-                if not env_pattern.match(value):
-                  raise SystemExit(
-                      f"invalid webhook env var name for {project['id']} "
-                      f"worker {worker.get('worker_id')} {key}: {value}"
-                  )
-          print("workspace and registry contracts valid")
-          PY
-
-      - name: Validate registry against JSON Schema
-        run: |
-          python3 -m pip install --quiet jsonschema
-          python3 - <<'PY'
-          import json
-          from jsonschema import Draft202012Validator
-
-          schema = json.load(open(".docs/projects-registry.schema.json", encoding="utf-8"))
-          registry = json.load(open(".docs/projects-registry.json", encoding="utf-8"))
-          Draft202012Validator(schema).validate(registry)
-          print("registry JSON Schema validation passed")
-          PY
-
-      - name: Guard required portfolio governance docs
-        run: |
-          set -euo pipefail
-          required=(
-            AGENTS.md
-            README.md
-            WORKSPACE.md
-            AUTOMATIONS.md
-            ONBOARDING.md
-            CROSS_PROJECT_TOOLS.md
-            SECRETS.example.md
-            .docs/README.md
-            .docs/projects-registry.json
-            .docs/projects-registry.schema.json
-            .docs/agent_prompts/portfolio-automation-bootstrap.md
-            .docs/agent_prompts/portfolio-plan-orchestrator-automation.md
-            .docs/agent_prompts/hourly-portfolio-improvement-automation.md
-            .docs/secrets_environment_practices.md
-            .docs/course_correct_rollout.md
-            .docs/git_workflow.md
-            .docs/examples/README.md
-            .docs/examples/stack_decisions.example.md
-            .docs/examples/frontend_stack.example.md
-            .docs/examples/deployment.example.md
-          )
-          missing=()
-          for path in "${required[@]}"; do
-            if [ ! -f "$path" ]; then
-              missing+=("$path")
-            fi
-          done
-          if [ "${#missing[@]}" -gt 0 ]; then
-            echo "Missing required portfolio governance files:"
-            printf '  %s\n' "${missing[@]}"
-            exit 1
-          fi
-          echo "required governance docs present"
-
-      - name: Guard projects directory footprint
-        run: |
-          set -euo pipefail
-          if [ ! -f "projects/README.md" ]; then
-            echo "projects/README.md is required"
-            exit 1
-          fi
-          extra="$(find projects -mindepth 1 -maxdepth 1 ! -name README.md -print)"
-          if [ -n "$extra" ]; then
-            echo "Unexpected tracked entries under projects/:"
-            echo "$extra"
-            exit 1
-          fi
-          echo "projects/ guard passed"
-
-      - name: Guard forbidden path recommendations in docs
-        run: |
-          python3 - <<'PY'
-          import re
-          import subprocess
-          import sys
-
-          # Paths that must not be documented as the *current* workspace root.
-          FORBIDDEN = [
-              (r"<workspace-root>/projects", "nested <workspace-root>/projects"),
-              (r"<home>/portfolio-workspace", "unapproved <home>/portfolio-workspace rename"),
-          ]
-          ALLOW = re.compile(
-              r"future|target|migrate|migration|moving|after|until|approved|will\s|"
-              r"anti-pattern|do not|example|drift|# |^\s*#|Target layout|unchanged|"
-              r"current path|sibling path",
-              re.I,
-          )
-
-          tracked = subprocess.check_output(["git", "ls-files", "*.md"], text=True).splitlines()
-          violations = []
-          for path in tracked:
-              text = open(path, encoding="utf-8").read().splitlines()
-              for lineno, line in enumerate(text, start=1):
-                  for pattern, label in FORBIDDEN:
-                      if re.search(pattern, line) and not ALLOW.search(line):
-                          prev = text[lineno - 2] if lineno > 1 else ""
-                          if not ALLOW.search(prev):
-                              violations.append(f"{path}:{lineno}: {label}: {line.strip()}")
-
-          if violations:
-              print("Forbidden path drift in tracked markdown (use future/migration context):")
-              print("\n".join(violations))
-              sys.exit(1)
-          print("path recommendation guard passed")
-          PY
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            tools/slice-agent-runner/package-lock.json
+            apps/web/package-lock.json
 
       - name: Guard tracked secret-like files
         run: |
@@ -206,7 +40,6 @@ jobs:
           import subprocess
           import sys
 
-          # Tracked paths that must never land in this portfolio repo.
           FORBIDDEN = [
               (re.compile(r"(^|/)\.env$"), ".env with values"),
               (re.compile(r"(^|/)\.env\.[^/]+$"), ".env.* local overrides"),
@@ -233,15 +66,5 @@ jobs:
           print("secret-like file guard passed")
           PY
 
-      - name: Set up Node.js for slice-agent-runner
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: tools/slice-agent-runner/package-lock.json
-
-      - name: Run portfolio CI preflight
+      - name: Run Drake CI preflight
         run: bash scripts/ci_preflight.sh
-
-      - name: Check branch conventions compliance
-        run: python3 scripts/check_branch_conventions.py

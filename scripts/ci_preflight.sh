@@ -35,4 +35,20 @@ npm --prefix tools/slice-agent-runner ci
 npm --prefix tools/slice-agent-runner run typecheck
 npm --prefix tools/slice-agent-runner run build
 
+if [ -f services/api/pyproject.toml ]; then
+  echo "-- hosted API sketch validation"
+  python3 scripts/validate_hosted_api_sketch.py
+
+  echo "-- hosted API tests"
+  python3 -m pip install --quiet -e "./services/api[dev]"
+  PYTHONPATH="$repo_root/services/api/src" python3 -m pytest "$repo_root/services/api/tests" -q
+fi
+
+if [ -f apps/web/package.json ]; then
+  echo "-- hosted web tests"
+  npm --prefix apps/web ci
+  npm --prefix apps/web test
+  npm --prefix apps/web run build
+fi
+
 echo "ci preflight passed"
