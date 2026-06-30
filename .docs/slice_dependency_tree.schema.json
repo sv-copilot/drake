@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sv-copilot.github.io/drake/schemas/slice_dependency_tree.schema.json",
+  "title": "Drake slice dependency tree",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "slices"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "source_backlog_path": {
+      "type": "string"
+    },
+    "default_fanout_limit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "slices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slice"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "slice": {
+      "type": "object",
+      "required": [
+        "slice_id",
+        "slice_number",
+        "group",
+        "title",
+        "state",
+        "dependencies",
+        "blocks",
+        "operator_gates",
+        "automation_eligible",
+        "risk",
+        "effort",
+        "tier"
+      ],
+      "properties": {
+        "slice_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slice_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "group": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "shaped",
+            "ready",
+            "gated",
+            "running",
+            "blocked",
+            "review",
+            "validated",
+            "promoted",
+            "released",
+            "archived",
+            "done"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "operator_gates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "checkpoint": {
+          "type": "string"
+        },
+        "automation_eligible": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_known_pr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "risk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "effort": {
+          "type": "string",
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "tier": {
+          "type": "string",
+          "enum": [
+            "P0",
+            "P1",
+            "P2",
+            "P3"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

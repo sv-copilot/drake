@@ -60,6 +60,40 @@ Then read [`docs/getting-started.md`](docs/getting-started.md) for the minimal
 adoption path: clone, copy example registry, install slice-pipeline-local,
 validate.
 
+## Hosted local development
+
+The hosted operations API and web shell are optional runtime surfaces. To verify
+the local scaffold:
+
+```bash
+bash scripts/dev-hosted.sh --check
+```
+
+To start both services locally:
+
+```bash
+bash scripts/dev-hosted.sh
+```
+
+Defaults:
+
+| Service | URL |
+| --- | --- |
+| API | `http://127.0.0.1:8000` |
+| Web | `http://127.0.0.1:3000` |
+
+`NEXT_PUBLIC_API_URL` points the web shell at the API. GitHub read sync may use
+`GH_TOKEN` or `GITHUB_TOKEN` from the environment; committed docs and examples
+must contain env var names only, never token values.
+
+For a temporary no-DNS staging smoke on `http://<ip>:<port>` with a production
+web build/start flow, see
+[Temporary hosted IP staging](.docs/hosted-ip-staging.md):
+
+```bash
+STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
+```
+
 ## Repo Layout
 
 | Directory | Purpose |

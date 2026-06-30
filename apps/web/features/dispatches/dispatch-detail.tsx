@@ -1,0 +1,211 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+
+import {
+  fetchDispatch,
+  fetchRuns,
+  type DispatchSummary,
+  type RunSummary,
+} from "@/lib/api-client";
+import { RelativeTime } from "@/components/relative-time";
+import { runsForDispatch } from "@/lib/evidence-correlation";
+
+export function DispatchDetail({ dispatchId }: { dispatchId: string }) {
+  const dispatchQuery = useQuery({
+    queryKey: ["dispatch", dispatchId],
+    queryFn: () => fetchDispatch(dispatchId),
+  });
+  const runsQuery = useQuery({
+    queryKey: ["runs"],
+    queryFn: fetchRuns,
+  });
+
+  if (dispatchQuery.isLoading) {
+    return <DispatchDetailLoading />;
+  }
+
+  if (dispatchQuery.isError || !dispatchQuery.data) {
+    return <DispatchDetailError dispatchId={dispatchId} />;
+  }
+
+  return (
+    <DispatchDetailContent
+      dispatch={dispatchQuery.data}
+      relatedRuns={runsForDispatch(runsQuery.data ?? [], dispatchQuery.data)}
+    />
+  );
+}
+
+export function DispatchDetailContent({
+  dispatch,
+  relatedRuns = [],
+}: {
+  dispatch: DispatchSummary;
+  relatedRuns?: RunSummary[];
+}) {
+  const repoHref = `/repos/${encodeURIComponent(dispatch.repo_id)}`;
+  const sliceBoardHref = `/repos/${encodeURIComponent(dispatch.repo_id)}/slices`;
+  const workersHref = `/workers?repo=${encodeURIComponent(dispatch.repo_id)}`;
+
+  return (
+    <section className="max-w-4xl">
+      <Link
+        href="/dispatches"
+        className="text-sm font-medium text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+      >
+        Back to dispatches
+      </Link>
+      <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+        Dispatch detail
+      </p>
+      <h2 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">
+        {dispatch.dispatch_id}
+      </h2>
+      <p className="mt-4 text-lg leading-8 text-slate-600">
+        Read-only dispatch provenance for {dispatch.repo_id} / {dispatch.slice_id}.
+      </p>
+
+      <dl className="mt-10 grid gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-2 xl:grid-cols-4">
+        <DetailTerm label="Status" value={dispatch.status} />
+        <DetailTerm label="Adapter" value={dispatch.adapter_type ?? "unknown"} />
+        <DetailTerm label="Retries" value={String(dispatch.retry_count)} />
+        <DetailTerm
+          label="Chain back"
+          value={dispatch.chain_back === undefined ? "not declared" : String(dispatch.chain_back)}
+        />
+      </dl>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-stone-200 bg-white p-5">
+          <h3 className="font-medium text-slate-950">Target</h3>
+          <dl className="mt-4 space-y-3 text-sm">
+            <DetailLink label="Repository" value={dispatch.repo_id} href={repoHref} />
+            <DetailLink label="Slice" value={dispatch.slice_id} href={sliceBoardHref} />
+            <DetailLink label="Worker" value={dispatch.worker_id} href={workersHref} />
+            <DetailLine label="Task packet" value={dispatch.task_packet_id ?? "not declared"} />
+          </dl>
+        </section>
+
+        <section className="rounded-xl border border-stone-200 bg-white p-5">
+          <h3 className="font-medium text-slate-950">Webhook provenance</h3>
+          <dl className="mt-4 space-y-3 text-sm">
+            <DetailLine
+              label="Webhook env"
+              value={dispatch.webhook_url_env_name ?? "not declared"}
+            />
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-slate-500">
+                Dispatched at
+              </dt>
+              <dd className="mt-1 font-mono text-slate-700">
+                <RelativeTime iso={dispatch.dispatched_at} />
+              </dd>
+            </div>
+            <DetailLine
+              label="Error summary"
+              value={dispatch.error_summary ?? "none"}
+            />
+          </dl>
+          <p className="mt-5 rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-slate-600">
+            Env var names only; webhook values are never rendered in this view.
+          </p>
+        </section>
+      </div>
+
+      <section className="mt-8 rounded-xl border border-stone-200 bg-white p-5">
+        <h3 className="font-medium text-slate-950">Related runs</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Correlated by shared task packet identifier.
+        </p>
+        <div className="mt-4 space-y-2 text-sm">
+          {relatedRuns.length === 0 ? (
+            <p className="text-slate-500">No correlated runs.</p>
+          ) : (
+            relatedRuns.map((run) => (
+              <Link
+                key={run.run_id}
+                href={`/runs/${encodeURIComponent(run.run_id)}`}
+                className="block break-words rounded-lg border border-stone-200 px-3 py-2 font-medium text-slate-950 transition-colors hover:bg-stone-50"
+              >
+                {run.run_id} · {run.status}
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function DetailLink({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href: string;
+}) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dd className="mt-1">
+        <Link
+          href={href}
+          className="break-words font-mono text-slate-950 underline decoration-stone-300 underline-offset-4 hover:decoration-slate-950"
+        >
+          {value}
+        </Link>
+      </dd>
+    </div>
+  );
+}
+
+function DetailTerm({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white p-5">
+      <dt className="text-sm text-slate-600">{label}</dt>
+      <dd className="mt-2 break-words text-xl font-semibold leading-7 tracking-tight text-slate-950">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function DetailLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dd className="mt-1 break-words font-mono text-slate-700">{value}</dd>
+    </div>
+  );
+}
+
+export function DispatchDetailLoading() {
+  return (
+    <section aria-label="Loading dispatch detail" className="max-w-4xl">
+      <div className="h-4 w-28 rounded bg-stone-200" />
+      <div className="mt-4 h-10 w-2/3 rounded bg-stone-200" />
+      <div className="mt-10 h-64 rounded-xl bg-stone-200" />
+    </section>
+  );
+}
+
+export function DispatchDetailError({ dispatchId }: { dispatchId: string }) {
+  return (
+    <section className="max-w-3xl rounded-xl border border-rose-200 bg-rose-50 p-8">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-700">
+        Dispatch unavailable
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold text-rose-950">
+        Could not load {dispatchId}.
+      </h2>
+      <p className="mt-3 text-rose-800">
+        Check that `drake-api` is running and the dispatch exists in the read
+        projection.
+      </p>
+    </section>
+  );
+}

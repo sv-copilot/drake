@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Export a curated Drake OSS tree from the private drake workspace.
+"""Export a curated Drake OSS tree.
 
-Reads path rules from `.docs/drake_public_export_manifest.md`, copies allowed
-artifacts into a fresh output directory (no source .git), applies rewrite rules,
-and generates adopter-facing stubs.
+Copies allowed artifacts into a fresh output directory (no source .git), applies
+rewrite rules, and generates adopter-facing stubs. Private workspaces may keep a
+manifest at `.docs/drake_public_export_manifest.md`; the public repo uses the
+curated rules in this script directly.
 """
 
 from __future__ import annotations
@@ -52,8 +53,14 @@ TEST_PATHS = [
 
 INCLUDE_FILES = [
     ".cursor/hooks.json",
+    ".docs/hosted-ip-staging.md",
+    ".docs/hosted_api_sketch.schema.json",
+    ".docs/mcp_environment_profile.schema.json",
+    ".docs/slice_dependency_tree.schema.json",
     "SECRETS.example.md",
     ".gitignore",
+    "scripts/dev-hosted.sh",
+    "scripts/hosted-ip-staging.sh",
 ]
 
 SCRIPT_ALLOWLIST = [
@@ -348,7 +355,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not args.manifest.is_file():
+    if args.manifest != MANIFEST_PATH and not args.manifest.is_file():
         print(f"manifest not found: {args.manifest}", file=sys.stderr)
         return 2
 

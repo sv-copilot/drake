@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sv-copilot.github.io/drake/schemas/mcp_environment_profile.schema.json",
+  "title": "Drake MCP environment profile",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile_id",
+    "default_tier",
+    "credential_policy",
+    "tiers"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "default_tier": {
+      "type": "string",
+      "enum": [
+        "dev",
+        "staging",
+        "production"
+      ]
+    },
+    "credential_policy": {
+      "type": "object",
+      "properties": {
+        "forbidden_in_tiers": {
+          "$ref": "#/$defs/tier_names"
+        },
+        "human_gate_tiers": {
+          "$ref": "#/$defs/tier_names"
+        }
+      },
+      "additionalProperties": true
+    },
+    "tiers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/tier"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "tier_names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "dev",
+          "staging",
+          "production"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "tier": {
+      "type": "object",
+      "required": [
+        "mcp_servers"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "mcp_servers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/server"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "server": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "transport",
+        "credential_refs"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "transport": {
+          "type": "string",
+          "enum": [
+            "stdio",
+            "sse",
+            "streamable_http"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "credential_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
