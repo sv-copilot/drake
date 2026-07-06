@@ -46,6 +46,13 @@
           "url": "https://mcp.example.com/deploy",
           "credential_refs": ["DEPLOY_MCP_TOKEN"],
           "notes": "Disabled by default until operator enables per release."
+        },
+        "drake": {
+          "enabled": false,
+          "transport": "streamable_http",
+          "url": "https://mcp.example.com/drake",
+          "credential_refs": ["DRAKE_MCP_API_KEY"],
+          "notes": "Path-routed Drake orchestration MCP. Use DRAKE_MCP_BASE_URL env var. Operator-gated."
         }
       }
     }

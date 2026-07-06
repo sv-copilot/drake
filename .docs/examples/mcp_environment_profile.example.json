@@ -28,6 +28,13 @@
           "transport": "sse",
           "url": "https://staging-search.example.com/mcp",
           "credential_refs": ["SEARCH_MCP_API_KEY"]
+        },
+        "drake-staging": {
+          "enabled": true,
+          "transport": "streamable_http",
+          "url": "https://mcp-staging.example.com/staging/drake",
+          "credential_refs": ["DRAKE_MCP_API_KEY"],
+          "notes": "Path-routed Drake orchestration MCP (staging). Clients consume via DRAKE_MCP_BASE_URL."
         }
       }
     },
@@ -40,6 +47,13 @@
           "url": "https://deploy.example.com/mcp/v1",
           "credential_refs": ["DEPLOY_MCP_TOKEN"],
           "notes": "Enable only during approved release windows."
+        },
+        "drake": {
+          "enabled": false,
+          "transport": "streamable_http",
+          "url": "https://mcp.example.com/drake",
+          "credential_refs": ["DRAKE_MCP_API_KEY"],
+          "notes": "Path-routed Drake orchestration MCP (production). Enable only with operator approval."
         }
       }
     }

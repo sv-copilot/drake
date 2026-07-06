@@ -58,7 +58,7 @@ bash scripts/ci_preflight.sh
 
 Then read [`docs/getting-started.md`](docs/getting-started.md) for the minimal
 adoption path: clone, copy example registry, install slice-pipeline-local,
-validate.
+validate. For MCP hosting guidance, see [`docs/mcp_hosting.md`](docs/mcp_hosting.md).
 
 ## Repo Layout
 
