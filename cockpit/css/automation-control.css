@@ -1,0 +1,46 @@
+/* Automation control panel styles */
+#control-panel {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 300px;
+  margin: 16px 0;
+  background: #f9f9f9;
+}
+
+.project-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+
+.project-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.project-toggle {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+.toggle-label {
+  font-size: 16px;
+}
+
+.global-pause-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.global-pause-btn:hover {
+  background: #c0392b;
+}

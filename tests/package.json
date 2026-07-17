@@ -1,0 +1,11 @@
+{
+  "name": "drake-cockpit-tests",
+  "private": true,
+  "scripts": {
+    "test": "mocha tests/cockpit/automation-control.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^22.1.0",
+    "mocha": "^10.2.0"
+  }
+}

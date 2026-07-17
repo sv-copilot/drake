@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drake Cockpit</title>
+  <link rel="stylesheet" href="css/automation-control.css">
+  <!-- existing cockpit styles and scripts remain unchanged -->
+</head>
+<body>
+  <header>
+    <h1>Drake Cockpit</h1>
+    <!-- existing header content -->
+  </header>
+  <main>
+    <!-- existing cockpit main content -->
+
+    <!-- Automation Control Panel Section -->
+    <section id="control-panel-section">
+      <h2>Automation Control</h2>
+      <div id="control-panel"></div>
+    </section>
+
+    <!-- rest of existing content remains unchanged -->
+  </main>
+
+  <!-- existing scripts remain intact -->
+  <script src="js/automation-control.js"></script>
+  <script>
+    // Initialize automation control panel after DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('control-panel');
+      if (container) {
+        const panel = new AutomationControlPanel(container);
+        panel.render();
+      }
+    });
+  </script>
+</body>
+</html>
