@@ -1,5 +1,8 @@
-import { SliceIndex } from "@/features/slices/slice-index";
-
 export default function SlicesPage() {
-  return <SliceIndex />;
+  return (
+    <div>
+      <h1 className="text-2xl font-bold">Slices</h1>
+      <p className="text-muted-foreground mt-2">Read‑only slice overview.</p>
+    </div>
+  );
 }

@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-
-import { AppShell } from "@/components/app-shell";
-import { QueryProvider } from "@/components/query-provider";
-
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Sidebar } from "@/components/sidebar";
+import { Providers } from "./providers";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Drake Hosted Operations",
-  description: "Read-only hosted operations shell for Drake governance.",
+  title: "Drake Cockpit",
+  description: "Hosted operations views for Drake",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>
-        <QueryProvider>
-          <AppShell>{children}</AppShell>
-        </QueryProvider>
+      <body className={inter.className}>
+        <Providers>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="ml-64 flex-1 p-8">{children}</main>
+          </div>
+        </Providers>
       </body>
     </html>
   );

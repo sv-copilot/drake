@@ -1,11 +1,10 @@
-import { Suspense } from "react";
-
-import { DispatchLog, DispatchLogLoading } from "@/features/dispatches/dispatch-log";
-
 export default function DispatchesPage() {
   return (
-    <Suspense fallback={<DispatchLogLoading />}>
-      <DispatchLog />
-    </Suspense>
+    <div>
+      <h1 className="text-2xl font-bold text-destructive">Dispatches</h1>
+      <p className="text-muted-foreground mt-2">
+        Active dispatch management. Write actions require elevated privileges.
+      </p>
+    </div>
   );
 }

@@ -1,11 +1,8 @@
-import { Suspense } from "react";
-
-import { WorkerStatus, WorkerStatusLoading } from "@/features/workers/worker-status";
-
 export default function WorkersPage() {
   return (
-    <Suspense fallback={<WorkerStatusLoading />}>
-      <WorkerStatus />
-    </Suspense>
+    <div>
+      <h1 className="text-2xl font-bold">Workers</h1>
+      <p className="text-muted-foreground mt-2">Read‑only worker status.</p>
+    </div>
   );
 }
