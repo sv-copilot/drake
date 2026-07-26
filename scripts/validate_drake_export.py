@@ -35,6 +35,13 @@ SCRUB_TOOL_PATHS = {
     "scripts/validate_drake_export.py",
 }
 
+# Files permitted to reference the private control-plane repo because they
+# document the Drake/Cockpit boundary for adopters.
+PRIVATE_MARKER_ALLOWED_FILES = {
+    "docs/mcp_hosting.md",
+    "docs/cascade-walkthrough.md",
+}
+
 TEXT_SUFFIXES = {
     ".md",
     ".mdc",
@@ -92,9 +99,10 @@ def validate_tree(root: Path) -> list[str]:
         if MAC_PATH_PATTERN.search(text):
             errors.append(f"operator mac path in {rel}")
 
-        for pattern in PRIVATE_MARKER_PATTERNS:
-            if pattern.search(text):
-                errors.append(f"private control-plane marker in {rel}")
+        if rel not in PRIVATE_MARKER_ALLOWED_FILES:
+            for pattern in PRIVATE_MARKER_PATTERNS:
+                if pattern.search(text):
+                    errors.append(f"private control-plane marker in {rel}")
 
     return errors
 
