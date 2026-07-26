@@ -217,6 +217,7 @@ license (see `LICENSE`).
 |-------|----------|
 | Getting started | [`docs/getting-started.md`](docs/getting-started.md) |
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
+| **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using Saimon as the example |
 | Adapter contract (workers) | [`adapters/CONTRACT.md`](adapters/CONTRACT.md) |
 | Task packet schema | [`adapters/task-packet.schema.json`](adapters/task-packet.schema.json) |
 | Evidence contract | [`adapters/evidence-contract.schema.json`](adapters/evidence-contract.schema.json) |
