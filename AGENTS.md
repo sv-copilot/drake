@@ -9,7 +9,7 @@ planning, dependency graphs, adapter contracts, and validation tooling.
 
 - `main` — stable integration branch for adopters.
 - `ai-dev` — agent integration branch when using Drake automations.
-- `agent/*` or `cursor/*` — feature branches for isolated slices.
+- `agent/*` or `slice/*` — feature branches for isolated slices.
 
 ## Validation before PR
 
