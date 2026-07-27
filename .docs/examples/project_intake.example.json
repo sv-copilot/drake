@@ -50,7 +50,7 @@
       "dev",
       "ai-dev",
       "agent/*",
-      "cursor/*"
+      "slice/*"
     ],
     "uat_target": "deferred",
     "production_target": "deferred",
