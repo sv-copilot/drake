@@ -7,9 +7,10 @@ planning, dependency graphs, adapter contracts, and validation tooling.
 
 ## Branch policy
 
-- `main` — stable integration branch for adopters.
-- `ai-dev` — agent integration branch when using Drake automations.
-- `agent/*` or `slice/*` — feature branches for isolated slices.
+- `main` — stable production branch for adopters.
+- `rc` — release candidate (staging verification) branch.
+- `dev` — agent integration branch when using Drake automations.
+- `agent/*` — feature branches for isolated slices (legacy `slice/*` retired).
 
 ## Validation before PR
 

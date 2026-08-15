@@ -3,13 +3,13 @@ name: CI
 on:
   pull_request:
     branches:
-      - ai-dev
       - dev
+      - rc
       - main
   push:
     branches:
-      - ai-dev
       - dev
+      - rc
       - main
 
 jobs:
