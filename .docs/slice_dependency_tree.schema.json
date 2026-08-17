@@ -151,6 +151,63 @@
             "P2",
             "P3"
           ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "product",
+            "content"
+          ],
+          "default": "product"
+        },
+        "content_brief": {
+          "$ref": "#/$defs/content_brief"
+        }
+      },
+      "additionalProperties": true
+    },
+    "content_brief": {
+      "type": "object",
+      "required": [
+        "scene_id",
+        "beats",
+        "pov",
+        "characters",
+        "setting",
+        "continuity_constraints",
+        "voice_profile"
+      ],
+      "properties": {
+        "scene_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "beats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pov": {
+          "type": "string"
+        },
+        "characters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "setting": {
+          "type": "string"
+        },
+        "continuity_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "voice_profile": {
+          "type": "string"
         }
       },
       "additionalProperties": true

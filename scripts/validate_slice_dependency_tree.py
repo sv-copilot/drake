@@ -18,6 +18,7 @@ from slice_lifecycle import (
     load_dependency_tree,
     normalize_state,
 )
+from content_slice import validate_content_slice
 
 
 def load_json(path: Path) -> dict:
@@ -51,6 +52,9 @@ def validate_semantics(tree: dict) -> list[str]:
         if slice_id in seen_ids:
             errors.append(f"semantic: duplicate slice_id {slice_id}")
         seen_ids.add(slice_id)
+
+        for err in validate_content_slice(row):
+            errors.append(f"semantic: {slice_id} {err}")
 
         for dep in row.get("dependencies", []):
             if dep not in by_number:
