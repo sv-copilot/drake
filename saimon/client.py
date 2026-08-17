@@ -15,9 +15,10 @@ import httpx
 # Saimon MCP tool routes (relative to the configured service base URL).
 HEALTH_PATH = "/health"
 SEARCH_TOOL_PATH = "/tools/search_knowledge_graph"
-VERIFY_TOOL_PATH = "/tools/verify_against_kg"
+VERIFY_TOOL_PATH = "/tools/verify_claim"
 GENERATE_TOOL_PATH = "/tools/generate_content"
 EXPORT_TOOL_PATH = "/tools/export_content"
+EVALUATE_TOOL_PATH = "/tools/evaluate_content"
 
 # Default auth header used by the saimon MCP platform.
 DEFAULT_HEADER_NAME = "X-Saimon-API-Key"
@@ -113,6 +114,19 @@ class SaimonClient:
         """Generate content (e.g. a decision record) via saimon."""
         payload = {"content": content, "content_type": content_type, **kwargs}
         return self._post(GENERATE_TOOL_PATH, payload)
+
+    def evaluate(
+        self,
+        content: str,
+        criteria: list[str] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Evaluate content against quality criteria (e.g. consistency)."""
+        payload: dict[str, Any] = {"content": content}
+        if criteria is not None:
+            payload["criteria"] = criteria
+        payload.update(kwargs)
+        return self._post(EVALUATE_TOOL_PATH, payload)
 
     def export(
         self,

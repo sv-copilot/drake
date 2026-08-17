@@ -64,7 +64,7 @@ def test_verify_sends_claim_payload() -> None:
 
     client.verify("is approach Y viable?")
 
-    assert captured[0].url.path == "/tools/verify_against_kg"
+    assert captured[0].url.path == "/tools/verify_claim"
     assert json.loads(captured[0].content) == {"claim": "is approach Y viable?"}
 
 
@@ -149,7 +149,7 @@ def test_refine_verify_approach_composes_client() -> None:
 
     refine.verify_approach(client, "claim")
 
-    assert captured[0].url.path == "/tools/verify_against_kg"
+    assert captured[0].url.path == "/tools/verify_claim"
 
 
 def test_refine_record_decision_composes_client() -> None:
