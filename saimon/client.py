@@ -17,6 +17,7 @@ HEALTH_PATH = "/health"
 SEARCH_TOOL_PATH = "/tools/search_knowledge_graph"
 VERIFY_TOOL_PATH = "/tools/verify_against_kg"
 GENERATE_TOOL_PATH = "/tools/generate_content"
+EXPORT_TOOL_PATH = "/tools/export_content"
 
 # Default auth header used by the saimon MCP platform.
 DEFAULT_HEADER_NAME = "X-Saimon-API-Key"
@@ -112,3 +113,13 @@ class SaimonClient:
         """Generate content (e.g. a decision record) via saimon."""
         payload = {"content": content, "content_type": content_type, **kwargs}
         return self._post(GENERATE_TOOL_PATH, payload)
+
+    def export(
+        self,
+        content: str,
+        format: str = "markdown",
+        **kwargs: Any,
+    ) -> Any:
+        """Export content in a requested format (e.g. task_context as markdown)."""
+        payload = {"content": content, "format": format, **kwargs}
+        return self._post(EXPORT_TOOL_PATH, payload)
