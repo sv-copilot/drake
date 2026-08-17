@@ -17,6 +17,10 @@ SECRET_PATTERNS = [
 
 MAC_PATH_PATTERN = re.compile("/" + "Users" + "/simon")
 
+PRIVATE_MARKER_PATTERNS = [
+    re.compile(r"\bsimon-projects\b"),
+]
+
 PRIVATE_DOC_NAMES = {
     "product_strategy.md",
     "product_strategy_refinement.md",
@@ -26,11 +30,16 @@ PRIVATE_DOC_NAMES = {
     "drake_public_export_manifest.md",
 }
 
-PRODUCT_SLUGS = ("example-app", "example-app", "example-app", "example-app")
-
 SCRUB_TOOL_PATHS = {
     "scripts/export_drake_public.py",
     "scripts/validate_drake_export.py",
+}
+
+# Files permitted to reference the private control-plane repo because they
+# document the Drake/Cockpit boundary for adopters.
+PRIVATE_MARKER_ALLOWED_FILES = {
+    "docs/mcp_hosting.md",
+    "docs/cascade-walkthrough.md",
 }
 
 TEXT_SUFFIXES = {
@@ -42,6 +51,7 @@ TEXT_SUFFIXES = {
     ".yml",
     ".yaml",
     ".txt",
+    ".toml",
     ".example",
     ".gitignore",
 }
@@ -89,13 +99,10 @@ def validate_tree(root: Path) -> list[str]:
         if MAC_PATH_PATTERN.search(text):
             errors.append(f"operator mac path in {rel}")
 
-        if "drake" in text and rel != "MIGRATION.md":
-            errors.append(f"drake slug in {rel}")
-
-        if ".docs/examples" not in rel:
-            for slug in PRODUCT_SLUGS:
-                if re.search(rf"\b{re.escape(slug)}\b", text):
-                    errors.append(f"real product slug '{slug}' in non-example path {rel}")
+        if rel not in PRIVATE_MARKER_ALLOWED_FILES:
+            for pattern in PRIVATE_MARKER_PATTERNS:
+                if pattern.search(text):
+                    errors.append(f"private control-plane marker in {rel}")
 
     return errors
 

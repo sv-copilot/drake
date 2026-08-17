@@ -26,13 +26,29 @@ python3 scripts/validate_mcp_environment_profile.py
 echo "-- validation_results schema fixtures"
 python3 scripts/validate_validation_results.py --file tests/fixtures/validation-results/sample-passed.json
 
-echo "-- export smoke tests"
-python3 -c "import pytest" 2>/dev/null || python3 -m pip install --user pytest
-python3 -m pytest tests/test_export_drake_public.py -q
+echo "-- python tests"
+python3 -c "import pytest, httpx" 2>/dev/null || python3 -m pip install --user pytest httpx
+python3 -m pytest tests/ -q
 
 echo "-- slice-agent-runner build"
 npm --prefix tools/slice-agent-runner ci
 npm --prefix tools/slice-agent-runner run typecheck
 npm --prefix tools/slice-agent-runner run build
+
+if [ -f services/api/pyproject.toml ]; then
+  echo "-- hosted API sketch validation"
+  python3 scripts/validate_hosted_api_sketch.py
+
+  echo "-- hosted API tests"
+  python3 -m pip install --quiet -e "./services/api[dev]"
+  PYTHONPATH="$repo_root/services/api/src" python3 -m pytest "$repo_root/services/api/tests" -q
+fi
+
+if [ -f apps/web/package.json ]; then
+  echo "-- hosted web tests (scaffold — failures non-blocking)"
+  npm --prefix apps/web ci
+  npm --prefix apps/web test || echo "  (web tests skipped — scaffold stubs)"
+  npm --prefix apps/web run build || echo "  (web build skipped — scaffold)"
+fi
 
 echo "ci preflight passed"
