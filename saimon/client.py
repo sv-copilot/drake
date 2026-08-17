@@ -19,6 +19,7 @@ VERIFY_TOOL_PATH = "/tools/verify_claim"
 GENERATE_TOOL_PATH = "/tools/generate_content"
 EXPORT_TOOL_PATH = "/tools/export_content"
 EVALUATE_TOOL_PATH = "/tools/evaluate_content"
+STORE_CONTENT_TOOL_PATH = "/tools/store_content"
 
 # Default auth header used by the saimon MCP platform.
 DEFAULT_HEADER_NAME = "X-Saimon-API-Key"
@@ -137,3 +138,20 @@ class SaimonClient:
         """Export content in a requested format (e.g. task_context as markdown)."""
         payload = {"content": content, "format": format, **kwargs}
         return self._post(EXPORT_TOOL_PATH, payload)
+
+    def store_content(
+        self,
+        title: str,
+        content_type: str = "note",
+        body: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Persist content into the saimon knowledge graph."""
+        payload: dict[str, Any] = {"title": title, "content_type": content_type}
+        if body is not None:
+            payload["body"] = body
+        if metadata is not None:
+            payload["metadata"] = metadata
+        payload.update(kwargs)
+        return self._post(STORE_CONTENT_TOOL_PATH, payload)
