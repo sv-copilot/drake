@@ -27,7 +27,7 @@ echo "-- validation_results schema fixtures"
 python3 scripts/validate_validation_results.py --file tests/fixtures/validation-results/sample-passed.json
 
 echo "-- python tests"
-python3 -c "import pytest" 2>/dev/null || python3 -m pip install --user pytest
+python3 -c "import pytest, httpx" 2>/dev/null || python3 -m pip install --user pytest httpx
 python3 -m pytest tests/ -q
 
 echo "-- slice-agent-runner build"
