@@ -66,3 +66,11 @@ Python suites, the runner typecheck and build, the adoption smoke, the harness m
 smoke, and — when those directories are present — the hosted API and web suites.
 **Every check is blocking**: a check that cannot run fails the gate rather than being
 skipped, because a gate that hides a broken build is worse than no gate.
+
+To retest the documented adoption chain against a published tag (cold clone, the gate,
+one install per harness, the run chain, the upgrade path): run
+`env -u PYTHONPATH bash scripts/adoption_chain_retest.sh <tag> gate`, then resume with
+the `chain` phase using the printed `RETEST_WORK`/`RETEST_CLONE` values. `env -u
+PYTHONPATH` reproduces a stranger's shell; an inherited `PYTHONPATH` lets pip treat
+another environment's packages as already installed and leaves the repo-local venv
+incomplete.
