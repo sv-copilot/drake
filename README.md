@@ -109,7 +109,7 @@ SLICE BACKLOG           →  What do we build and in what order?
 DEPENDENCY TREE         →  What blocks what?
     │                        Owner: Engineering Lead.
     │                        Artifact: slice_dependency_tree.json
-    │                        Gate: No cycles. All deps declared. Detail docs present.
+    │                        Gate: No cycles. Every dependency declared and present.
     ▼
 TDD SLICES              →  RED → GREEN → REFACTOR → PROVE
     │                        Owner: AI Agent (dispatched) or Human Engineer.
@@ -155,7 +155,7 @@ These rules are enforced by tooling in **this** repository, not by convention:
 | **One slice, one PR** | One branch per slice; fan-out limited by the validated dependency tree | `adapters/task-packet.schema.json`, `tools/slice-agent-runner/` |
 | **Branch policy** | Feature/slice branches → `dev` → `rc` → `main`; CI runs on every push to those three | `.github/workflows/ci.yml` |
 | **Validation before merge** | `ci_preflight.sh` must pass, with every check blocking | `scripts/ci_preflight.sh` |
-| **Dependency integrity** | Trees validated for cycles, missing dependencies, and missing detail docs | `scripts/validate_slice_dependency_tree.py` |
+| **Dependency integrity** | Trees validated for cycles, dependencies missing from the tree, gate/state mismatches, and invalid states | `scripts/validate_slice_dependency_tree.py` |
 | **No credential or private-data leak** | Public exports are scanned for credential shapes, home paths, and private control-plane markers | `scripts/validate_drake_export.py` |
 | **Agent scope isolation** | Templated agent profiles scope which tools a worker may reach | `templates/slice-pipeline-local/.cursor/`, `.docs/mcp_environment_profile.json` |
 

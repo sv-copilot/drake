@@ -86,6 +86,48 @@ def validate_semantics(tree: dict) -> list[str]:
     return errors
 
 
+def validate_cycles(tree: dict) -> list[str]:
+    """Report dependency cycles.
+
+    The README promises "no cycles" as a gate, so the gate has to exist. A cycle
+    means no slice in the loop can ever be dispatched, which is worse than a
+    missing dependency because the tree still validates on every other check.
+    """
+    errors: list[str] = []
+    slices = tree.get("slices", [])
+    by_number = {row["slice_number"]: row for row in slices}
+    edges = {
+        row["slice_number"]: [
+            dep for dep in row.get("dependencies", []) if dep in by_number
+        ]
+        for row in slices
+    }
+
+    WHITE, GREY, BLACK = 0, 1, 2
+    colour = dict.fromkeys(edges, WHITE)
+    stack: list[int] = []
+
+    def visit(node: int) -> None:
+        colour[node] = GREY
+        stack.append(node)
+        for neighbour in edges.get(node, []):
+            if colour[neighbour] == GREY:
+                start = stack.index(neighbour)
+                cycle = stack[start:] + [neighbour]
+                errors.append(
+                    "semantic: dependency cycle: " + " -> ".join(str(n) for n in cycle)
+                )
+            elif colour[neighbour] == WHITE:
+                visit(neighbour)
+        stack.pop()
+        colour[node] = BLACK
+
+    for node in list(edges):
+        if colour[node] == WHITE:
+            visit(node)
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     repo_root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
@@ -114,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     schema = load_json(args.schema)
     errors = validate_with_schema(tree, schema)
     errors.extend(validate_semantics(tree))
+    errors.extend(validate_cycles(tree))
 
     if errors:
         print("slice dependency tree validation failed:", file=sys.stderr)
