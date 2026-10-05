@@ -27,7 +27,7 @@ was last checked against the vendor's documentation — **the vendor's docs win*
 
 ```bash
 python3 scripts/sync_slice_pipeline_local.py --target /path/to/repo --mode install \
-  --harnesses claude            # or: cursor, codex, aider, generic, or a comma list
+  --harnesses claude            # or: cursor, codex, aider, generic, or a comma list; cline is the default
 ```
 
 The first id becomes the `harness.id` in `.drake/slice-pipeline.config.json`. The
@@ -53,7 +53,12 @@ and re-install, rather than editing a copy.
 | `aider` | Aider | `aider --message-file <prompt-file> --yes-always --no-auto-commits [--model <model>]` | [scripting](https://aider.chat/docs/scripting.html) |
 | `generic` | any harness | your command, with `{prompt_file}`, `{prompt}` or `{model}` placeholders | this file |
 
-Checked against vendor docs on 2026-10-05 (Cline: 2026-10-05). `tools/slice-agent-runner run-next
+**How these were checked.** `cline` and `aider` were verified by running their CLIs
+(`cline 3.0.68`, `aider 0.86.2`) and reading `--help`: the prompt position, `--auto-approve
+<boolean>`, `--message-file`, `--yes-always` and `--no-auto-commits` are confirmed as written.
+`claude`, `codex` and `cursor` are checked against their vendor documentation and by rendering
+the exact command (`--dry-run`), not by executing them here — no vendor CLI was available to
+install. `adapters/harnesses.json` carries `verified_by` per harness so this is never a guess. `tools/slice-agent-runner run-next
 --dry-run` prints the exact command for your config, which is the fastest way to see
 what would run.
 
@@ -83,7 +88,11 @@ what would run.
 ### cline — Cline
 
 - Entry points: `AGENTS.md`, `.clinerules`
-- Auth: `cline auth` (Cline Provider, ClinePass, or your own provider key). Install with `npm i -g cline`.
+- Install: `npm i -g cline@3.0.68` — **pin the version** (upstream flagged old releases as
+  malicious, so an unpinned install is a supply-chain gamble). If `cline` does not appear
+  afterwards, check that npm's global bin directory is on `PATH`; on npm versions that gate
+  install scripts, allow them for this package.
+- Auth: `cline auth` (Cline Provider, ClinePass, or your own provider key).
 - Headless mode engages when stdout is redirected, stdin is piped, or `--json` is passed — all three
   happen under this runner, so a slice run is a batch task.
 - `--auto-approve true` is what makes it unattended: it may edit files and run commands without
