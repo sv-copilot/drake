@@ -79,6 +79,19 @@ def test_every_catalogue_entry_is_complete_and_dated() -> None:
             assert entry["invocation"]
 
 
+def test_each_harness_records_how_its_invocation_was_verified() -> None:
+    """'Verified' must say verified *how*: docs, a real CLI, or the adopter's own command."""
+    allowed = {"cli --help", "vendor docs", "n/a (your command)"}
+    source = HARNESSES_TS.read_text(encoding="utf-8")
+
+    for entry in mirror_entries():
+        assert entry["verified_by"] in allowed, entry["id"]
+        block = source.split(f'id: "{entry["id"]}"', 1)[1].split("  },", 1)[0]
+        assert f'verifiedBy: "{entry["verified_by"]}"' in block, (
+            f"{entry['id']}: the runner and the mirror disagree about how it was verified"
+        )
+
+
 def test_prompt_delivery_matches_the_invocation() -> None:
     """A harness that needs a file must be shown a file, and vice versa."""
     source = HARNESSES_TS.read_text(encoding="utf-8")

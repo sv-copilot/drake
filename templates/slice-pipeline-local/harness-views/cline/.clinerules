@@ -1,0 +1,27 @@
+# Cline rules for this workspace
+#
+# Cline reads this file as a prefix to its system prompt. Keep it short and declarative:
+# guardrails, not style. Delete anything that does not apply to you.
+
+## Scope
+
+- Implement exactly the one slice you were given. Do not implement a different slice.
+- One slice, one branch, one pull request. Do not fan out.
+- If the slice is unclear or blocked, stop and report it. Do not guess.
+
+## Git
+
+- Branch prefix comes from `.drake/slice-pipeline.config.json` (`featureBranchPrefix`).
+- Never push to the integration branch or `main` directly.
+- Never force-push, and never rewrite history on a shared branch.
+
+## Secrets
+
+- Never commit credentials, tokens, browser sessions, `.env` files or local MCP config.
+- Runtime handoff files belong under `.drake/runs/`, which is not committed.
+
+## Validation
+
+- Run the `validationCommands` from `.drake/slice-pipeline.config.json` before reporting done.
+- Report the routing path (A, B or STOP), the slice, the PR, the validation output and blockers.
+- See `AGENTS.md` for the full contract; this file only narrows it.
