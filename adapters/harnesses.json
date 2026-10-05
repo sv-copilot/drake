@@ -1,0 +1,95 @@
+{
+  "$comment": "Machine-readable harness catalogue. The behavioural source of truth is tools/slice-agent-runner/src/harnesses.ts; the installer's HARNESS_IDS and docs/harnesses.md mirror the same ids, and tests/test_harness_catalogue.py fails when they drift apart. Invocations were checked against vendor docs on verified_on; flags move between releases, so the vendor docs win.",
+  "harnesses": [
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "binary": "claude",
+      "prompt_delivery": "argv",
+      "config_dir": ".claude",
+      "auth_env": [
+        "ANTHROPIC_API_KEY",
+        "CLAUDE_CODE_OAUTH_TOKEN"
+      ],
+      "invocation": "claude -p <prompt> --output-format json --permission-mode acceptEdits [--model <model>]",
+      "docs_url": "https://code.claude.com/docs/en/headless",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".claude/agents/<name>.md"
+      ],
+      "notes": "-p prints and exits. --permission-mode acceptEdits lets it write files without prompting; dontAsk is the locked-down CI variant."
+    },
+    {
+      "id": "codex",
+      "name": "Codex CLI",
+      "binary": "codex",
+      "prompt_delivery": "argv",
+      "config_dir": ".codex",
+      "auth_env": [
+        "OPENAI_API_KEY",
+        "CODEX_API_KEY"
+      ],
+      "invocation": "codex exec --sandbox workspace-write [--model <model>] <prompt>",
+      "docs_url": "https://developers.openai.com/codex/",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md"
+      ],
+      "notes": "exec runs headless; workspace-write permits edits without network. Upstream deprecated --full-auto in favour of the explicit sandbox flag."
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor CLI",
+      "binary": "cursor-agent",
+      "prompt_delivery": "argv",
+      "config_dir": ".cursor",
+      "auth_env": [
+        "CURSOR_API_KEY"
+      ],
+      "invocation": "cursor-agent -p --force [--model <model>] <prompt>",
+      "docs_url": "https://cursor.com/docs/cli/headless",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md",
+        ".cursor/agents/<name>.md",
+        ".cursor/hooks/*"
+      ],
+      "notes": "Print mode without --force only proposes changes. Some installations expose the binary as `agent`."
+    },
+    {
+      "id": "aider",
+      "name": "Aider",
+      "binary": "aider",
+      "prompt_delivery": "file",
+      "config_dir": ".aider",
+      "auth_env": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "invocation": "aider --message-file <prompt-file> --yes-always --no-auto-commits [--model <model>]",
+      "docs_url": "https://aider.chat/docs/scripting.html",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md"
+      ],
+      "notes": "--no-auto-commits leaves committing to your promotion flow; --message-file avoids argv limits."
+    },
+    {
+      "id": "generic",
+      "name": "Any harness (bring your own command)",
+      "binary": null,
+      "prompt_delivery": "file",
+      "config_dir": null,
+      "auth_env": [],
+      "invocation": "<your command> with {prompt_file}, {prompt} or {model} placeholders",
+      "docs_url": "docs/harnesses.md",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md"
+      ],
+      "notes": "Runs through a shell, so Cline, Goose, OpenHands, a custom script or a wrapper around your own tooling all plug in here."
+    }
+  ]
+}

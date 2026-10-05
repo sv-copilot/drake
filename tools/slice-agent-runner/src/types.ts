@@ -15,6 +15,13 @@ export type RunnerConfig = {
   docsSyncCommand: string | null;
   validationCommands: string[];
   approvedSubagents: string[];
+  /** Harness preset id from the catalogue ("claude", "codex", "cursor", "aider", "generic"). */
+  harness: string;
+  /** Shell command for the "generic" harness; null for built-in presets. */
+  harnessCommand: string | null;
+  /** Model passed to the harness; null means "use whatever the harness is configured with". */
+  harnessModel: string | null;
+  /** Legacy alias kept so older configs keep loading. */
   model: string;
   portfolioWebhookUrlEnv: string;
   portfolioWebhookTokenEnv: string;
@@ -45,22 +52,4 @@ export type NormalizedPayload = {
   trigger_reason: string;
 };
 
-export type RunnerEvent =
-  | { type: "assistant_delta"; text: string }
-  | { type: "thinking"; text: string }
-  | {
-      type: "tool";
-      callId?: string;
-      name: string;
-      params?: string;
-      status: string;
-    }
-  | { type: "status"; status: string; message?: string }
-  | { type: "task"; status?: string; text?: string }
-  | {
-      type: "result";
-      status: string;
-      durationMs?: number;
-      agentId?: string;
-      runId?: string;
-    };
+export type RunnerEvent = Record<string, unknown>;
