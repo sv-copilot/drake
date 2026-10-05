@@ -1,0 +1,50 @@
+{
+  "task_id": "2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001",
+  "status": "success",
+  "summary": "Any harness (bring your own command) (generic) ran slice SMOKE-AUTOMATION-001 and exited 0 after 0s",
+  "evidence_items": [
+    {
+      "path": ".drake/stub-harness-output.txt",
+      "change_type": "added",
+      "description": "added by harness run 2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001"
+    },
+    {
+      "path": "scripts/__pycache__/",
+      "change_type": "added",
+      "description": "added by harness run 2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001"
+    }
+  ],
+  "adapter_info": {
+    "adapter_type": "generic",
+    "adapter_version": "0.2.0",
+    "runtime": "local"
+  },
+  "completed_at": "2026-10-05T09:47:13.149Z",
+  "logs": [
+    {
+      "timestamp": "2026-10-05T09:47:13.135Z",
+      "level": "info",
+      "message": "command: [shell] bash scripts/harness_stub.sh /tmp/drake-fixture-WDLW/.drake/runs/2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001/prompt.txt"
+    },
+    {
+      "timestamp": "2026-10-05T09:47:13.149Z",
+      "level": "info",
+      "message": "exit code 0 after 8ms"
+    }
+  ],
+  "timestamps": {
+    "started_at": "2026-10-05T09:47:13.135Z",
+    "completed_at": "2026-10-05T09:47:13.149Z",
+    "duration_ms": 8
+  },
+  "harness": {
+    "id": "generic",
+    "command": "[shell] bash scripts/harness_stub.sh /tmp/drake-fixture-WDLW/.drake/runs/2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001/prompt.txt",
+    "exit_code": 0,
+    "stdout_log": "/tmp/drake-fixture-WDLW/.drake/runs/2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001/harness-stdout.log",
+    "stderr_log": "/tmp/drake-fixture-WDLW/.drake/runs/2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001/harness-stderr.log",
+    "prompt_file": "/tmp/drake-fixture-WDLW/.drake/runs/2026-10-05T09-47-13-134Z-run-next-generic-SMOKE-AUTOMATION-001/prompt.txt",
+    "model": null,
+    "docs": "docs/harnesses.md"
+  }
+}

@@ -3,7 +3,17 @@ import path from "node:path";
 
 import type { RunnerConfig } from "./types.js";
 
-const DEFAULT_CONFIG_FILE = ".cursor/slice-pipeline-local.config.json";
+/** Harness-neutral config location. */
+export const CONFIG_FILE = ".drake/slice-pipeline.config.json";
+
+/** Pre-0.2 location (Cursor-branded). Read for compatibility, never written. */
+export const LEGACY_CONFIG_FILE = ".cursor/slice-pipeline-local.config.json";
+
+type HarnessBlock = {
+  id?: string;
+  model?: string | null;
+  command?: string | null;
+};
 
 type RawConfig = Partial<{
   projectName: string;
@@ -20,6 +30,10 @@ type RawConfig = Partial<{
   docsSyncCommand: string | null;
   validationCommands: string[] | string;
   approvedSubagents: string[];
+  harness: string | HarnessBlock;
+  harnessCommand: string | null;
+  harnessModel: string | null;
+  /** Legacy pre-0.2 fields. */
   model: string;
   portfolioWebhookUrlEnv: string;
   portfolioWebhookTokenEnv: string;
@@ -27,52 +41,80 @@ type RawConfig = Partial<{
   localWebhookTokenEnv: string;
 }>;
 
-export function loadRunnerConfig(repoPath: string): RunnerConfig {
+export type LoadedConfig = {
+  config: RunnerConfig;
+  configPath: string;
+  legacy: boolean;
+  warnings: string[];
+};
+
+export function loadRunnerConfig(repoPath: string): LoadedConfig {
   const localPath = path.resolve(repoPath);
-  const configPath = path.join(localPath, DEFAULT_CONFIG_FILE);
+  const legacyPath = path.join(localPath, LEGACY_CONFIG_FILE);
+  const neutralPath = path.join(localPath, CONFIG_FILE);
+  const useLegacy = !fs.existsSync(neutralPath) && fs.existsSync(legacyPath);
+  const configPath = useLegacy ? legacyPath : neutralPath;
   const raw = readJsonConfig(configPath);
+  const warnings: string[] = [];
+
+  if (useLegacy) {
+    warnings.push(
+      `${LEGACY_CONFIG_FILE} is the pre-0.2 location; move it to ${CONFIG_FILE} (Drake is harness agnostic and no longer keeps configuration under a single harness's directory).`
+    );
+  }
+
   const projectName = raw.projectName ?? path.basename(localPath);
   const projectId = raw.projectId ?? slugify(projectName);
-  const dependencyTreePath =
-    raw.dependencyTreePath ?? ".docs/slice_dependency_tree.json";
-  const configuredLocalPath = raw.localPath
-    ? path.resolve(raw.localPath)
-    : localPath;
-  const effectiveLocalPath = fs.existsSync(configuredLocalPath)
-    ? configuredLocalPath
-    : localPath;
+  const dependencyTreePath = raw.dependencyTreePath ?? ".docs/slice_dependency_tree.json";
+  const configuredLocalPath = raw.localPath ? path.resolve(raw.localPath) : localPath;
+  const effectiveLocalPath = fs.existsSync(configuredLocalPath) ? configuredLocalPath : localPath;
+  const harnessBlock: HarnessBlock =
+    typeof raw.harness === "string" ? { id: raw.harness } : raw.harness ?? {};
+  const harnessModel = harnessBlock.model ?? raw.harnessModel ?? raw.model ?? null;
+
+  // A config still at the old path predates the catalogue: keep it working.
+  const harness = harnessBlock.id ?? (useLegacy ? "cursor" : "");
+
+  if (!harnessBlock.id && useLegacy) {
+    warnings.push('harness not set in the legacy config: defaulting to "cursor".');
+  }
 
   return {
-    projectName,
-    projectId,
-    githubSlug: raw.githubSlug ?? "OWNER/REPO",
-    localPath: effectiveLocalPath,
-    integrationBranch: raw.integrationBranch ?? "dev",
-    featureBranchPrefix: raw.featureBranchPrefix ?? "agent/",
-    legacyFeatureBranchPrefixes: raw.legacyFeatureBranchPrefixes ?? ["cursor/"],
-    dependencyTreePath,
-    sliceBacklogPath: raw.sliceBacklogPath ?? ".docs/slice_backlog.md",
-    sliceDetailDir: raw.sliceDetailDir ?? ".docs/slices",
-    sliceSelectorCommand:
-      raw.sliceSelectorCommand ??
-      `python3 scripts/select_next_automation_slice.py --tree ${dependencyTreePath}`,
-    docsSyncCommand:
-      raw.docsSyncCommand === undefined ? null : raw.docsSyncCommand,
-    validationCommands: normalizeCommands(raw.validationCommands),
-    approvedSubagents: raw.approvedSubagents ?? [
-      "slice-preflight",
-      "slice-implementer",
-      "pr-babysitter",
-    ],
-    model: raw.model ?? process.env.CURSOR_MODEL ?? "composer-2.5",
-    portfolioWebhookUrlEnv:
-      raw.portfolioWebhookUrlEnv ?? "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_URL",
-    portfolioWebhookTokenEnv:
-      raw.portfolioWebhookTokenEnv ??
-      "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN",
-    localWebhookUrlEnv: raw.localWebhookUrlEnv ?? "PLAN_NEXT_SLICE_WEBHOOK_URL",
-    localWebhookTokenEnv:
-      raw.localWebhookTokenEnv ?? "PLAN_NEXT_SLICE_WEBHOOK_TOKEN",
+    config: {
+      projectName,
+      projectId,
+      githubSlug: raw.githubSlug ?? "OWNER/REPO",
+      localPath: effectiveLocalPath,
+      integrationBranch: raw.integrationBranch ?? "dev",
+      featureBranchPrefix: raw.featureBranchPrefix ?? "agent/",
+      legacyFeatureBranchPrefixes: raw.legacyFeatureBranchPrefixes ?? ["cursor/"],
+      dependencyTreePath,
+      sliceBacklogPath: raw.sliceBacklogPath ?? ".docs/slice_backlog.md",
+      sliceDetailDir: raw.sliceDetailDir ?? ".docs/slices",
+      sliceSelectorCommand:
+        raw.sliceSelectorCommand ??
+        `python3 scripts/select_next_automation_slice.py --tree ${dependencyTreePath}`,
+      docsSyncCommand: raw.docsSyncCommand === undefined ? null : raw.docsSyncCommand,
+      validationCommands: normalizeCommands(raw.validationCommands),
+      approvedSubagents: raw.approvedSubagents ?? [
+        "slice-preflight",
+        "slice-implementer",
+        "pr-babysitter",
+      ],
+      harness,
+      harnessCommand: harnessBlock.command ?? raw.harnessCommand ?? null,
+      harnessModel,
+      model: harnessModel ?? "",
+      portfolioWebhookUrlEnv:
+        raw.portfolioWebhookUrlEnv ?? "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_URL",
+      portfolioWebhookTokenEnv:
+        raw.portfolioWebhookTokenEnv ?? "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN",
+      localWebhookUrlEnv: raw.localWebhookUrlEnv ?? "PLAN_NEXT_SLICE_WEBHOOK_URL",
+      localWebhookTokenEnv: raw.localWebhookTokenEnv ?? "PLAN_NEXT_SLICE_WEBHOOK_TOKEN",
+    },
+    configPath,
+    legacy: useLegacy,
+    warnings,
   };
 }
 
@@ -102,15 +144,21 @@ export function validateConfig(config: RunnerConfig): string[] {
     errors.push("sliceSelectorCommand is empty");
   }
 
-  if (!config.model.trim()) {
-    errors.push("model is empty");
+  if (!config.harness.trim()) {
+    errors.push(
+      `harness is not configured: set "harness" in ${CONFIG_FILE} (see docs/harnesses.md)`
+    );
   }
 
   return errors;
 }
 
 export function configPathFor(repoPath: string): string {
-  return path.join(path.resolve(repoPath), DEFAULT_CONFIG_FILE);
+  return path.join(path.resolve(repoPath), CONFIG_FILE);
+}
+
+export function legacyConfigPathFor(repoPath: string): string {
+  return path.join(path.resolve(repoPath), LEGACY_CONFIG_FILE);
 }
 
 function readJsonConfig(configPath: string): RawConfig {

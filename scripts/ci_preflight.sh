@@ -71,6 +71,12 @@ npm --prefix tools/slice-agent-runner run build
 echo "-- adoption smoke (the documented getting-started path, on a throwaway repo)"
 PYTHON="$PYTHON" bash scripts/adoption_smoke.sh
 
+echo "-- run artifacts satisfy the contracts"
+"$PYTHON" scripts/validate_run_artifacts.py --run tests/fixtures/automation-runs/stub-harness-run
+
+echo "-- harness matrix smoke (catalogue, exit codes, legacy config)"
+PYTHON="$PYTHON" bash scripts/harness_matrix_smoke.sh
+
 if [ -f services/api/pyproject.toml ]; then
   echo "-- hosted API sketch validation"
   "$PYTHON" scripts/validate_hosted_api_sketch.py

@@ -58,11 +58,24 @@ def run_installer(target: Path, *extra: str) -> subprocess.CompletedProcess[str]
 
 
 def test_managed_paths_are_all_installed_by_the_bundle() -> None:
-    installed = set(installer.TEMPLATE_FILES) | {
-        f"scripts/{name}" for name in installer.REPO_SCRIPTS_TO_INSTALL
-    }
+    """Framework-owned files must actually be written, for every harness choice.
 
-    assert installer.MANAGED_PATHS <= installed
+    A managed path nobody installs is a rule that never applies: the refresh
+    silently does nothing and the runner keeps executing old code.
+    """
+    cursor_only = {
+        ".cursor/hooks/block-task-tool.sh",
+        ".cursor/hooks/block-subagent.sh",
+    }
+    harness_agnostic = installer.MANAGED_PATHS - cursor_only
+
+    for harnesses in (["cursor"], ["claude"], ["codex"], ["generic"], ["cursor", "claude"]):
+        installed = installer.installed_paths_for(harnesses)
+        assert harness_agnostic <= installed, harnesses
+
+    # The Cursor hook scripts are only written when Cursor is selected, and are
+    # managed so a re-install refreshes them rather than leaving a stale copy.
+    assert installer.MANAGED_PATHS <= installer.installed_paths_for(["cursor"])
 
 
 def test_install_refreshes_a_modified_managed_script(tmp_path: Path) -> None:
@@ -90,6 +103,35 @@ def test_install_leaves_adopter_owned_files_alone(tmp_path: Path) -> None:
     run_installer(target, "--mode", "install")
 
     assert (target / "AGENTS.md").read_text(encoding="utf-8") == "# my own contract\n"
+
+
+def test_install_for_codex_writes_no_cursor_or_claude_views(tmp_path: Path) -> None:
+    """Harness-agnostic means: install for codex and get no other harness's files."""
+    target = tmp_path / "product"
+    target.mkdir()
+
+    assert run_installer(target, "--mode", "install", "--harnesses", "codex").returncode == 0
+
+    assert (target / "AGENTS.md").is_file()
+    assert (target / ".drake/slice-pipeline.config.json").is_file()
+    assert not (target / ".cursor").exists()
+    assert not (target / ".claude").exists()
+    assert not (target / "CLAUDE.md").exists()
+
+
+def test_claude_view_is_generated_from_the_canonical_agent(tmp_path: Path) -> None:
+    """One body, harness-specific frontmatter; the canonical file stays the source."""
+    target = tmp_path / "product"
+    target.mkdir()
+
+    assert run_installer(target, "--mode", "install", "--harnesses", "claude").returncode == 0
+
+    canonical = (target / ".drake/agents/slice-implementer.md").read_text(encoding="utf-8")
+    claude = (target / ".claude/agents/slice-implementer.md").read_text(encoding="utf-8")
+
+    assert claude.split("---", 2)[2] == canonical.split("---", 2)[2]
+    assert "name: slice-implementer" in claude
+    assert "model:" not in claude.split("---", 2)[1]
 
 
 def test_check_reports_a_stale_managed_script_as_blocking(tmp_path: Path) -> None:

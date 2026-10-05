@@ -89,6 +89,7 @@ EXCLUDE_PARTS = {
     "__pycache__",
     ".pytest_cache",
     ".cursor/automation-runs",
+    ".drake/runs",
 }
 
 EXCLUDE_REL_PATHS = {

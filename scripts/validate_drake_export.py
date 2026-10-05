@@ -81,6 +81,7 @@ SCRUB_TOOL_PATHS = {
 
 FORBIDDEN_PATH_PREFIXES = {
     ".cursor/automation-runs/",
+    ".drake/runs/",
 }
 
 SKIPPED_DIRS = {

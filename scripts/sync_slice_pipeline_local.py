@@ -42,31 +42,60 @@ MANAGED_PATHS = frozenset(
         "scripts/select_next_automation_slice.py",
         "scripts/slice_lifecycle.py",
         "scripts/sync_slice_execution_docs.py",
+        ".drake/runs/.gitignore",
         ".cursor/hooks/block-task-tool.sh",
         ".cursor/hooks/block-subagent.sh",
-        ".cursor/automation-runs/.gitignore",
     }
 )
 TEMPLATE_ROOT = REPO_ROOT / "templates" / "slice-pipeline-local"
 
+# Canonical, harness-neutral assets. Everything below works whichever coding
+# harness the adopter runs; per-harness entry points are generated *views* of
+# these files, never a second copy to keep in sync.
 TEMPLATE_FILES = (
     "AGENTS.md",
     ".docs/git_workflow.md",
-    ".cursor/skills/slice-pipeline-local/SKILL.md",
-    ".cursor/agents/slice-preflight.md",
-    ".cursor/agents/slice-implementer.md",
-    ".cursor/agents/pr-babysitter.md",
+    ".drake/skills/slice-pipeline-local/SKILL.md",
+    ".drake/agents/slice-preflight.md",
+    ".drake/agents/slice-implementer.md",
+    ".drake/agents/pr-babysitter.md",
     ".docs/agent_prompts/slice-pipeline-automation.md",
     ".docs/agent_prompts/slice-pipeline-handoff-contract.md",
     ".docs/agent_automation_execution_policy.md",
     ".docs/agent_automations.md",
     ".docs/branch_conventions.md",
-    ".cursor/hooks/block-task-tool.sh",
-    ".cursor/hooks/block-subagent.sh",
-    ".cursor/slice-pipeline-local.config.json",
-    ".cursor/automation-runs/.gitignore",
+    ".drake/slice-pipeline.config.json",
+    ".drake/runs/.gitignore",
     "scripts/sync_slice_execution_docs.py",
+    "scripts/harness_stub.sh",
 )
+
+CANONICAL_AGENT_DIR = ".drake/agents"
+AGENT_NAMES = ("slice-preflight", "slice-implementer", "pr-babysitter")
+CLAUDE_AGENT_DEST = ".claude/agents"
+
+# Harness ids the installer knows. Mirrors
+# tools/slice-agent-runner/src/harnesses.ts and docs/harnesses.md;
+# tests/test_harness_catalogue.py fails when the three drift apart.
+HARNESS_IDS = ("claude", "codex", "cursor", "aider", "generic")
+DEFAULT_HARNESSES = "cursor"
+
+# Per-harness entry points, as (template source, destination) pairs. Sources are
+# read from the bundle; destinations are repo-relative in the target repository.
+HARNESS_VIEW_FILES: dict[str, tuple[tuple[str, str], ...]] = {
+    "cursor": (
+        (".drake/agents/slice-preflight.md", ".cursor/agents/slice-preflight.md"),
+        (".drake/agents/slice-implementer.md", ".cursor/agents/slice-implementer.md"),
+        (".drake/agents/pr-babysitter.md", ".cursor/agents/pr-babysitter.md"),
+        (
+            ".drake/skills/slice-pipeline-local/SKILL.md",
+            ".cursor/skills/slice-pipeline-local/SKILL.md",
+        ),
+        (".cursor/hooks/block-task-tool.sh", ".cursor/hooks/block-task-tool.sh"),
+        (".cursor/hooks/block-subagent.sh", ".cursor/hooks/block-subagent.sh"),
+    ),
+    "claude": (("harness-views/claude/CLAUDE.md", "CLAUDE.md"),),
+}
 
 HOOK_POLICY_TEMPLATE = ".cursor/hooks.json"
 HOOK_SCRIPT_PATHS = {
@@ -134,7 +163,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--slice-selector-command")
     parser.add_argument("--docs-sync-command", default="not configured")
     parser.add_argument("--validation-commands", default="not configured")
-    parser.add_argument("--sdk-model", default="composer-2.5")
+    parser.add_argument(
+        "--harnesses",
+        default=DEFAULT_HARNESSES,
+        help=(
+            "Comma-separated harnesses to install for; the first becomes the "
+            f"primary harness in the runner config. Known: {', '.join(HARNESS_IDS)}."
+        ),
+    )
+    parser.add_argument(
+        "--harness-model",
+        help="Model passed to the harness (default: the harness's own model).",
+    )
+    parser.add_argument(
+        "--harness-command",
+        help='Shell command for the "generic" harness (the BYO-command path).',
+    )
+    parser.add_argument(
+        "--sdk-model",
+        help="Deprecated alias for --harness-model (no SDK is required any more).",
+    )
     parser.add_argument(
         "--portfolio-webhook-url-env",
         default="PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_URL",
@@ -182,6 +230,104 @@ def parse_legacy_prefixes(value: str) -> list[str]:
     return prefixes
 
 
+def selected_harnesses(args: argparse.Namespace) -> list[str]:
+    ids = [part.strip() for part in args.harnesses.split(",") if part.strip()]
+    if not ids:
+        raise SystemExit("--harnesses must list at least one harness")
+    unknown = [harness for harness in ids if harness not in HARNESS_IDS]
+    if unknown:
+        raise SystemExit(
+            f"unknown harness(es): {', '.join(unknown)}; known: {', '.join(HARNESS_IDS)}"
+        )
+    deduped: list[str] = []
+    for harness in ids:
+        if harness not in deduped:
+            deduped.append(harness)
+    return deduped
+
+
+def installed_paths_for(harnesses: list[str]) -> set[str]:
+    """Every repo-relative path an install writes for the given harness selections.
+
+    Kept next to HARNESS_VIEW_FILES so the tests can assert the managed set is a
+    subset of what an install actually produces, for every harness combination.
+    """
+    paths = set(TEMPLATE_FILES)
+    paths.update(f"scripts/{name}" for name in REPO_SCRIPTS_TO_INSTALL)
+    for harness in harnesses:
+        for _source, dest in HARNESS_VIEW_FILES.get(harness, ()):
+            paths.add(dest)
+        if harness == "claude":
+            paths.update(f"{CLAUDE_AGENT_DEST}/{name}.md" for name in AGENT_NAMES)
+        if harness == "cursor":
+            paths.add(HOOK_POLICY_TEMPLATE)
+    return paths
+
+
+def claude_agent_view(canonical: str) -> str:
+    """Claude Code subagent definition generated from a canonical agent prompt.
+
+    Same body as every other harness reads; the frontmatter keeps only the fields
+    Claude Code documents for subagents (name, description, optional tools). The
+    model line is dropped so the subagent inherits the session model instead of a
+    harness-specific alias.
+    """
+    if not canonical.startswith("---"):
+        return canonical
+    end = canonical.find("\n---", 3)
+    if end == -1:
+        return canonical
+    keep = {"name", "description", "tools"}
+    front = [
+        line
+        for line in canonical[3:end].strip().splitlines()
+        if line.split(":", 1)[0].strip() in keep
+    ]
+    return "---\n" + "\n".join(front) + "\n---" + canonical[end + 4 :]
+
+
+def sync_harness_view(
+    harness: str, args: argparse.Namespace, target: Path, tokens: dict[str, str]
+) -> list[WriteResult]:
+    """Install the entry points one harness needs, generated from canonical assets."""
+    results: list[WriteResult] = []
+
+    for source, dest in HARNESS_VIEW_FILES.get(harness, ()):
+        content = render_template(source, tokens)
+        results.append(
+            write_text_if_needed(
+                target,
+                dest,
+                content,
+                mode=args.mode,
+                dry_run=args.dry_run,
+                overwrite_existing=(
+                    args.overwrite_existing or dest in MANAGED_PATHS
+                ),
+            )
+        )
+
+    if harness == "claude":
+        for name in AGENT_NAMES:
+            source = f"{CANONICAL_AGENT_DIR}/{name}.md"
+            content = claude_agent_view(render_template(source, tokens))
+            results.append(
+                write_text_if_needed(
+                    target,
+                    f"{CLAUDE_AGENT_DEST}/{name}.md",
+                    content,
+                    mode=args.mode,
+                    dry_run=args.dry_run,
+                    overwrite_existing=args.overwrite_existing,
+                )
+            )
+
+    if harness == "cursor":
+        results.append(merge_hooks_json(target, mode=args.mode, dry_run=args.dry_run))
+
+    return results
+
+
 def token_map(args: argparse.Namespace, target: Path) -> dict[str, str]:
     project_name = args.project_name or target.name
     project_id = args.project_id or slugify(project_name)
@@ -195,6 +341,8 @@ def token_map(args: argparse.Namespace, target: Path) -> dict[str, str]:
         args.slice_selector_command
         or f"python3 scripts/select_next_automation_slice.py --tree {args.dependency_tree_path}"
     )
+    harnesses = selected_harnesses(args)
+    harness_model = args.harness_model or args.sdk_model
     return {
         "PROJECT_NAME": project_name,
         "PROJECT_ID": project_id,
@@ -210,7 +358,11 @@ def token_map(args: argparse.Namespace, target: Path) -> dict[str, str]:
         "SLICE_SELECTOR_COMMAND": selector,
         "DOCS_SYNC_COMMAND": args.docs_sync_command,
         "VALIDATION_COMMANDS": args.validation_commands,
-        "SDK_MODEL": args.sdk_model,
+        "HARNESS_ID": harnesses[0],
+        "HARNESS_IDS_LIST": ", ".join(harnesses),
+        "HARNESS_MODEL_JSON": json.dumps(harness_model or None),
+        "HARNESS_COMMAND_JSON": json.dumps(args.harness_command or None),
+        "HARNESS_MODEL": harness_model or "",
         "APPROVED_SUBAGENTS": args.approved_subagents,
         "PORTFOLIO_WEBHOOK_URL_ENV": args.portfolio_webhook_url_env,
         "PORTFOLIO_WEBHOOK_TOKEN_ENV": args.portfolio_webhook_token_env,
@@ -439,6 +591,10 @@ def missing_bundle_assets() -> list[str]:
     for rel_path in TEMPLATE_FILES:
         if not (TEMPLATE_ROOT / rel_path).is_file():
             missing.append(f"templates/slice-pipeline-local/{rel_path}")
+    for views in HARNESS_VIEW_FILES.values():
+        for source, _dest in views:
+            if not (TEMPLATE_ROOT / source).is_file():
+                missing.append(f"templates/slice-pipeline-local/{source}")
     for name in REPO_SCRIPTS_TO_INSTALL:
         if not (REPO_ROOT / "scripts" / name).is_file():
             missing.append(f"scripts/{name}")
@@ -476,7 +632,8 @@ def sync_templates(args: argparse.Namespace, target: Path, tokens: dict[str, str
                 ),
             )
         )
-    results.append(merge_hooks_json(target, mode=args.mode, dry_run=args.dry_run))
+    for harness in selected_harnesses(args):
+        results.extend(sync_harness_view(harness, args, target, tokens))
     for rel_path, content in placeholder_docs(tokens).items():
         results.append(
             write_placeholder_if_missing(

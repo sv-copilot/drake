@@ -1,13 +1,14 @@
 ---
 name: slice-pipeline-local
-description: Run the drake slice-pipeline orchestration locally in Cursor. Use when the operator invokes /slice-pipeline-local or asks to locally test the repo's slice-pipeline worker/subagent flow.
+description: Run the repo-local slice-pipeline orchestration with any coding harness. Use when the operator invokes /slice-pipeline-local or asks to locally test the repo's slice-pipeline worker/subagent flow.
 disable-model-invocation: true
 ---
 
 # Slice Pipeline Local
 
-Use this skill to exercise the `drake` slice-pipeline worker flow
-inside the Cursor IDE.
+Use this skill to exercise the `drake` slice-pipeline worker flow with any
+coding harness. `AGENTS.md` is the contract every harness reads; `docs/harnesses.md`
+lists the harness catalogue and the generated entry points.
 
 ## Project Defaults
 
@@ -76,9 +77,9 @@ Report:
 - merge action
 - docs sync commands run and whether selection advanced
 - webhook chaining result
-- SDK agent/run IDs and event artifact path when launched by `slice-agent-runner`
+- harness id, command and exit code, and the run directory when launched by `slice-agent-runner`
 - blockers
 
 For large validation logs or PR metadata, use the runtime handoff schema in
 `.docs/agent_prompts/slice-pipeline-handoff-contract.md`. Runtime handoff files
-belong under `.cursor/automation-runs/` and must not be committed.
+belong under `.drake/runs/` and must not be committed.

@@ -138,6 +138,8 @@ install_flags=(
   --github-slug smoke-org/smoke-app
   --integration-branch dev
   --validation-commands "bash scripts/ci_preflight.sh"
+  --harnesses generic
+  --harness-command "bash scripts/harness_stub.sh {prompt_file}"
 )
 python3 "$repo_root/scripts/sync_slice_pipeline_local.py" --mode install "${install_flags[@]}" >/dev/null
 
@@ -150,12 +152,21 @@ if ! python3 "$repo_root/scripts/sync_slice_pipeline_local.py" --mode check "${i
   exit 1
 fi
 
-for required in AGENTS.md .docs/git_workflow.md scripts/select_next_automation_slice.py scripts/slice_lifecycle.py .cursor/slice-pipeline-local.config.json; do
+for required in AGENTS.md .docs/git_workflow.md scripts/select_next_automation_slice.py scripts/slice_lifecycle.py .drake/slice-pipeline.config.json .drake/agents/slice-implementer.md .drake/runs/.gitignore scripts/harness_stub.sh; do
   if [ ! -f "$app/$required" ]; then
     echo "adoption smoke: FAILED - installer did not provide $required" >&2
     exit 1
   fi
 done
+
+# A real adopter commits the installed bundle. Without that commit, every
+# installed file is an untracked change and evidence would attribute all of them to
+# the harness run instead of naming only what the run actually touched.
+(
+  cd "$app"
+  git add -A
+  git -c user.name=smoke -c user.email=smoke@example.invalid commit -qm "install slice pipeline"
+)
 
 echo "adoption smoke: validate the dependency tree"
 python3 "$repo_root/scripts/validate_slice_dependency_tree.py" --tree "$app/.docs/slice_dependency_tree.json"
@@ -166,10 +177,10 @@ if ! node "$runner" check --repo "$app" > "$work/check.txt" 2>&1; then
   exit 1
 fi
 grep -q "check: passed" "$work/check.txt" || { cat "$work/check.txt" >&2; exit 1; }
-grep -q "selector: ok" "$work/check.txt" || { cat "$work/check.txt" >&2; exit 1; }
+grep -q "next slice:" "$work/check.txt" || { cat "$work/check.txt" >&2; exit 1; }
 
 echo "adoption smoke: runner run-next --dry-run selects the ready slice"
-if ! node "$runner" run-next --repo "$app" --local --dry-run > "$work/dryrun.txt" 2>&1; then
+if ! node "$runner" run-next --repo "$app" --dry-run > "$work/dryrun.txt" 2>&1; then
   cat "$work/dryrun.txt" >&2
   exit 1
 fi
@@ -179,6 +190,60 @@ if grep -q "Traceback" "$work/dryrun.txt"; then
   cat "$work/dryrun.txt" >&2
   exit 1
 fi
+
+echo "adoption smoke: a real harness run, no credentials, no model call"
+if ! node "$runner" run-next --repo "$app" > "$work/run.txt" 2>&1; then
+  echo "adoption smoke: FAILED - the documented run-next failed" >&2
+  cat "$work/run.txt" >&2
+  exit 1
+fi
+grep -q "stub harness: wrote" "$work/run.txt" || { cat "$work/run.txt" >&2; exit 1; }
+run_dir="$(ls -dt "$app"/.drake/runs/*/ | head -1)"
+
+echo "adoption smoke: the run's packet and evidence satisfy the contracts"
+python3 "$repo_root/scripts/validate_run_artifacts.py" --run "$run_dir" > "$work/artifacts.txt" 2>&1 || {
+  cat "$work/artifacts.txt" >&2
+  exit 1
+}
+"$python_bin" - "$run_dir" <<'PY'
+import json
+import pathlib
+import sys
+
+run = pathlib.Path(sys.argv[1])
+evidence = json.loads((run / "evidence.json").read_text(encoding="utf-8"))
+assert evidence["status"] == "success", evidence["status"]
+assert evidence["harness"]["exit_code"] == 0
+assert evidence["evidence_items"], "the stub harness wrote a file, so evidence must name it"
+assert any(
+    ".drake/stub-harness-output.txt" in item["path"] for item in evidence["evidence_items"]
+), evidence["evidence_items"]
+assert (run / "task-packet.json").is_file()
+print("  evidence:", evidence["status"], "| changed files:", len(evidence["evidence_items"]))
+PY
+
+echo "adoption smoke: a failing harness is recorded, not swallowed"
+set +e
+STUB_HARNESS_FAIL=1 node "$runner" run-next --repo "$app" > "$work/run-failed.txt" 2>&1
+failed_exit=$?
+set -e
+if [ "$failed_exit" -ne 2 ]; then
+  echo "adoption smoke: FAILED - expected exit 2 from a failing harness, got $failed_exit" >&2
+  cat "$work/run-failed.txt" >&2
+  exit 1
+fi
+failed_dir="$(ls -dt "$app"/.drake/runs/*/ | head -1)"
+"$python_bin" - "$failed_dir" <<'PY'
+import json
+import pathlib
+import sys
+
+run = pathlib.Path(sys.argv[1])
+evidence = json.loads((run / "evidence.json").read_text(encoding="utf-8"))
+assert evidence["status"] == "failure", evidence["status"]
+assert evidence["harness"]["exit_code"] != 0
+print("  failing run recorded as:", evidence["status"])
+PY
 
 echo "adoption smoke: nothing runnable is reported, not crashed on"
 cat > "$app/.docs/slice_dependency_tree.json" <<'JSON'
