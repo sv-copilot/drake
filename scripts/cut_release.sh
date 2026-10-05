@@ -34,7 +34,7 @@ python_bin="${PYTHON:-python3}"
 fail() { echo "cut_release: FAILED — $1" >&2; exit 1; }
 step() { printf '\n== %s\n' "$1"; }
 
-step "1/4 preconditions"
+step "1/5 preconditions"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ "$branch" = "main" ] || fail "must be on main, currently on $branch"
 git fetch -q origin || fail "could not fetch origin"
@@ -58,13 +58,26 @@ else
   echo "gh not available: skipping the CI-on-main check"
 fi
 
-step "2/4 adoption chain on this tree"
+step "2/5 the documentation pins the version being released"
+# The README quick start and the whitepaper name the release they were verified against. They
+# drifted two releases behind once, so a stranger following the documented path cloned an old tag
+# without anyone noticing. Enforce it here: cutting a release requires the docs to name it.
+unpinned=""
+for doc in README.md docs/whitepaper.md; do
+  grep -q -- "$version" "$doc" || unpinned="$unpinned $doc"
+done
+if [ -n "$unpinned" ]; then
+  fail "these files do not name $version:$unpinned — update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
+fi
+echo "documentation names $version"
+
+step "3/5 adoption chain on this tree"
 chain_work="$(mktemp -d)"
 if ! RETEST_WORK="$chain_work" bash scripts/adoption_chain_retest.sh "$version" chain; then
   fail "the adoption chain failed; nothing was tagged (artifacts in $chain_work)"
 fi
 
-step "3/4 tag and publish"
+step "4/5 tag and publish"
 git tag -a "$version" -m "$version" || fail "could not create the tag"
 git push origin "$version" || fail "could not push the tag"
 if [ -n "$notes_file" ]; then
@@ -75,7 +88,7 @@ else
 fi
 echo "published: $(gh release view "$version" --json url -q .url 2>/dev/null || echo "$version")"
 
-step "4/4 verify the published artifact"
+step "5/5 verify the published artifact"
 remote="$(git remote get-url origin)"
 verify_dir="$(mktemp -d)/drake"
 bash -c "git clone -q --branch '$version' --depth 1 '$remote' '$verify_dir'" \
