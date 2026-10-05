@@ -3,7 +3,8 @@
 **Whitepaper · October 2026 · v3**
 
 Drake is an open-source, repository-native governance layer for AI-assisted software development.
-It is Apache-2.0 licensed, currently released as **v0.2.8**, and lives at
+It is Apache-2.0 licensed, released under semantic tags (v0.2.10 at the time of writing — see the
+releases page for the current one), and lives at
 [github.com/sv-copilot/drake](https://github.com/sv-copilot/drake).
 
 This paper describes what the system is, how it is put together, and — where it matters — what
@@ -305,7 +306,7 @@ nothing in this paper depends on it existing.
 
 | Component | Status |
 |---|---|
-| Release | **v0.2.8**, Apache-2.0 |
+| Release | **v0.2.10**, Apache-2.0 |
 | Gate | **17 stages, all blocking**; green from a from-scratch room and on every release |
 | Harness catalogue | **6 presets**; two verified by running the CLI, three by vendor docs, one bring-your-own-command |
 | Runner | Spawns a child process; holds no model credential |
@@ -323,7 +324,7 @@ nothing in this paper depends on it existing.
 ```bash
 room=$(mktemp -d)
 bash scripts/cleanroom-setup.sh "$room"
-bash scripts/cleanroom-run.sh "$room" v0.2.8
+bash scripts/cleanroom-run.sh "$room" v0.2.10
 ```
 
 ---

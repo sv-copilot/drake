@@ -62,7 +62,7 @@ Then the documented path, which is what CI runs on every push:
 
 ```bash
 # 1. get the framework
-git clone --branch v0.2.7 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
+git clone --branch v0.2.10 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
 
 # 2. its own gate - compiles, validates, runs the suites, the smokes, the adoption chain,
 #    the hosted API and the web build. Takes about a minute from an empty npm cache.
@@ -115,7 +115,7 @@ Reproduce it yourself — the scripts that built the room and walked this path a
 ```bash
 room=$(mktemp -d)
 bash scripts/cleanroom-setup.sh "$room"          # base utilities + Node + Python, nothing else
-bash scripts/cleanroom-run.sh "$room" v0.2.7     # the documented path, inside that room
+bash scripts/cleanroom-run.sh "$room" v0.2.10     # the documented path, inside that room
 ```
 
 **This section exists because a clean machine found two defects the host machine hid:** the gate

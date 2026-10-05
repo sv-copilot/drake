@@ -126,3 +126,16 @@ def test_the_chain_retest_does_not_hardcode_matrix_counts() -> None:
 
     assert "harness matrix: 14 passed" not in retest
     assert "matrix_passed" in retest and "-ge 14" in retest
+
+
+def test_cutting_a_release_requires_the_documentation_to_name_it() -> None:
+    """The README quick start and the whitepaper pin a version, and they drifted two releases
+    behind: a stranger following the documented path cloned an old tag. The release path now
+    refuses to tag unless those documents name the version being released.
+    """
+    source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "cut_release.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "for doc in README.md docs/whitepaper.md" in source
+    assert "do not name" in source
