@@ -36,10 +36,13 @@ you running an old selector behind a new config.
 ```bash
 # Report what is missing or stale in your repo.
 # check compares the target against the flags you pass, so give it the same ones
-# you installed with.
+# you installed with. The harness id, model and command are the exception: on check
+# they are read back from the target's own config, so omitting them cannot produce a
+# false "stale".
 python3 scripts/sync_slice_pipeline_local.py --target /path/to/your-repo --mode check \
   --project-name "Your Product" --project-id your-product \
-  --github-slug OWNER/REPO --validation-commands "bash scripts/ci_preflight.sh"
+  --github-slug OWNER/REPO --validation-commands "bash scripts/ci_preflight.sh" \
+  --harnesses claude
 
 # Install (existing non-empty files are left alone unless you pass --overwrite-existing)
 python3 scripts/sync_slice_pipeline_local.py \
