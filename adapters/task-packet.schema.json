@@ -112,7 +112,7 @@
         "target_branch": {
           "type": "string",
           "description": "The base branch the worker should target with changes.",
-          "default": "ai-dev"
+          "default": "dev"
         }
       }
     },
@@ -143,7 +143,7 @@
         "integration_branch": {
           "type": "string",
           "description": "The integration branch for PRs.",
-          "default": "ai-dev"
+          "default": "dev"
         },
         "environment": {
           "type": "string",

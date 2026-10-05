@@ -10,6 +10,7 @@ import {
   statusTone,
 } from "@/features/dispatches/dispatch-log";
 import type { EvidenceFilters } from "@/lib/evidence-filters";
+import type { SortKey } from "@/lib/evidence-sort";
 import type { DispatchSummary } from "@/lib/api-client";
 
 const dispatches: DispatchSummary[] = [
@@ -183,7 +184,7 @@ describe("Dispatch log", () => {
 
   it("reorders rows when the sort control changes", () => {
     function Harness() {
-      const [sort, setSort] = useState<"newest" | "oldest">("newest");
+      const [sort, setSort] = useState<SortKey>("newest");
       return (
         <DispatchLogContent
           dispatches={dispatches}

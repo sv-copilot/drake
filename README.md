@@ -1,12 +1,84 @@
 # Drake
 
-**Autonomous Development Governance** — Repo-native governance for AI-assisted
+[![CI](https://github.com/sv-copilot/drake/actions/workflows/ci.yml/badge.svg)](https://github.com/sv-copilot/drake/actions/workflows/ci.yml)
+
+**Autonomous Development Governance** — repo-native governance for AI-assisted
 software development. Coordinate agents, validate changes, and ship with
 confidence.
 
 > Agents generate code. Governance produces working software.
 
 ---
+
+## What you can run in this repo today
+
+Everything below is verified by CI on every push to `dev`, `rc`, and `main`.
+
+| Command | What it does | Expected result |
+| --- | --- | --- |
+| `bash scripts/ci_preflight.sh` | The full gate: compiles and runs every validator, the Python test suites, the worker-runner build, and the hosted web tests + production build | ends with `ci preflight passed` |
+| `bash scripts/dev-hosted.sh --check` | Verifies the hosted API + web shell scaffold | prints the local URLs |
+| `bash scripts/dev-hosted.sh` | Starts the hosted read API and web shell locally | API on `http://127.0.0.1:8000`, web on `http://127.0.0.1:3000` |
+| `python3 scripts/validate_slice_dependency_tree.py --tree .docs/examples/slice_dependency_tree.example.json` | Validates a slice dependency tree (cycles, missing deps, missing detail docs) | `dependency tree valid: …` |
+| `python3 scripts/validate_drake_export.py --tree .` | Scans a tree for credential shapes and private control-plane markers | `drake export validation passed` |
+| `npm --prefix apps/web test` | Hosted web shell unit tests (vitest) | all tests pass |
+| `npm --prefix apps/web run test:e2e` | Playwright end-to-end smoke | passes with the dev server running |
+
+Every check in `ci_preflight.sh` is **blocking**. There is deliberately no
+"skip if it fails" path: a gate that hides a broken build is worse than no gate.
+
+### Prerequisites
+
+- Python **3.12+**
+- Node **22+** and npm **10+**
+
+`ci_preflight.sh` installs Python test dependencies into a repo-local `.venv`
+(never into your system interpreter, which PEP 668 hosts refuse anyway).
+
+## What is Drake?
+
+Drake is a governance framework that lives inside your repository. It coordinates
+humans, AI coding agents, validation gates, and release promotion across one or
+many software projects.
+
+It is **not** an AI IDE, another coding agent, a CI/CD platform, a project
+management tool, a GitHub replacement, or a fully autonomous engineering system.
+
+Agents produce suggestions. Drake ensures those suggestions are scoped, validated,
+reviewable, and merge-ready — with explicit human gates where they matter.
+
+### What is in this repository, and what is not
+
+This repo is the **adoptable framework**: contracts, schemas, templates,
+validators, the slice-agent-runner CLI, and an optional hosted read-model API +
+web shell.
+
+The **reference worker runtime** — the orchestrator that schedules slices across
+repositories, the dispatch queue, and the credentialed worker fleet — is operated
+privately by the maintainer and is *not* part of this export. Adopters implement
+or plug in their own worker against
+[`adapters/CONTRACT.md`](adapters/CONTRACT.md); the contract and the evidence
+schema are the stable interface.
+
+### The Problem Drake Solves
+
+AI coding has moved beyond autocomplete. Today's agents can read repos, edit
+files, run commands, and open pull requests. The bottleneck is no longer code
+generation — it is governance: knowing what to work on next, keeping changes
+small and reviewable, proving they work before merging, and maintaining
+portability across tools and environments.
+
+Drake addresses the failure modes that frustrate AI-assisted development:
+
+- **Context loss** — agents start fresh each time with no memory of repo state
+- **Vague tasks** — poorly scoped instructions produce large, risky changes
+- **Weak planning** — no dependency graph, no decomposition into reviewable units
+- **Incomplete validation** — PRs merge without proof the change works
+- **Broken environment parity** — local and headless agents see different
+  filesystems and credentials
+- **Tool lock-in** — deep coupling to one IDE or agent framework
+- **Lack of trust** — no confidence that unattended execution produces safe,
+  mergeable work
 
 ## Product Development Philosophy
 
@@ -51,7 +123,7 @@ EVIDENCE CONTRACT       →  Prove the work was done correctly.
     ▼
 PROMOTION PIPELINE      →  Ship with confidence.
                              Owner: Release Manager.
-                             Branches: slice/* → ai-dev → dev → main
+                             Branches: slice/* → dev → rc → main
                              Gates: Local validation → CI → Staging deploy → CI → Production
 ```
 
@@ -70,68 +142,24 @@ Drake draws a clear line between human judgment and AI execution:
 | Validation and CI | ✅ Defines commands | ✅ Runs, reports |
 | Merging and promotion | ✅ Approves PR | ✅ Creates PR, syncs tree |
 
-AI agents are implementers and suggester — never deciders. Every decision that
+AI agents are implementers and suggesters — never deciders. Every decision that
 affects product direction, architecture, or quality standards has a human gate.
 
 ### Automated Enforcement
 
-These rules are enforced by tooling, not convention:
+These rules are enforced by tooling in **this** repository, not by convention:
 
-| Rule | Enforcement | Where |
-|------|-------------|-------|
-| **TDD required** | Guardrail rejects output with zero test files. Verification gate checks test diff. | `guardrail.py`, `orchestrator.py` |
-| **One slice, one PR** | Runner creates one branch per slice. Fan-out controlled by dependency tree. | `cockpit-runner-cron` |
-| **Branch policy** | `slice/*` → `ai-dev` (local validation) → `dev` (CI) → `main` (CI). No direct pushes to dev/main. | Branch protection + AGENTS.md contract |
-| **Validation before merge** | `ci_preflight.sh` must pass. Exact commands documented in PR body. | Pre-commit hooks + CI |
-| **Evidence required** | Every completed slice produces `pipelineRunEvidence` JSON: test files changed, test results, validation output. | `evidence-contract.schema.json` |
-| **Dependency integrity** | Tree validated for cycles, missing deps, missing detail docs. Invalid trees block fan-out. | `validate_slice_dependency_tree.py` |
-| **Agent scope isolation** | BUILD agents get cockpit tools only. USE agents get platform tools only. Never both. | MCP access control + agent instructions |
+| Rule | Enforcement | Artifact |
+|------|-------------|----------|
+| **TDD required** | The evidence gate requires test files in the diff and a recorded pre-implementation failure | `adapters/evidence-contract.schema.json` |
+| **One slice, one PR** | One branch per slice; fan-out limited by the validated dependency tree | `adapters/task-packet.schema.json`, `tools/slice-agent-runner/` |
+| **Branch policy** | Feature/slice branches → `dev` → `rc` → `main`; CI runs on every push to those three | `.github/workflows/ci.yml` |
+| **Validation before merge** | `ci_preflight.sh` must pass, with every check blocking | `scripts/ci_preflight.sh` |
+| **Dependency integrity** | Trees validated for cycles, missing dependencies, and missing detail docs | `scripts/validate_slice_dependency_tree.py` |
+| **No credential or private-data leak** | Public exports are scanned for credential shapes, home paths, and private control-plane markers | `scripts/validate_drake_export.py` |
+| **Agent scope isolation** | Templated agent profiles scope which tools a worker may reach | `templates/slice-pipeline-local/.cursor/`, `.docs/mcp_environment_profile.json` |
 
 ---
-
-## What is Drake?
-
-Drake is a governance framework that lives inside your repository. It coordinates
-humans, AI coding agents, validation gates, and release promotion across one or
-many software projects.
-
-It is **not** an AI IDE, another coding agent, a CI/CD platform, a project
-management tool, a GitHub replacement, or a fully autonomous engineering system.
-
-Agents produce suggestions. Drake ensures those suggestions are scoped, validated,
-reviewable, and merge-ready — with explicit human gates where they matter.
-
-### The Problem Drake Solves
-
-AI coding has moved beyond autocomplete. Today's agents can read repos, edit
-files, run commands, and open pull requests. The bottleneck is no longer code
-generation — it is governance: knowing what to work on next, keeping changes
-small and reviewable, proving they work before merging, and maintaining
-portability across tools and environments.
-
-Drake addresses the failure modes that frustrate AI-assisted development:
-
-- **Context loss** — agents start fresh each time with no memory of repo state
-- **Vague tasks** — poorly scoped instructions produce large, risky changes
-- **Weak planning** — no dependency graph, no decomposition into reviewable units
-- **Incomplete validation** — PRs merge without proof the change works
-- **Broken environment parity** — local and headless agents see different
-  filesystems and credentials
-- **Tool lock-in** — deep coupling to one IDE or agent framework
-- **Lack of trust** — no confidence that unattended execution produces safe,
-  mergeable work
-
-## Architecture at a Glance
-
-Drake is organized into five layers. You adopt the layers you need.
-
-| Layer | Where it Lives | What it Does |
-| --- | --- | --- |
-| **Repo-Native Contract** | Your product repo (`.docs/`) | Roadmap, slice backlog, dependency tree, validation commands, branch policy, MCP profiles |
-| **Portfolio Governance** | Your control-plane repo | Project registry, cross-repo scheduling, dependency resolution, reusable templates |
-| **State Engine** | Schema conventions (JSON) | Slice lifecycle tracking: proposed → shaped → ready → running → review → validated → promoted |
-| **Worker Runtime** | Adapter layer | Interchangeable agents that receive task packets and produce PR evidence |
-| **MCP / Tooling** | Environment profiles | Tool servers scoped to dev, staging, or production; agents move between environments but credentials do not |
 
 ## Quick Start
 
@@ -141,9 +169,18 @@ cd drake
 bash scripts/ci_preflight.sh
 ```
 
-Then read [`docs/getting-started.md`](docs/getting-started.md) for the minimal
-adoption path: clone, copy example registry, install slice-pipeline-local,
-validate. For MCP hosting guidance, see [`docs/mcp_hosting.md`](docs/mcp_hosting.md).
+That installs what it needs, validates the tree, runs every test suite, and
+builds the hosted web shell. It ends with `ci preflight passed` or a failing exit
+code — there is no partial pass.
+
+Then:
+
+1. [`docs/getting-started.md`](docs/getting-started.md) — the minimal adoption
+   path: copy the example registry, install `slice-pipeline-local`, validate.
+2. [`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md) — the whole
+   methodology end to end, from strategy to production, on a worked example.
+3. [`adapters/CONTRACT.md`](adapters/CONTRACT.md) — what a worker must implement
+   to receive slices from Drake.
 
 ## Hosted local development
 
@@ -183,12 +220,14 @@ STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
 
 | Directory | Purpose |
 | --- | --- |
-| `adapters/` | Worker adapter contract — task packet schema, evidence contract, and reference adapter implementations |
-| `docs/` | Getting started, decision documentation (ADRs), MCP hosting |
-| `scripts/` | Validation, export, and slice management tooling |
-| `templates/` | Reusable templates: ADR format, slice-pipeline-local install bundle |
-| `tests/` | Test fixtures and export validation tests |
-| `tools/` | CLI utilities (slice-agent-runner for local/cloud execution) |
+| `adapters/` | Worker adapter contract — task packet schema, evidence contract, reference adapter notes |
+| `apps/web/` | Hosted operations web shell (Next.js) with its own unit and e2e tests |
+| `services/api/` | Hosted read-model API (FastAPI) — read-only routes over the registry and trees |
+| `docs/` | Getting started, cascade walkthrough, positioning, MCP hosting |
+| `scripts/` | Validation, export, slice-lifecycle, and dev tooling |
+| `templates/` | Reusable templates: ADR format, `slice-pipeline-local` install bundle |
+| `tests/` | Validator and export-gate tests |
+| `tools/` | CLI utilities (`slice-agent-runner` for local/cloud execution) |
 | `.docs/examples/` | Fictional registry and slice-tree samples for adopters |
 
 ## Who is Drake For?
@@ -202,6 +241,18 @@ STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
 If you're asking "what should I work on next?", "did that change actually pass
 validation?", or "how do I make my agent workflows portable?" — Drake is for
 you.
+
+## Status
+
+Version **v0.1.0**. The governance contracts, schemas, validators, and the hosted
+read-model shell in this repository are release-grade: every one of them is
+exercised by the blocking gate above. The reference worker runtime (orchestrator,
+dispatch, credentialed fleet) is operated privately and is intentionally not part
+of this export.
+
+Adoption is incremental: start with the evidence contract and the validators, add
+the slice lifecycle when you have more than one agent working, and add the hosted
+read-model when you want a view across repositories.
 
 ## License and Community
 
@@ -217,7 +268,8 @@ license (see `LICENSE`).
 |-------|----------|
 | Getting started | [`docs/getting-started.md`](docs/getting-started.md) |
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
-| **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using Saimon as the example |
+| **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using a worked example |
+| Positioning next to coding agents | [`docs/comparison.md`](docs/comparison.md) |
 | Adapter contract (workers) | [`adapters/CONTRACT.md`](adapters/CONTRACT.md) |
 | Task packet schema | [`adapters/task-packet.schema.json`](adapters/task-packet.schema.json) |
 | Evidence contract | [`adapters/evidence-contract.schema.json`](adapters/evidence-contract.schema.json) |
@@ -226,16 +278,3 @@ license (see `LICENSE`).
 | Slice dependency tree example | [`.docs/examples/slice_dependency_tree.example.json`](.docs/examples/slice_dependency_tree.example.json) |
 | Stack decisions example | [`.docs/examples/stack_decisions.example.md`](.docs/examples/stack_decisions.example.md) |
 | MCP hosting | [`docs/mcp_hosting.md`](docs/mcp_hosting.md) |
-
-### Project Bootstrap
-
-Drake's opinionated project-start template lives in
-[project-bootstrap](https://github.com/sv-copilot/project-bootstrap).
-Use it to create new repos with Drake governance pre-configured.
-
-## Status
-
-Drake is a working internal reference architecture managing multiple product
-repositories. It is evolving from operator-private tooling into a public
-open-source framework. Current focus: documentation, adapter contracts, and
-public launch readiness.

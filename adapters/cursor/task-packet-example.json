@@ -19,14 +19,14 @@
     "instructions": "Implement the Cursor adapter reference implementation. Create adapters/cursor/ directory with CURSOR-ADAPTER.md, task-packet-example.json, and evidence-contract-example.json. Create the slice detail doc at .docs/slices/ADAPTER-CURSOR-1.md. Validate all example JSON files against their schemas.",
     "working_directory": "<workspace-root>",
     "branch_prefix": "agent/",
-    "target_branch": "ai-dev"
+    "target_branch": "dev"
   },
   "context": {
     "credential_refs": [
       "GH_TOKEN"
     ],
     "github_slug": "sv-copilot/drake",
-    "integration_branch": "ai-dev",
+    "integration_branch": "dev",
     "environment": "local",
     "model_hint": "composer-2.5",
     "tags": {

@@ -272,3 +272,26 @@ def test_hosted_ip_staging_rejects_unknown_mode() -> None:
 
     assert result.returncode == 1
     assert "HOSTED_STAGING_MODE must be production or dev" in result.stderr
+
+
+# The literals below are split so this test file does not trip the very gate it
+# exercises. A scrub gate must be exempt from nothing but its own rule list.
+
+
+def test_scrub_validator_rejects_private_repo_urls_and_home_paths(tmp_path: Path) -> None:
+    private_url = "https://github.com/" + "sv-copilot/" + "simon" + "-projects/blob/main/notes.md"
+    (tmp_path / "notes.md").write_text(f"See {private_url}\n", encoding="utf-8")
+
+    assert validate_tree(tmp_path) == ["private control-plane marker in notes.md"]
+
+    home_path = "/" + "Users/" + "someone/workspace/notes.md"
+    (tmp_path / "notes.md").write_text(f"Path: {home_path}\n", encoding="utf-8")
+
+    assert validate_tree(tmp_path) == ["operator home path in notes.md"]
+
+
+def test_scrub_validator_rejects_screaming_snake_private_env_prefixes(tmp_path: Path) -> None:
+    env_name = "SIMON" + "_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL"
+    (tmp_path / "secrets.md").write_text(f"| `{env_name}` | Worker webhook URL |\n", encoding="utf-8")
+
+    assert validate_tree(tmp_path) == ["private control-plane marker in secrets.md"]

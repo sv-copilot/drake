@@ -17,6 +17,15 @@ EXAMPLE_REGISTRY = REPO_ROOT / ".docs/examples/projects-registry.example.json"
 EXAMPLE_TREE = REPO_ROOT / ".docs/examples/slice_dependency_tree.example.json"
 EXAMPLE_HOSTED_API = REPO_ROOT / ".docs/examples/hosted_api_sketch.example.json"
 
+# Legacy private control-plane env prefixes are rewritten before anything leaves
+# the read model: the hosted surface must never echo an operator-only project's
+# webhook configuration, and adopters should only ever see their own names.
+# This mapping is the ONE place in the codebase that names the legacy prefixes.
+LEGACY_ENV_PREFIX_REWRITES = {
+    "SIMON_PROJECTS": "EXAMPLE_PORTFOLIO",
+    "RESEARCH_SERVICE": "EXAMPLE_SERVICE",
+}
+
 
 @dataclass(frozen=True)
 class DashboardProjection:
@@ -43,7 +52,7 @@ def snapshot_from_examples() -> SyncSnapshot:
             project_id: ProjectTree(
                 project_id=project_id,
                 github_slug=project["github_slug"],
-                ref=project.get("integration_branch", "ai-dev"),
+                ref=project.get("integration_branch", "dev"),
                 path=tree_path,
                 tree=tree,
             ),
@@ -51,14 +60,14 @@ def snapshot_from_examples() -> SyncSnapshot:
         files=[
             SyncedFile(
                 repo="example-org/example-portfolio",
-                ref="ai-dev",
+                ref="dev",
                 path=".docs/projects-registry.json",
                 sha=None,
                 source="example_fixture",
             ),
             SyncedFile(
                 repo=project["github_slug"],
-                ref=project.get("integration_branch", "ai-dev"),
+                ref=project.get("integration_branch", "dev"),
                 path=tree_path,
                 sha=None,
                 source="example_fixture",
@@ -104,10 +113,9 @@ def _sanitize_dispatch(dispatch: dict[str, Any]) -> dict[str, Any]:
     sanitized = dict(dispatch)
     env_name = sanitized.get("webhook_url_env_name")
     if isinstance(env_name, str):
-        sanitized["webhook_url_env_name"] = (
-            env_name.replace("SIMON_PROJECTS", "EXAMPLE_PORTFOLIO")
-            .replace("RESEARCH_SERVICE", "EXAMPLE_APP")
-        )
+        for legacy_prefix, example_prefix in LEGACY_ENV_PREFIX_REWRITES.items():
+            env_name = env_name.replace(legacy_prefix, example_prefix)
+        sanitized["webhook_url_env_name"] = env_name
     return sanitized
 
 
@@ -148,7 +156,7 @@ def _repo_row(project: dict[str, Any], snapshot: SyncSnapshot) -> dict[str, Any]
     return {
         "id": project_id,
         "github_slug": project["github_slug"],
-        "integration_branch": project.get("integration_branch", "ai-dev"),
+        "integration_branch": project.get("integration_branch", "dev"),
         "automation_enabled": bool(project.get("automation_enabled", False)),
         "priority": project.get("priority"),
         "readiness": project.get("readiness") or {},

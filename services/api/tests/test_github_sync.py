@@ -31,7 +31,7 @@ class FakeContentsFetcher:
 
         if (repo, ref, path) == (
             "example-org/example-portfolio",
-            "ai-dev",
+            "dev",
             ".docs/projects-registry.json",
         ):
             return FetchedFile(
@@ -45,7 +45,7 @@ class FakeContentsFetcher:
 
         if (repo, ref, path) == (
             "example-org/example-app",
-            "ai-dev",
+            "dev",
             ".docs/examples/slice_dependency_tree.example.json",
         ):
             return FetchedFile(
@@ -68,7 +68,7 @@ def test_github_sync_loads_registry_and_dependency_tree() -> None:
     snapshot = service.pull(
         GitHubSyncConfig(
             registry_repo="example-org/example-portfolio",
-            registry_ref="ai-dev",
+            registry_ref="dev",
             stale_after_seconds=60,
         ),
     )
@@ -82,12 +82,12 @@ def test_github_sync_loads_registry_and_dependency_tree() -> None:
     assert fetcher.calls == [
         (
             "example-org/example-portfolio",
-            "ai-dev",
+            "dev",
             ".docs/projects-registry.json",
         ),
         (
             "example-org/example-app",
-            "ai-dev",
+            "dev",
             ".docs/examples/slice_dependency_tree.example.json",
         ),
     ]
@@ -122,7 +122,7 @@ def test_sync_endpoint_uses_mocked_fetcher() -> None:
         "/api/v1/sync",
         json={
             "registry_repo": "example-org/example-portfolio",
-            "registry_ref": "ai-dev",
+            "registry_ref": "dev",
             "stale_after_seconds": 60,
         },
     )
@@ -136,14 +136,14 @@ def test_sync_endpoint_uses_mocked_fetcher() -> None:
     assert payload["files"] == [
         {
             "repo": "example-org/example-portfolio",
-            "ref": "ai-dev",
+            "ref": "dev",
             "path": ".docs/projects-registry.json",
             "sha": "registry-sha",
             "source": "fake",
         },
         {
             "repo": "example-org/example-app",
-            "ref": "ai-dev",
+            "ref": "dev",
             "path": ".docs/examples/slice_dependency_tree.example.json",
             "sha": "tree-sha",
             "source": "fake",
