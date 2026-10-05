@@ -19,7 +19,8 @@
         "CLAUDE.md",
         ".claude/agents/<name>.md"
       ],
-      "notes": "-p prints and exits. --permission-mode acceptEdits lets it write files without prompting; dontAsk is the locked-down CI variant."
+      "notes": "-p prints and exits. --permission-mode acceptEdits lets it write files without prompting; dontAsk is the locked-down CI variant. Checked against vendor documentation, not executed here.",
+      "verified_by": "vendor docs"
     },
     {
       "id": "codex",
@@ -37,7 +38,8 @@
       "repo_entry_points": [
         "AGENTS.md"
       ],
-      "notes": "exec runs headless; workspace-write permits edits without network. Upstream deprecated --full-auto in favour of the explicit sandbox flag."
+      "notes": "exec runs headless; workspace-write permits edits without network. Upstream deprecated --full-auto in favour of the explicit sandbox flag. Checked against vendor documentation, not executed here.",
+      "verified_by": "vendor docs"
     },
     {
       "id": "cursor",
@@ -56,7 +58,8 @@
         ".cursor/agents/<name>.md",
         ".cursor/hooks/*"
       ],
-      "notes": "Print mode without --force only proposes changes. Some installations expose the binary as `agent`."
+      "notes": "Print mode without --force only proposes changes. Some installations expose the binary as `agent`. Checked against vendor documentation, not executed here.",
+      "verified_by": "vendor docs"
     },
     {
       "id": "cline",
@@ -72,7 +75,8 @@
         "AGENTS.md",
         ".clinerules"
       ],
-      "notes": "Install with `npm i -g cline`; authenticate with `cline auth`. Headless runs trigger on redirected stdout, piped stdin or --json. --auto-approve true is what makes it unattended: use a disposable branch and constrain shell access with CLINE_COMMAND_PERMISSIONS."
+      "notes": "Verified by running cline 3.0.68's --help (positional prompt, --auto-approve <boolean>, --plan, --json, --timeout). Pin the version: npm i -g cline@3.0.68. If the binary does not appear, check that npm's global bin directory is on PATH, and on npm versions that gate install scripts allow them for this package. Upstream flagged old versions as malicious, so pinning is not optional.",
+      "verified_by": "cli --help"
     },
     {
       "id": "aider",
@@ -90,7 +94,8 @@
       "repo_entry_points": [
         "AGENTS.md"
       ],
-      "notes": "--no-auto-commits leaves committing to your promotion flow; --message-file avoids argv limits."
+      "notes": "Verified by running aider 0.86.2's --help: --message-file, --yes-always and --no-auto-commits all exist as written.",
+      "verified_by": "cli --help"
     },
     {
       "id": "generic",
@@ -105,7 +110,8 @@
       "repo_entry_points": [
         "AGENTS.md"
       ],
-      "notes": "Runs through a shell, so Cline, Goose, OpenHands, a custom script or a wrapper around your own tooling all plug in here."
+      "notes": "Runs through a shell, so Cline, Goose, OpenHands, a custom script or a wrapper around your own tooling all plug in here.",
+      "verified_by": "n/a (your command)"
     }
   ]
 }

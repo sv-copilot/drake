@@ -62,7 +62,7 @@ Then the documented path, which is what CI runs on every push:
 
 ```bash
 # 1. get the framework
-git clone --branch v0.2.6 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
+git clone --branch v0.2.7 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
 
 # 2. its own gate - compiles, validates, runs the suites, the smokes, the adoption chain,
 #    the hosted API and the web build. Takes about a minute from an empty npm cache.
@@ -115,7 +115,7 @@ Reproduce it yourself — the scripts that built the room and walked this path a
 ```bash
 room=$(mktemp -d)
 bash scripts/cleanroom-setup.sh "$room"          # base utilities + Node + Python, nothing else
-bash scripts/cleanroom-run.sh "$room" v0.2.6     # the documented path, inside that room
+bash scripts/cleanroom-run.sh "$room" v0.2.7     # the documented path, inside that room
 ```
 
 **This section exists because a clean machine found two defects the host machine hid:** the gate
@@ -370,5 +370,6 @@ license (see `LICENSE`).
 | Stack decisions example | [`.docs/examples/stack_decisions.example.md`](.docs/examples/stack_decisions.example.md) |
 | MCP hosting | [`docs/mcp_hosting.md`](docs/mcp_hosting.md) |
 | Retest the adoption chain against a release | `scripts/adoption_chain_retest.sh` |
+| Run slices unattended (cron, systemd) | [`docs/scheduling.md`](docs/scheduling.md) + `scripts/slice-cron.sh` |
 | Reproduce the from-scratch run | `scripts/cleanroom-setup.sh` + `scripts/cleanroom-run.sh` |
 | Cut a verified release | `scripts/cut_release.sh <version>` (chain before the tag, cold-clone gate after it) |

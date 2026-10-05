@@ -158,6 +158,33 @@ else
   report fail "a failing harness exits 2 and records failure evidence" "exit $status" "$out"
 fi
 
+echo "harness matrix: scheduling (what cron and systemd timers call)"
+out="$work/cron.txt"
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
+cron_status=$?
+if [ "$cron_status" -eq 0 ] && grep -q "a slice ran" "$out"; then
+  report ok "slice-cron runs a slice and reports exit 0"
+else
+  report fail "slice-cron runs a slice and reports exit 0" "exit $cron_status" "$out"
+fi
+
+if ls "$target"/.drake/logs/*.log >/dev/null 2>&1; then
+  report ok "slice-cron writes one log per run under .drake/logs/"
+else
+  report fail "slice-cron writes one log per run under .drake/logs/"
+fi
+
+mkdir -p "$target/.drake/.slice-cron.lock"
+out="$work/cron-locked.txt"
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
+locked_status=$?
+rmdir "$target/.drake/.slice-cron.lock" 2>/dev/null || true
+if [ "$locked_status" -eq 0 ] && grep -q "skipping this tick" "$out"; then
+  report ok "slice-cron refuses to overlap a run already in flight"
+else
+  report fail "slice-cron refuses to overlap a run already in flight" "exit $locked_status" "$out"
+fi
+
 out="$work/none.txt"
 "$python_bin" - "$target" <<'PY'
 import json
@@ -176,6 +203,15 @@ if [ "$status" -eq 3 ] && grep -q "no runnable slice" "$out"; then
   report ok "nothing runnable exits 3 with an explanation"
 else
   report fail "nothing runnable exits 3 with an explanation" "exit $status" "$out"
+fi
+
+out="$work/cron-none.txt"
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
+cron_none_status=$?
+if [ "$cron_none_status" -eq 3 ] && grep -q "nothing runnable (normal" "$out"; then
+  report ok "slice-cron reports nothing runnable as exit 3, not a failure"
+else
+  report fail "slice-cron reports nothing runnable as exit 3, not a failure" "exit $cron_none_status" "$out"
 fi
 
 echo "harness matrix: legacy config from the pre-0.2 layout"
