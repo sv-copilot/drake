@@ -145,12 +145,14 @@ def validate_validation_results(payload: dict[str, Any], repo_root: Path | None 
     try:
         from jsonschema import Draft7Validator
     except ImportError:
-        import sys
-
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", "jsonschema"]
+        raise SystemExit(
+            "jsonschema is required to validate this document and is not importable in\n"
+            "the interpreter running this script. It is deliberately not installed on\n"
+            "demand: pip-installing into a managed interpreter (PEP 668, uv, Homebrew) is\n"
+            "refused there and mutates the host where it is not. Run this through the\n"
+            "repository gate instead - bash scripts/ci_preflight.sh - which provisions a\n"
+            "repo-local .venv, or use an interpreter you own with jsonschema installed."
         )
-        from jsonschema import Draft7Validator
 
     schema = load_validation_results_schema(repo_root)
     validator = Draft7Validator(schema)
