@@ -49,10 +49,11 @@ and re-install, rather than editing a copy.
 | `claude` | Claude Code | `claude -p <prompt> --output-format json --permission-mode acceptEdits [--model <model>]` | [headless](https://code.claude.com/docs/en/headless) |
 | `codex` | Codex CLI | `codex exec --sandbox workspace-write [--model <model>] <prompt>` | [docs](https://developers.openai.com/codex/) |
 | `cursor` | Cursor CLI | `cursor-agent -p --force [--model <model>] <prompt>` | [headless](https://cursor.com/docs/cli/headless) |
+| `cline` | Cline | `cline --auto-approve true <prompt>` | [CLI overview](https://docs.cline.bot/usage/cli-overview) |
 | `aider` | Aider | `aider --message-file <prompt-file> --yes-always --no-auto-commits [--model <model>]` | [scripting](https://aider.chat/docs/scripting.html) |
 | `generic` | any harness | your command, with `{prompt_file}`, `{prompt}` or `{model}` placeholders | this file |
 
-Checked against vendor docs on 2026-10-05. `tools/slice-agent-runner run-next
+Checked against vendor docs on 2026-10-05 (Cline: 2026-10-05). `tools/slice-agent-runner run-next
 --dry-run` prints the exact command for your config, which is the fastest way to see
 what would run.
 
@@ -78,6 +79,18 @@ what would run.
 - Auth: `CURSOR_API_KEY` for scripted runs
 - Print mode without `--force` only proposes changes. Some installations expose the
   binary as `agent`; point `harness.command` at whichever you have.
+
+### cline — Cline
+
+- Entry points: `AGENTS.md`, `.clinerules`
+- Auth: `cline auth` (Cline Provider, ClinePass, or your own provider key). Install with `npm i -g cline`.
+- Headless mode engages when stdout is redirected, stdin is piped, or `--json` is passed — all three
+  happen under this runner, so a slice run is a batch task.
+- `--auto-approve true` is what makes it unattended: it may edit files and run commands without
+  prompting. Use a disposable branch, review the evidence record afterwards, and constrain shell
+  access with `CLINE_COMMAND_PERMISSIONS` (`{"allow": ["git *", "pytest *"], "deny": ["sudo *"]}`).
+- The model is whatever `cline auth` is configured with; add `--timeout` to the command if you want a
+  hard ceiling on a run.
 
 ### aider — Aider
 

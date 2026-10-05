@@ -94,6 +94,19 @@ export const HARNESSES: HarnessPreset[] = [
       "Print mode without --force only proposes changes. Some installations expose the binary as `agent`.",
   },
   {
+    id: "cline",
+    name: "Cline",
+    binary: "cline",
+    promptDelivery: "argv",
+    args: ["--auto-approve", "true", "{prompt}"],
+    configDir: ".cline",
+    authEnv: [],
+    docsUrl: "https://docs.cline.bot/usage/cli-overview",
+    verifiedOn: "2026-10-05",
+    notes:
+      "Install with `npm i -g cline` and authenticate with `cline auth`. Headless runs happen when stdout is redirected, stdin is piped, or --json is passed; --auto-approve true is what lets it edit files and run commands unattended, so treat the branch as disposable and constrain shell access with CLINE_COMMAND_PERMISSIONS.",
+  },
+  {
     id: "aider",
     name: "Aider",
     binary: "aider",
