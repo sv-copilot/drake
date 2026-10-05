@@ -80,6 +80,10 @@ CLAUDE_AGENT_DEST = ".claude/agents"
 HARNESS_IDS = ("claude", "codex", "cursor", "aider", "generic")
 DEFAULT_HARNESSES = "cursor"
 
+# Harness-neutral config locations, mirroring tools/slice-agent-runner/src/slice-config.ts.
+CONFIG_FILE = ".drake/slice-pipeline.config.json"
+LEGACY_CONFIG_FILE = ".cursor/slice-pipeline-local.config.json"
+
 # Per-harness entry points, as (template source, destination) pairs. Sources are
 # read from the bundle; destinations are repo-relative in the target repository.
 HARNESS_VIEW_FILES: dict[str, tuple[tuple[str, str], ...]] = {
@@ -165,10 +169,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--validation-commands", default="not configured")
     parser.add_argument(
         "--harnesses",
-        default=DEFAULT_HARNESSES,
+        default=None,
         help=(
             "Comma-separated harnesses to install for; the first becomes the "
-            f"primary harness in the runner config. Known: {', '.join(HARNESS_IDS)}."
+            f"primary harness in the runner config. Known: {', '.join(HARNESS_IDS)}. "
+            f"Default: {DEFAULT_HARNESSES} on install; on check, whatever the target "
+            "already records."
         ),
     )
     parser.add_argument(
@@ -230,8 +236,47 @@ def parse_legacy_prefixes(value: str) -> list[str]:
     return prefixes
 
 
-def selected_harnesses(args: argparse.Namespace) -> list[str]:
-    ids = [part.strip() for part in args.harnesses.split(",") if part.strip()]
+def installed_harness_block(target: Path) -> dict:
+    """Harness settings already recorded in the target, for check mode.
+
+    ``check`` compares the target against the flags it is given. The harness id,
+    model and command are pass-through values that the installed config already
+    holds, so re-reading them removes a trap: install with ``--harness-command``,
+    then run ``check`` without it, and the config would be reported stale for no
+    real reason — which trains people to ignore the report.
+    """
+    for rel_path in (CONFIG_FILE, LEGACY_CONFIG_FILE):
+        path = target / rel_path
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+        block = data.get("harness")
+        if isinstance(block, str):
+            return {"id": block}
+        if isinstance(block, dict):
+            return block
+        return {}
+    return {}
+
+
+def selected_harnesses(
+    args: argparse.Namespace, target: Path | None = None
+) -> list[str]:
+    raw = args.harnesses
+    installed = (
+        installed_harness_block(target)
+        if target is not None and args.mode == "check"
+        else {}
+    )
+    if raw is None and installed.get("id"):
+        raw = str(installed["id"])
+    if raw is None:
+        raw = DEFAULT_HARNESSES
+
+    ids = [part.strip() for part in raw.split(",") if part.strip()]
     if not ids:
         raise SystemExit("--harnesses must list at least one harness")
     unknown = [harness for harness in ids if harness not in HARNESS_IDS]
@@ -239,10 +284,23 @@ def selected_harnesses(args: argparse.Namespace) -> list[str]:
         raise SystemExit(
             f"unknown harness(es): {', '.join(unknown)}; known: {', '.join(HARNESS_IDS)}"
         )
+
     deduped: list[str] = []
     for harness in ids:
         if harness not in deduped:
             deduped.append(harness)
+
+    # In check mode, also cover the harness views that are actually present, so a
+    # target installed for several harnesses is checked as installed rather than as
+    # one harness plus whatever the flags happened to say.
+    if target is not None and args.mode == "check":
+        for harness, marker in (
+            ("claude", Path(".claude") / "agents"),
+            ("cursor", Path(".cursor") / "agents"),
+        ):
+            if (target / marker).is_dir() and harness not in deduped:
+                deduped.append(harness)
+
     return deduped
 
 
@@ -341,8 +399,19 @@ def token_map(args: argparse.Namespace, target: Path) -> dict[str, str]:
         args.slice_selector_command
         or f"python3 scripts/select_next_automation_slice.py --tree {args.dependency_tree_path}"
     )
-    harnesses = selected_harnesses(args)
-    harness_model = args.harness_model or args.sdk_model
+    installed = installed_harness_block(target) if args.mode == "check" else {}
+    harnesses = selected_harnesses(args, target)
+    harness_model = args.harness_model or args.sdk_model or installed.get("model")
+    harness_command = (
+        args.harness_command
+        if args.harness_command is not None
+        else installed.get("command")
+    )
+    if args.mode == "check" and args.harnesses is None and installed:
+        print(
+            f"note: --harnesses not given; checking the harness recorded in the target "
+            f"({', '.join(harnesses)})"
+        )
     return {
         "PROJECT_NAME": project_name,
         "PROJECT_ID": project_id,
@@ -361,7 +430,7 @@ def token_map(args: argparse.Namespace, target: Path) -> dict[str, str]:
         "HARNESS_ID": harnesses[0],
         "HARNESS_IDS_LIST": ", ".join(harnesses),
         "HARNESS_MODEL_JSON": json.dumps(harness_model or None),
-        "HARNESS_COMMAND_JSON": json.dumps(args.harness_command or None),
+        "HARNESS_COMMAND_JSON": json.dumps(harness_command or None),
         "HARNESS_MODEL": harness_model or "",
         "APPROVED_SUBAGENTS": args.approved_subagents,
         "PORTFOLIO_WEBHOOK_URL_ENV": args.portfolio_webhook_url_env,
@@ -632,7 +701,7 @@ def sync_templates(args: argparse.Namespace, target: Path, tokens: dict[str, str
                 ),
             )
         )
-    for harness in selected_harnesses(args):
+    for harness in selected_harnesses(args, target):
         results.extend(sync_harness_view(harness, args, target, tokens))
     for rel_path, content in placeholder_docs(tokens).items():
         results.append(
