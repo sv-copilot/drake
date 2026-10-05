@@ -78,7 +78,7 @@ CLAUDE_AGENT_DEST = ".claude/agents"
 # tools/slice-agent-runner/src/harnesses.ts and docs/harnesses.md;
 # tests/test_harness_catalogue.py fails when the three drift apart.
 HARNESS_IDS = ("claude", "codex", "cursor", "cline", "aider", "generic")
-DEFAULT_HARNESSES = "cursor"
+DEFAULT_HARNESSES = "cline"
 
 # Harness-neutral config locations, mirroring tools/slice-agent-runner/src/slice-config.ts.
 CONFIG_FILE = ".drake/slice-pipeline.config.json"
@@ -99,6 +99,7 @@ HARNESS_VIEW_FILES: dict[str, tuple[tuple[str, str], ...]] = {
         (".cursor/hooks/block-subagent.sh", ".cursor/hooks/block-subagent.sh"),
     ),
     "claude": (("harness-views/claude/CLAUDE.md", "CLAUDE.md"),),
+    "cline": (("harness-views/cline/.clinerules", ".clinerules"),),
 }
 
 HOOK_POLICY_TEMPLATE = ".cursor/hooks.json"

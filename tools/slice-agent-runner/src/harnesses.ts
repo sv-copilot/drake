@@ -33,7 +33,9 @@ export type HarnessPreset = {
   /** Environment variable names the harness authenticates with (names only). */
   authEnv: string[];
   docsUrl: string;
+  /** The date the invocation was last checked, and what it was checked against. */
   verifiedOn: string;
+  verifiedBy: "cli --help" | "vendor docs" | "n/a (your command)";
   notes: string;
 };
 
@@ -57,6 +59,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"],
     docsUrl: "https://code.claude.com/docs/en/headless",
     verifiedOn: "2026-10-05",
+    verifiedBy: "vendor docs",
     notes:
       "-p prints and exits; --permission-mode acceptEdits lets it write files without prompting. Use dontAsk for locked-down CI.",
   },
@@ -77,6 +80,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: ["OPENAI_API_KEY", "CODEX_API_KEY"],
     docsUrl: "https://developers.openai.com/codex/",
     verifiedOn: "2026-10-05",
+    verifiedBy: "vendor docs",
     notes:
       "exec runs headless; --sandbox workspace-write permits edits without network. Upstream deprecated --full-auto in favour of the explicit sandbox flag. Add --json for an event stream.",
   },
@@ -90,6 +94,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: ["CURSOR_API_KEY"],
     docsUrl: "https://cursor.com/docs/cli/headless",
     verifiedOn: "2026-10-05",
+    verifiedBy: "vendor docs",
     notes:
       "Print mode without --force only proposes changes. Some installations expose the binary as `agent`.",
   },
@@ -103,6 +108,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: [],
     docsUrl: "https://docs.cline.bot/usage/cli-overview",
     verifiedOn: "2026-10-05",
+    verifiedBy: "cli --help",
     notes:
       "Install with `npm i -g cline` and authenticate with `cline auth`. Headless runs happen when stdout is redirected, stdin is piped, or --json is passed; --auto-approve true is what lets it edit files and run commands unattended, so treat the branch as disposable and constrain shell access with CLINE_COMMAND_PERMISSIONS.",
   },
@@ -123,6 +129,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"],
     docsUrl: "https://aider.chat/docs/scripting.html",
     verifiedOn: "2026-10-05",
+    verifiedBy: "cli --help",
     notes:
       "--no-auto-commits leaves committing to your promotion flow. --message-file avoids argv limits on long prompts.",
   },
@@ -136,6 +143,7 @@ export const HARNESSES: HarnessPreset[] = [
     authEnv: [],
     docsUrl: "docs/harnesses.md",
     verifiedOn: "2026-10-05",
+    verifiedBy: "n/a (your command)",
     notes:
       "Set harness.command (or --harness-command) with {prompt_file}, {prompt} or {model} placeholders. The command runs through a shell, so the runner can drive any CLI, including Cline, Goose, OpenHands, or your own script.",
   },
