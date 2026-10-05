@@ -77,7 +77,7 @@ CLAUDE_AGENT_DEST = ".claude/agents"
 # Harness ids the installer knows. Mirrors
 # tools/slice-agent-runner/src/harnesses.ts and docs/harnesses.md;
 # tests/test_harness_catalogue.py fails when the three drift apart.
-HARNESS_IDS = ("claude", "codex", "cursor", "aider", "generic")
+HARNESS_IDS = ("claude", "codex", "cursor", "cline", "aider", "generic")
 DEFAULT_HARNESSES = "cursor"
 
 # Harness-neutral config locations, mirroring tools/slice-agent-runner/src/slice-config.ts.
