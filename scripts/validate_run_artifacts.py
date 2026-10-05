@@ -60,7 +60,10 @@ def validate(run_dir: Path) -> list[str]:
     try:
         from jsonschema import Draft7Validator
     except ImportError:  # pragma: no cover - dependency is declared in CI
-        return ["jsonschema is not installed: pip install jsonschema"]
+        return [
+            "jsonschema is not importable in this interpreter; run this through the repo "
+            "gate (bash scripts/ci_preflight.sh), which provisions a repo-local .venv"
+        ]
 
     registry = build_registry()
     problems: list[str] = []

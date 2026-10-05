@@ -15,7 +15,10 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-PYTHON="${PYTHON:-python3}"
+# The interpreter used to *create* the venv. Everything after provisioning uses the
+# venv's interpreter, so the gate never depends on what the host happens to have.
+BOOTSTRAP_PYTHON="${PYTHON:-python3}"
+PYTHON="$BOOTSTRAP_PYTHON"
 
 # --- local virtualenv -------------------------------------------------------
 # PEP 668 hosts (Debian/Ubuntu, Homebrew Python) refuse system-wide pip
@@ -26,7 +29,7 @@ ensure_venv() {
     return 0
   fi
   echo "  (creating .venv — package installs stay out of the host interpreter)"
-  if ! "$PYTHON" -m venv .venv; then
+  if ! "$BOOTSTRAP_PYTHON" -m venv .venv; then
     echo "FAILED: could not create .venv. Install python3-venv for your platform." >&2
     return 1
   fi
@@ -57,6 +60,13 @@ ensure_test_tools() {
   fi
 }
 
+# Provision first. On a clean machine the system interpreter has neither jsonschema nor
+# pytest, and the validators below need jsonschema; provisioning later meant the gate
+# could not run at all on a machine that had nothing installed. Found by running this
+# gate in a clean room with only base utilities plus Node and Python.
+ensure_test_tools
+PYTHON="$repo_root/.venv/bin/python"
+
 echo "== Drake CI preflight =="
 
 echo "-- python scripts compile"
@@ -80,8 +90,6 @@ echo "-- validation_results schema fixtures"
 "$PYTHON" scripts/validate_validation_results.py --file tests/fixtures/validation-results/sample-passed.json
 
 echo "-- python tests"
-ensure_test_tools
-PYTHON="$repo_root/.venv/bin/python"
 # Run with a clean PYTHONPATH too: the suite must pass on what this repo declares,
 # not on packages that happen to be lying around in the caller's environment.
 env -u PYTHONPATH "$PYTHON" -m pytest tests/ -q
