@@ -68,6 +68,9 @@ npm --prefix tools/slice-agent-runner ci
 npm --prefix tools/slice-agent-runner run typecheck
 npm --prefix tools/slice-agent-runner run build
 
+echo "-- adoption smoke (the documented getting-started path, on a throwaway repo)"
+PYTHON="$PYTHON" bash scripts/adoption_smoke.sh
+
 if [ -f services/api/pyproject.toml ]; then
   echo "-- hosted API sketch validation"
   "$PYTHON" scripts/validate_hosted_api_sketch.py

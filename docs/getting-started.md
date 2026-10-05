@@ -29,8 +29,12 @@ definitions, hooks, prompts, branch conventions, and the runner config) into a
 target repository. It is conservative by design: `check` writes nothing.
 
 ```bash
-# Report what is missing or stale in your repo
-python3 scripts/sync_slice_pipeline_local.py --target /path/to/your-repo --mode check
+# Report what is missing or stale in your repo.
+# check compares the target against the flags you pass, so give it the same ones
+# you installed with.
+python3 scripts/sync_slice_pipeline_local.py --target /path/to/your-repo --mode check \
+  --project-name "Your Product" --project-id your-product \
+  --github-slug OWNER/REPO --validation-commands "bash scripts/ci_preflight.sh"
 
 # Install (existing non-empty files are left alone unless you pass --overwrite-existing)
 python3 scripts/sync_slice_pipeline_local.py \
@@ -66,8 +70,9 @@ Validate the tree before you rely on it — this is the same validator CI runs:
 python3 scripts/validate_slice_dependency_tree.py --tree /path/to/your-repo/.docs/slice_dependency_tree.json
 ```
 
-It fails on cycles, missing dependencies, and missing detail docs. Acceptance
-criteria should be **runnable**: each one names the command that proves it.
+It fails on dependency cycles, dependencies missing from the tree, gate/state
+mismatches, and invalid states. Acceptance criteria should be **runnable**: each
+one names the command that proves it.
 
 ## Step 4 — Point a worker at the slices
 

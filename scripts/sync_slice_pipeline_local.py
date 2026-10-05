@@ -21,9 +21,21 @@ from sync_mcp_environment_profile import sync_mcp_environment_profile_scaffold
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Assets copied verbatim from this repository's own scripts/. The runner config
+# this script generates points sliceSelectorCommand at
+# `scripts/select_next_automation_slice.py`, so an adopter's repository needs the
+# selector AND the module it imports; without them the first `run-next` fails with
+# ModuleNotFoundError.
+REPO_SCRIPTS_TO_INSTALL = (
+    "select_next_automation_slice.py",
+    "slice_lifecycle.py",
+)
 TEMPLATE_ROOT = REPO_ROOT / "templates" / "slice-pipeline-local"
 
 TEMPLATE_FILES = (
+    "AGENTS.md",
+    ".docs/git_workflow.md",
     ".cursor/skills/slice-pipeline-local/SKILL.md",
     ".cursor/agents/slice-preflight.md",
     ".cursor/agents/slice-implementer.md",
@@ -222,7 +234,13 @@ def write_text_if_needed(
         if current == content:
             return WriteResult(rel_path, "ok", "already current")
         if mode == "check":
-            return WriteResult(rel_path, "stale", "content differs")
+            return WriteResult(
+                rel_path,
+                "stale",
+                "content differs (check compares against the flags you pass, so "
+                "re-run with the same --project-name/--github-slug/--validation-commands "
+                "you installed with)",
+            )
         if current.strip() and not overwrite_existing:
             return WriteResult(
                 rel_path,
@@ -395,10 +413,39 @@ detail doc under this directory when the project uses detailed slice specs.
     }
 
 
+def missing_bundle_assets() -> list[str]:
+    """Report bundle assets referenced by this script that do not exist.
+
+    A missing asset used to raise FileNotFoundError mid-install, which reads as a
+    crash rather than as a packaging defect. Check up front and say so.
+    """
+    missing: list[str] = []
+    for rel_path in TEMPLATE_FILES:
+        if not (TEMPLATE_ROOT / rel_path).is_file():
+            missing.append(f"templates/slice-pipeline-local/{rel_path}")
+    for name in REPO_SCRIPTS_TO_INSTALL:
+        if not (REPO_ROOT / "scripts" / name).is_file():
+            missing.append(f"scripts/{name}")
+    return missing
+
+
 def sync_templates(args: argparse.Namespace, target: Path, tokens: dict[str, str]) -> list[WriteResult]:
     results: list[WriteResult] = []
     for rel_path in TEMPLATE_FILES:
         content = render_template(rel_path, tokens)
+        results.append(
+            write_text_if_needed(
+                target,
+                rel_path,
+                content,
+                mode=args.mode,
+                dry_run=args.dry_run,
+                overwrite_existing=args.overwrite_existing,
+            )
+        )
+    for name in REPO_SCRIPTS_TO_INSTALL:
+        rel_path = f"scripts/{name}"
+        content = (REPO_ROOT / rel_path).read_text(encoding="utf-8")
         results.append(
             write_text_if_needed(
                 target,
@@ -454,6 +501,16 @@ def main() -> int:
     validate_repo_relative_path(tokens["DEPENDENCY_TREE_PATH"], "dependency tree path")
     validate_repo_relative_path(tokens["SLICE_BACKLOG_PATH"], "slice backlog path")
     validate_repo_relative_path(tokens["SLICE_DETAIL_DIR"], "slice detail dir")
+    missing = missing_bundle_assets()
+    if missing:
+        print(
+            "slice-pipeline-local bundle is incomplete; these assets are missing:",
+            file=sys.stderr,
+        )
+        for rel_path in missing:
+            print(f"  - {rel_path}", file=sys.stderr)
+        return 2
+
     results = sync_templates(args, target, tokens)
     print_results(results)
 
