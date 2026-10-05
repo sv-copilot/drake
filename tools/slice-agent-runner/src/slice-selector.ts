@@ -5,13 +5,51 @@ import type { RunnerConfig, SelectedSlice } from "./types.js";
 
 const execAsync = promisify(exec);
 
+/**
+ * The selector exits non-zero when nothing is runnable, which is a normal state
+ * (a repo can legitimately have no ready, unblocked, automation-eligible slice).
+ * Surfacing that as "Error: Command failed: ..." makes a healthy scheduler look
+ * broken, so it gets its own error type and its own message.
+ */
+export class NoRunnableSliceError extends Error {
+  constructor() {
+    super(
+      "no runnable slice: nothing is ready, unblocked, and automation-eligible"
+    );
+    this.name = "NoRunnableSliceError";
+  }
+}
+
 export async function selectNextSlice(
   config: RunnerConfig
 ): Promise<SelectedSlice> {
-  const { stdout } = await execAsync(config.sliceSelectorCommand, {
-    cwd: config.localPath,
-    maxBuffer: 10 * 1024 * 1024,
-  });
+  let stdout: string;
+
+  try {
+    ({ stdout } = await execAsync(config.sliceSelectorCommand, {
+      cwd: config.localPath,
+      maxBuffer: 10 * 1024 * 1024,
+    }));
+  } catch (error) {
+    const failure = error as {
+      stdout?: string;
+      stderr?: string;
+      code?: number | string;
+    };
+    const payload = parseSelectorOutputOrUndefined(failure.stdout ?? "");
+
+    if (payload && Array.isArray(payload.selected) && payload.selected.length === 0) {
+      throw new NoRunnableSliceError();
+    }
+
+    const exit = failure.code === undefined ? "" : ` (exit ${failure.code})`;
+    const stderr = (failure.stderr ?? "").trim();
+    throw new Error(
+      `selector command failed${exit}: ${config.sliceSelectorCommand}` +
+        (stderr ? `\n${stderr}` : "")
+    );
+  }
+
   const parsed = parseSelectorOutput(stdout);
   const selected = Array.isArray(parsed.selected) ? parsed.selected[0] : undefined;
 
@@ -53,6 +91,16 @@ export async function selectNextSlice(
     fanoutLimit,
     raw: parsed,
   };
+}
+
+function parseSelectorOutputOrUndefined(
+  stdout: string
+): Record<string, unknown> | undefined {
+  try {
+    return parseSelectorOutput(stdout);
+  } catch {
+    return undefined;
+  }
 }
 
 function parseSelectorOutput(stdout: string): Record<string, unknown> {

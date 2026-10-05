@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 """Select the next automation-eligible slice from the dependency tree.
 
+Ordering: `priority` ascending (lower number = higher priority), then
+`slice_number` as the tie-break. A row without `priority` falls back to its own
+`slice_number`, so trees that never set the field keep their natural order.
+`priority` is a declared field in `.docs/slice_dependency_tree.schema.json`, and a
+tree that sets it must be dispatched in that order or the field means nothing.
+
+A slice is selectable when all of these hold:
+  - its state is `ready` (and not `gated`), and it carries no `operator_gates`
+  - `automation_eligible` is true
+  - every dependency is already done (terminal state or status `done`)
+
 Prints JSON to stdout for webhook, GitHub Actions, and slice-agent-runner
-consumption.
+consumption. Exits 1 when nothing is runnable, which is a normal state, not an
+error: the payload still prints, with `selected: []`.
 
 Usage:
   python3 scripts/select_next_automation_slice.py
@@ -54,6 +66,13 @@ def fanout_limit_for_rank(rank: int, tree: dict) -> int:
     return int(tree.get("default_fanout_limit", 3))
 
 
+def ordering_key(row: dict) -> tuple[int, int]:
+    """Sort key: (priority, slice_number), priority falling back to slice_number."""
+    number = row["slice_number"]
+    priority = row.get("priority")
+    return (priority if isinstance(priority, int) else number, number)
+
+
 def select_runnable_slices(
     tree: dict,
     *,
@@ -62,7 +81,7 @@ def select_runnable_slices(
     by_number = slice_by_number(tree)
     runnable: list[dict] = []
 
-    for row in sorted(tree["slices"], key=lambda item: item["slice_number"]):
+    for row in sorted(tree["slices"], key=ordering_key):
         if not is_runnable(row):
             continue
         if not deps_complete(row, by_number):

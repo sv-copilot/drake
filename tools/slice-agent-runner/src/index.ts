@@ -10,7 +10,7 @@ import {
   loadRunnerConfig,
   validateConfig,
 } from "./slice-config.js";
-import { selectNextSlice } from "./slice-selector.js";
+import { NoRunnableSliceError, selectNextSlice } from "./slice-selector.js";
 import { buildPayload, buildSlicePrompt, type PromptKind } from "./prompts.js";
 import { listModels, runSdkPrompt } from "./sdk-session.js";
 import type { RunnerConfig, RuntimeMode, SelectedSlice } from "./types.js";
@@ -74,7 +74,12 @@ async function runCheck(config: RunnerConfig): Promise<void> {
       `selector: ok (${selected.targetSliceId} ${selected.targetSliceTitle})`
     );
   } catch (error) {
-    errors.push(`selector failed: ${messageFromError(error)}`);
+    // Nothing runnable is a state, not a defect: report it and carry on.
+    if (error instanceof NoRunnableSliceError) {
+      console.log(`selector: none runnable (${error.message})`);
+    } else {
+      errors.push(`selector failed: ${messageFromError(error)}`);
+    }
   }
 
   if (errors.length) {
@@ -94,7 +99,21 @@ async function runSliceCommand(
   config: RunnerConfig,
   options: CliOptions
 ): Promise<void> {
-  const selected = await selectNextSlice(config);
+  let selected: SelectedSlice;
+
+  try {
+    selected = await selectNextSlice(config);
+  } catch (error) {
+    if (error instanceof NoRunnableSliceError) {
+      console.log(error.message);
+      console.log(
+        "nothing was dispatched; check the dependency tree for ready, unblocked, automation-eligible slices"
+      );
+      process.exitCode = 3;
+      return;
+    }
+    throw error;
+  }
   const triggerReason =
     command === "preflight"
       ? "sdk_runner_preflight"
@@ -327,6 +346,12 @@ Options:
   --print-prompt        Alias-style prompt render without SDK call.
   --force               Expire a stuck active local run before sending.
   -h, --help            Show this help.
+
+Exit codes:
+  0  the command completed (a dry run that dispatched nothing included)
+  1  an error: bad config, missing required file, failed selector command
+  2  the SDK run finished in a non-finished state
+  3  nothing to do: no ready, unblocked, automation-eligible slice exists
 `);
 }
 
