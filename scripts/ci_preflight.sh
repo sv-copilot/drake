@@ -40,7 +40,21 @@ ensure_venv() {
 # `ModuleNotFoundError: pygments` and read as a repo defect. Provision it here, once.
 ensure_test_tools() {
   ensure_venv || return 1
-  .venv/bin/python -m pip install --quiet pytest httpx jsonschema
+  # Install with a clean PYTHONPATH. pip treats anything importable from the current
+  # environment as already satisfied, so an inherited PYTHONPATH pointing at another
+  # environment (a dev shell, a CI image, an IDE) makes pip skip installing pytest's
+  # own dependencies into this venv; a later stage that replaces PYTHONPATH then
+  # cannot import them, and the failure surfaces as an unrelated ModuleNotFoundError.
+  env -u PYTHONPATH PYTHONNOUSERSITE=1 .venv/bin/python -m pip install --quiet pytest httpx jsonschema
+  # Verify rather than assume: say "provisioning problem" here, where the cause is,
+  # instead of letting it surface two stages later as a phantom repo defect.
+  if ! env -u PYTHONPATH .venv/bin/python -c "import pytest, httpx, jsonschema, pygments" >/dev/null 2>&1; then
+    echo "FAILED: the python tooling is incomplete in .venv" >&2
+    echo "        This is an environment/provisioning problem, not a repo defect." >&2
+    echo "        Re-run, or install it directly:" >&2
+    echo "          .venv/bin/python -m pip install pytest httpx jsonschema" >&2
+    return 1
+  fi
 }
 
 echo "== Drake CI preflight =="
@@ -68,7 +82,9 @@ echo "-- validation_results schema fixtures"
 echo "-- python tests"
 ensure_test_tools
 PYTHON="$repo_root/.venv/bin/python"
-"$PYTHON" -m pytest tests/ -q
+# Run with a clean PYTHONPATH too: the suite must pass on what this repo declares,
+# not on packages that happen to be lying around in the caller's environment.
+env -u PYTHONPATH "$PYTHON" -m pytest tests/ -q
 
 echo "-- slice-agent-runner build"
 npm --prefix tools/slice-agent-runner ci
