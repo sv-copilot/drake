@@ -53,7 +53,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/sync \
   -H 'content-type: application/json' \
   -d '{
     "registry_repo": "example-org/example-portfolio",
-    "registry_ref": "ai-dev",
+    "registry_ref": "dev",
     "registry_path": ".docs/projects-registry.json"
   }'
 ```

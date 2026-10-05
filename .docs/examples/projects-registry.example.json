@@ -5,7 +5,7 @@
     "hourly_improvement_id": "00000000-0000-0000-0000-000000000000",
     "hourly_improvement_schedule": "0 * * * *",
     "hourly_improvement_prompt": ".docs/agent_prompts/hourly-improvement.example.md",
-    "hourly_improvement_pr_target_branch": "ai-dev",
+    "hourly_improvement_pr_target_branch": "dev",
     "hourly_improvement_model_slug": "composer-2.5"
   },
   "orchestrator": {
@@ -22,7 +22,7 @@
       "name": "example-app",
       "local_path": "<workspace-root>/example-app",
       "github_slug": "example-org/example-app",
-      "integration_branch": "ai-dev",
+      "integration_branch": "dev",
       "priority": 1,
       "bootstrap_maturity": "starter",
       "readiness": {

@@ -3,7 +3,7 @@
 Extends the Drake slice model with a ``kind`` discriminator:
 
 * ``product`` — code/product unit; acceptance routes to test runners (unchanged).
-* ``content`` — creative scene; acceptance routes to saimon continuity/lore/style
+* ``content`` — creative scene; acceptance routes to content continuity/lore/style
   checks instead of test runners.
 
 A content slice carries a ``content_brief`` describing the scene. The lifecycle
@@ -74,14 +74,14 @@ def validate_content_slice(row: dict[str, Any]) -> list[str]:
 def route_acceptance(row: dict[str, Any]) -> str:
     """Return the acceptance route for a slice.
 
-    ``content`` → ``"saimon"`` (continuity/lore/style checks);
+    ``content`` → ``"content"`` (continuity/lore/style checks);
     ``product`` → ``"tests"`` (unit/integration test runners).
     """
-    return "saimon" if slice_kind(row) == "content" else "tests"
+    return "content" if slice_kind(row) == "content" else "tests"
 
 
 def content_acceptance_checks(brief: dict[str, Any]) -> dict[str, Any]:
-    """Build the saimon verify/evaluate checks for a content brief."""
+    """Build the verify/evaluate checks for a content brief."""
     scene_id = brief.get("scene_id") or "scene"
     return {
         "verify": f"scene {scene_id} preserves continuity and lore",

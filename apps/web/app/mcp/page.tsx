@@ -1,8 +1,19 @@
-export default function McpPage() {
+export const metadata = { title: "MCP — Drake operations" };
+
+export default function MCPPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">MCP</h1>
-      <p className="text-muted-foreground mt-2">MCP tool & resource inventory.</p>
-    </div>
+    <section className="max-w-3xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+        MCP
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+        Not implemented in this release
+      </h2>
+      <p className="mt-4 text-lg leading-8 text-slate-600">
+        This screen is part of the hosted operations roadmap but has no
+        implementation yet. The screens that do work — portfolio, slices, runs,
+        workers, dispatches, and sync — are reachable from the sidebar.
+      </p>
+    </section>
   );
 }

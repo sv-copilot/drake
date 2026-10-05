@@ -1,8 +1,15 @@
+import { Suspense } from "react";
+
+import { SliceIndex, SliceIndexLoading } from "@/features/slices/slice-index";
+
+export const metadata = { title: "Slices — Drake operations" };
+
 export default function SlicesPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Slices</h1>
-      <p className="text-muted-foreground mt-2">Read‑only slice overview.</p>
-    </div>
+    // This screen reads and writes URL query state, which suspends during
+    // static prerendering — the boundary is required, not cosmetic.
+    <Suspense fallback={<SliceIndexLoading />}>
+      <SliceIndex />
+    </Suspense>
   );
 }

@@ -43,3 +43,9 @@ apps/**/*.tsbuildinfo
 projects/*
 !projects/README.md
 __pycache__/
+
+# Repo-local virtualenv used by scripts/ci_preflight.sh on PEP 668 hosts
+.venv/
+
+# Optional local export denylist (see .drake-export-deny.txt.example)
+.drake-export-deny.txt

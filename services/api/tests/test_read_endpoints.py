@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from hosted_api.main import create_app
+from hosted_api.read_models import LEGACY_ENV_PREFIX_REWRITES
 from hosted_api.sync.github import InMemorySyncCache, ProjectTree, SyncSnapshot
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -133,8 +134,10 @@ def test_read_endpoints_do_not_expose_webhook_values_or_private_prefixes() -> No
     }
     serialized = json.dumps(payload)
 
-    assert "SIMON_PROJECTS" not in serialized
-    assert "RESEARCH_SERVICE" not in serialized
+    # No legacy private control-plane prefix may reach a consumer, and this
+    # assertion follows the sanitizer's own mapping so the two cannot drift.
+    for legacy_prefix in LEGACY_ENV_PREFIX_REWRITES:
+        assert legacy_prefix not in serialized
     assert "https://hooks.slack.com" not in serialized
     assert "webhook.site" not in serialized
     assert "secret" not in serialized.lower()

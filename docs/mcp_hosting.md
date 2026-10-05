@@ -22,13 +22,10 @@ tools (including personal operator Cockpits) connect through this URL.
 
 ## Relationship to Cockpit
 
-Drake is a bare orchestration MCP. A personal operator Cockpit (such as Simon's
-private Cockpit UI/API at `cockpit.yourdomain.com`) may consume Drake as one of
-its MCP tools. Drake does **not** own Cockpit UI/API hostnames or `COCKPIT_*`
-environment variables. See the [Drake-Cockpit boundary doc](../.docs/examples/README.md)
-in this repo and the portfolio governance repo's
-[`drake_cockpit_boundary.md`](https://github.com/sv-copilot/simon-projects/blob/ai-dev/.docs/drake_cockpit_boundary.md)
-for the separation of concerns.
+Drake is a bare orchestration MCP. A personal operator cockpit (its own UI/API at
+`cockpit.yourdomain.com`) may consume Drake as one of its MCP tools. Drake does
+**not** own cockpit UI/API hostnames or `COCKPIT_*` environment variables — keep
+that boundary explicit in your own deployment documentation.
 
 ## Path routing vs subdomain routing
 

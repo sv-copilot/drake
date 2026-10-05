@@ -9,6 +9,7 @@ import {
   statusTone,
 } from "@/features/runs/run-history";
 import type { RunSummary } from "@/lib/api-client";
+import type { SortKey } from "@/lib/evidence-sort";
 
 const runs: RunSummary[] = [
   {
@@ -126,7 +127,7 @@ describe("Run history", () => {
 
   it("reorders rows when the sort control changes", () => {
     function Harness() {
-      const [sort, setSort] = useState<"newest" | "oldest">("newest");
+      const [sort, setSort] = useState<SortKey>("newest");
       return (
         <RunHistoryContent runs={runs} sort={sort} onSortChange={setSort} />
       );

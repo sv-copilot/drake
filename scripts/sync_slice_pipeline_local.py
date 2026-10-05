@@ -87,7 +87,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project-id", help="Kebab-case project id.")
     parser.add_argument("--github-slug", default="OWNER/REPO")
     parser.add_argument("--local-path")
-    parser.add_argument("--integration-branch", default="ai-dev")
+    parser.add_argument("--integration-branch", default="dev")
     parser.add_argument(
         "--feature-branch-prefix",
         default="agent/",

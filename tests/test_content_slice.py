@@ -82,7 +82,7 @@ def test_list_fields_must_be_lists() -> None:
 
 def test_route_acceptance_content() -> None:
     row = {"kind": "content", "content_brief": VALID_BRIEF}
-    assert route_acceptance(row) == "saimon"
+    assert route_acceptance(row) == "content"
 
 
 def test_content_acceptance_checks_shape() -> None:
