@@ -31,6 +31,22 @@ REPO_SCRIPTS_TO_INSTALL = (
     "select_next_automation_slice.py",
     "slice_lifecycle.py",
 )
+
+# Framework-owned assets: this tooling is executed, not edited. On install they are
+# refreshed to match the framework, because leaving a stale copy means the runner
+# keeps executing old code while the config, the docs and CI all describe new code.
+# Everything else (AGENTS.md, prompts, agents, conventions) is adopter-owned and is
+# never overwritten without --overwrite-existing.
+MANAGED_PATHS = frozenset(
+    {
+        "scripts/select_next_automation_slice.py",
+        "scripts/slice_lifecycle.py",
+        "scripts/sync_slice_execution_docs.py",
+        ".cursor/hooks/block-task-tool.sh",
+        ".cursor/hooks/block-subagent.sh",
+        ".cursor/automation-runs/.gitignore",
+    }
+)
 TEMPLATE_ROOT = REPO_ROOT / "templates" / "slice-pipeline-local"
 
 TEMPLATE_FILES = (
@@ -440,7 +456,9 @@ def sync_templates(args: argparse.Namespace, target: Path, tokens: dict[str, str
                 content,
                 mode=args.mode,
                 dry_run=args.dry_run,
-                overwrite_existing=args.overwrite_existing,
+                overwrite_existing=(
+                    args.overwrite_existing or rel_path in MANAGED_PATHS
+                ),
             )
         )
     for name in REPO_SCRIPTS_TO_INSTALL:
@@ -453,7 +471,9 @@ def sync_templates(args: argparse.Namespace, target: Path, tokens: dict[str, str
                 content,
                 mode=args.mode,
                 dry_run=args.dry_run,
-                overwrite_existing=args.overwrite_existing,
+                overwrite_existing=(
+                    args.overwrite_existing or rel_path in MANAGED_PATHS
+                ),
             )
         )
     results.append(merge_hooks_json(target, mode=args.mode, dry_run=args.dry_run))
