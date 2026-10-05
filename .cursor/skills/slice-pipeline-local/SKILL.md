@@ -16,7 +16,7 @@ inside the Cursor IDE.
 | Project ID | `drake` |
 | GitHub slug | `sv-copilot/drake` |
 | Local path | `<workspace-root>` |
-| Integration branch | `ai-dev` |
+| Integration branch | `dev` |
 | Dependency tree | `.docs/slice_dependency_tree.json` |
 | Slice backlog | `.docs/slice_backlog.md` |
 | Slice detail directory | `.docs/slices` |

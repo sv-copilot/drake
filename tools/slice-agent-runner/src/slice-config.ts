@@ -47,7 +47,7 @@ export function loadRunnerConfig(repoPath: string): RunnerConfig {
     projectId,
     githubSlug: raw.githubSlug ?? "OWNER/REPO",
     localPath: effectiveLocalPath,
-    integrationBranch: raw.integrationBranch ?? "ai-dev",
+    integrationBranch: raw.integrationBranch ?? "dev",
     featureBranchPrefix: raw.featureBranchPrefix ?? "agent/",
     legacyFeatureBranchPrefixes: raw.legacyFeatureBranchPrefixes ?? ["cursor/"],
     dependencyTreePath,

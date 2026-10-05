@@ -113,7 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
             <h1 className="text-xl font-semibold">Hosted operations</h1>
           </header>
-          <div className="px-5 py-8 sm:px-8 lg:px-12">{children}</div>
+          <div id="screen" className="px-5 py-8 sm:px-8 lg:px-12">{children}</div>
         </main>
       </div>
     </div>

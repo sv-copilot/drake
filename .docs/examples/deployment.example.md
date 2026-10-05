@@ -68,7 +68,7 @@ prod by mistake.
 
 ## CI and automation notes
 
-- Local validation on `ai-dev` validates build artifacts before integration; GitHub Actions checks gate `dev` / `main` promotion.
+- Local validation runs on the feature branch before integration; CI gates promotion through `dev` → `rc` → `main`.
 - Do not enable `automation_enabled=true` until UAT ownership and smoke slice are documented in [WORKSPACE.md](../../WORKSPACE.md) maturity checklist (portfolio repo).
 - Smoke slice must not deploy to production or touch real secrets.
 

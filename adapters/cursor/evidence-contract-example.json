@@ -65,7 +65,7 @@
     "pr_url": "https://github.com/sv-copilot/drake/pull/60",
     "pr_number": 60,
     "branch": "agent/adapter-cursor-1",
-    "base_branch": "ai-dev",
+    "base_branch": "dev",
     "state": "open"
   },
   "completed_at": "2026-06-22T21:05:42Z",

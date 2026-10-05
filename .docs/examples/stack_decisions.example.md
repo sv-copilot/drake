@@ -19,7 +19,7 @@ Canonical references:
 | GitHub slug | `sv-copilot/<project-id>` |
 | Local path (current) | `<home>/<project-id>` |
 | Sensitivity profile | `public-marketing` \| `private-data` \| `browser-automation` \| `rag` |
-| Integration branch | `ai-dev` |
+| Integration branch | `dev` |
 | Last reviewed | `YYYY-MM-DD` |
 
 ## Scaffold inputs (chosen at kickoff)
@@ -46,7 +46,7 @@ Frontend-only detail lives in `.docs/frontend_stack.md` when applicable.
 | Data store | Postgres 16 (managed) | Relational model fits domain | Read-heavy analytics → evaluate warehouse |
 | Auth | Hosted provider (example) | Offloads OAuth/session; no custom auth in v1 | Enterprise SSO requirement |
 | Hosting | Project-owned or shared UAT host | Document in `.docs/deployment.md` | Multi-region or GPU workloads |
-| CI | Local validation on `ai-dev`; GitHub Actions on `dev` / `main` | Keeps agent integration fast while preserving staging and production gates | Hosted checks block promotion to staging or production |
+| CI | Local validation on `dev`; GitHub Actions on `dev` / `main` | Keeps agent integration fast while preserving staging and production gates | Hosted checks block promotion to staging or production |
 
 ## Validation commands
 
@@ -61,7 +61,7 @@ Stable script names (see [testing_quality_practices.md](../testing_quality_pract
 | Build | `npm run build` |
 | Smoke/e2e | `npm run test:e2e` |
 
-Local validation for `ai-dev` and GitHub Actions for `dev` promotion must run
+Local validation for `dev` and GitHub Actions for `dev` promotion must run
 all gates without real production secrets.
 
 ## Automation smoke slice

@@ -98,7 +98,7 @@ Beyond the required `payload.instructions`, the Cursor adapter recognizes:
 | --- | --- | --- |
 | `working_directory` | All | Override the default repo root. Default `.`. |
 | `branch_prefix` | `implement_slice`, `review_pr` | Branch prefix for new work. Default `agent/`. Legacy `cursor/` accepted. |
-| `target_branch` | `implement_slice` | Base branch for PR. Default `ai-dev`. |
+| `target_branch` | `implement_slice` | Base branch for PR. Default `dev`. |
 
 ---
 

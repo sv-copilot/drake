@@ -1,10 +1,15 @@
+import { Suspense } from "react";
+
+import { DispatchLog, DispatchLogLoading } from "@/features/dispatches/dispatch-log";
+
+export const metadata = { title: "Dispatches — Drake operations" };
+
 export default function DispatchesPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-destructive">Dispatches</h1>
-      <p className="text-muted-foreground mt-2">
-        Active dispatch management. Write actions require elevated privileges.
-      </p>
-    </div>
+    // This screen reads and writes URL query state, which suspends during
+    // static prerendering — the boundary is required, not cosmetic.
+    <Suspense fallback={<DispatchLogLoading />}>
+      <DispatchLog />
+    </Suspense>
   );
 }

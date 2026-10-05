@@ -100,12 +100,12 @@ The Task Packet is a JSON object with the following structure:
     "instructions": "Implement the adapter specification...",
     "working_directory": "<workspace-root>",
     "branch_prefix": "agent/",
-    "target_branch": "ai-dev"
+    "target_branch": "dev"
   },
   "context": {
     "credential_refs": ["GH_TOKEN"],
     "github_slug": "sv-copilot/drake",
-    "integration_branch": "ai-dev",
+    "integration_branch": "dev",
     "environment": "local"
   },
   "created_at": "2026-06-17T14:30:00Z",
@@ -206,7 +206,7 @@ The Evidence Contract is a JSON object with the following structure:
     "pr_url": "https://github.com/sv-copilot/drake/pull/42",
     "pr_number": 42,
     "branch": "cursor/adapter-spec-1",
-    "base_branch": "ai-dev",
+    "base_branch": "dev",
     "state": "open"
   },
   "logs": [

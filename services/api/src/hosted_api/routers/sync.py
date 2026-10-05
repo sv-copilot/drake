@@ -25,7 +25,7 @@ class SyncRequest(BaseModel):
         examples=["example-org/example-portfolio"],
     )
     registry_ref: str = Field(
-        default="ai-dev",
+        default="dev",
         description="Branch, tag, or SHA to read.",
     )
     registry_path: str = Field(
