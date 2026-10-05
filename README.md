@@ -268,7 +268,9 @@ Then:
    path: copy the example registry, install `slice-pipeline-local`, validate.
 2. [`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md) — the whole
    methodology end to end, from strategy to production, on a worked example.
-3. [`adapters/CONTRACT.md`](adapters/CONTRACT.md) — what a worker must implement
+3. [`docs/whitepaper.md`](docs/whitepaper.md) — what the system is, how it is put
+   together, and what has been verified and how.
+4. [`adapters/CONTRACT.md`](adapters/CONTRACT.md) — what a worker must implement
    to receive slices from Drake.
 
 ## Hosted local development
@@ -312,7 +314,7 @@ STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
 | `adapters/` | Worker adapter contract — task packet schema, evidence contract, reference adapter notes |
 | `apps/web/` | Hosted operations web shell (Next.js) with its own unit and e2e tests |
 | `services/api/` | Hosted read-model API (FastAPI) — read-only routes over the registry and trees |
-| `docs/` | Getting started, cascade walkthrough, positioning, MCP hosting |
+| `docs/` | Whitepaper, getting started, cascade walkthrough, harnesses, positioning, MCP hosting |
 | `scripts/` | Validation, export, slice-lifecycle, and dev tooling |
 | `templates/` | Reusable templates: ADR format, `slice-pipeline-local` install bundle |
 | `tests/` | Validator and export-gate tests |
@@ -359,6 +361,7 @@ license (see `LICENSE`).
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
 | **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using a worked example |
 | Positioning next to coding agents | [`docs/comparison.md`](docs/comparison.md) |
+| **Whitepaper (what this is, and what is verified)** | **[`docs/whitepaper.md`](docs/whitepaper.md)** |
 | **Harnesses (Claude Code, Codex, Cursor, Cline, Aider, your own)** | [`docs/harnesses.md`](docs/harnesses.md) |
 | **Example configuration to copy** | [`docs/example-configuration.md`](docs/example-configuration.md) + [`examples/governed-workspace/`](examples/governed-workspace/README.md) |
 | Adapter contract (workers) | [`adapters/CONTRACT.md`](adapters/CONTRACT.md) |
