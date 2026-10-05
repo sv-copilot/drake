@@ -67,6 +67,24 @@ smoke, and — when those directories are present — the hosted API and web sui
 **Every check is blocking**: a check that cannot run fails the gate rather than being
 skipped, because a gate that hides a broken build is worse than no gate.
 
+### Release management
+
+The adoption chain is a **tested part of releasing**, not a manual rehearsal:
+
+- every push and pull request runs `scripts/ci_preflight.sh`, which includes the
+  adoption chain against the tree (documented check/install/check, one install per
+  harness, the run chain with its documented exit codes, the upgrade path, a pre-0.2
+  config). The chain phase never calls the gate, so this is not recursive;
+- tags are cut with `scripts/cut_release.sh <version> [notes-file]`, which refuses to
+  run unless main is clean, level with origin and green in CI, rehearses the chain
+  *before* tagging, and afterwards cold-clones the published tag and runs its gate —
+  the artifact must pass its own gate, chain included;
+- `.github/workflows/release-verify.yml` repeats that cold-clone verification on every
+  tag push (`workflow_dispatch` re-verifies any tag), so a hand-cut release is
+  verified too.
+
+A tag whose artifact a stranger cannot adopt is not a release.
+
 To retest the documented adoption chain against a published tag (cold clone, the gate,
 one install per harness, the run chain, the upgrade path): run
 `env -u PYTHONPATH bash scripts/adoption_chain_retest.sh <tag> gate`, then resume with

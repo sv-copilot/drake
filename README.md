@@ -280,3 +280,4 @@ license (see `LICENSE`).
 | Stack decisions example | [`.docs/examples/stack_decisions.example.md`](.docs/examples/stack_decisions.example.md) |
 | MCP hosting | [`docs/mcp_hosting.md`](docs/mcp_hosting.md) |
 | Retest the adoption chain against a release | `scripts/adoption_chain_retest.sh` |
+| Cut a verified release | `scripts/cut_release.sh <version>` (chain before the tag, cold-clone gate after it) |
