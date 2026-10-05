@@ -95,6 +95,35 @@ def test_install_refreshes_a_modified_managed_script(tmp_path: Path) -> None:
     )
 
 
+def test_check_reads_harness_settings_back_from_the_target(tmp_path: Path) -> None:
+    """Install with --harness-command, check without it: not stale.
+
+    check compares the target against the flags it is given, but the harness id,
+    model and command are recorded in the installed config, so check re-reads them.
+    Reporting a false "stale" here trains people to ignore the report.
+    """
+    target = tmp_path / "product"
+    target.mkdir()
+
+    assert (
+        run_installer(
+            target,
+            "--mode",
+            "install",
+            "--harnesses",
+            "generic",
+            "--harness-command",
+            "bash scripts/harness_stub.sh {prompt_file}",
+        ).returncode
+        == 0
+    )
+
+    result = run_installer(target, "--mode", "check")
+
+    assert result.returncode == 0, result.stdout
+    assert "stale" not in result.stdout
+
+
 def test_install_leaves_adopter_owned_files_alone(tmp_path: Path) -> None:
     target = tmp_path / "product"
     target.mkdir()

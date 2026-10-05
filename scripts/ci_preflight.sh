@@ -33,6 +33,16 @@ ensure_venv() {
   .venv/bin/python -m pip install --quiet --upgrade pip
 }
 
+# The gate's python tooling, provisioned deliberately. Taking whichever interpreter
+# happens to have pytest importable produced two different environments depending on
+# the host: on a fresh clone where the host lacked it, the venv was created later and
+# used for the API tests without pytest's own dependencies, so the suite died on
+# `ModuleNotFoundError: pygments` and read as a repo defect. Provision it here, once.
+ensure_test_tools() {
+  ensure_venv || return 1
+  .venv/bin/python -m pip install --quiet pytest httpx jsonschema
+}
+
 echo "== Drake CI preflight =="
 
 echo "-- python scripts compile"
@@ -56,11 +66,8 @@ echo "-- validation_results schema fixtures"
 "$PYTHON" scripts/validate_validation_results.py --file tests/fixtures/validation-results/sample-passed.json
 
 echo "-- python tests"
-if ! "$PYTHON" -c "import pytest, httpx" >/dev/null 2>&1; then
-  ensure_venv
-  .venv/bin/python -m pip install --quiet pytest httpx
-  PYTHON="$repo_root/.venv/bin/python"
-fi
+ensure_test_tools
+PYTHON="$repo_root/.venv/bin/python"
 "$PYTHON" -m pytest tests/ -q
 
 echo "-- slice-agent-runner build"
@@ -82,7 +89,7 @@ if [ -f services/api/pyproject.toml ]; then
   "$PYTHON" scripts/validate_hosted_api_sketch.py
 
   echo "-- hosted API tests"
-  ensure_venv
+  ensure_test_tools
   .venv/bin/python -m pip install --quiet -e "./services/api[dev]"
   PYTHONPATH="$repo_root/services/api/src" \
     .venv/bin/python -m pytest "$repo_root/services/api/tests" -q
