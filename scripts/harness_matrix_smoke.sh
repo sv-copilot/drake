@@ -160,7 +160,7 @@ fi
 
 echo "harness matrix: scheduling (what cron and systemd timers call)"
 out="$work/cron.txt"
-"$repo_root/scripts/slice-cron.sh" --repo "$target" > "$out" 2>&1
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
 cron_status=$?
 if [ "$cron_status" -eq 0 ] && grep -q "a slice ran" "$out"; then
   report ok "slice-cron runs a slice and reports exit 0"
@@ -176,7 +176,7 @@ fi
 
 mkdir -p "$target/.drake/.slice-cron.lock"
 out="$work/cron-locked.txt"
-"$repo_root/scripts/slice-cron.sh" --repo "$target" > "$out" 2>&1
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
 locked_status=$?
 rmdir "$target/.drake/.slice-cron.lock" 2>/dev/null || true
 if [ "$locked_status" -eq 0 ] && grep -q "skipping this tick" "$out"; then
@@ -206,7 +206,7 @@ else
 fi
 
 out="$work/cron-none.txt"
-"$repo_root/scripts/slice-cron.sh" --repo "$target" > "$out" 2>&1
+"$repo_root/scripts/slice-cron.sh" --repo "$target" --runner "$runner" > "$out" 2>&1
 cron_none_status=$?
 if [ "$cron_none_status" -eq 3 ] && grep -q "nothing runnable (normal" "$out"; then
   report ok "slice-cron reports nothing runnable as exit 3, not a failure"
