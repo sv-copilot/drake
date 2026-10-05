@@ -141,12 +141,12 @@ install_flags=(
   --harnesses generic
   --harness-command "bash scripts/harness_stub.sh {prompt_file}"
 )
-python3 "$repo_root/scripts/sync_slice_pipeline_local.py" --mode install "${install_flags[@]}" >/dev/null
+"$python_bin" "$repo_root/scripts/sync_slice_pipeline_local.py" --mode install "${install_flags[@]}" >/dev/null
 
 echo "adoption smoke: check mode reports the installed target as complete"
 # check compares the target against the flags it is given, so it gets the same
 # flags the install used.
-if ! python3 "$repo_root/scripts/sync_slice_pipeline_local.py" --mode check "${install_flags[@]}" > "$work/check-install.txt" 2>&1; then
+if ! "$python_bin" "$repo_root/scripts/sync_slice_pipeline_local.py" --mode check "${install_flags[@]}" > "$work/check-install.txt" 2>&1; then
   echo "adoption smoke: FAILED - check mode is unhappy after a successful install" >&2
   cat "$work/check-install.txt" >&2
   exit 1
@@ -169,7 +169,7 @@ done
 )
 
 echo "adoption smoke: validate the dependency tree"
-python3 "$repo_root/scripts/validate_slice_dependency_tree.py" --tree "$app/.docs/slice_dependency_tree.json"
+"$python_bin" "$repo_root/scripts/validate_slice_dependency_tree.py" --tree "$app/.docs/slice_dependency_tree.json"
 
 echo "adoption smoke: runner check"
 if ! node "$runner" check --repo "$app" > "$work/check.txt" 2>&1; then
@@ -201,7 +201,7 @@ grep -q "stub harness: wrote" "$work/run.txt" || { cat "$work/run.txt" >&2; exit
 run_dir="$(ls -dt "$app"/.drake/runs/*/ | head -1)"
 
 echo "adoption smoke: the run's packet and evidence satisfy the contracts"
-python3 "$repo_root/scripts/validate_run_artifacts.py" --run "$run_dir" > "$work/artifacts.txt" 2>&1 || {
+"$python_bin" "$repo_root/scripts/validate_run_artifacts.py" --run "$run_dir" > "$work/artifacts.txt" 2>&1 || {
   cat "$work/artifacts.txt" >&2
   exit 1
 }

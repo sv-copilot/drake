@@ -35,6 +35,95 @@ Every check in `ci_preflight.sh` is **blocking**. There is deliberately no
 `ci_preflight.sh` installs Python test dependencies into a repo-local `.venv`
 (never into your system interpreter, which PEP 668 hosts refuse anyway).
 
+### From scratch on a clean machine
+
+Verified in a clean room: base OS utilities plus the toolchains installed below — no Node,
+no Python toolchain, no npm cache, no site-packages. Every command here was run in that room,
+in this order, on the release it ships with.
+
+**Prerequisites — the whole list:** `git`, `curl`, `tar`, `xz`, **Python 3.12+** (with
+`venv`), **Node 22+** and **npm 10+**. No C toolchain, no system Python packages: the gate
+provisions a repo-local `.venv` for everything it needs.
+
+Without root, both toolchains install from their own sources:
+
+```bash
+# Node, from the official tarball
+curl -fsSL https://nodejs.org/dist/v22.20.0/node-v22.20.0-linux-x64.tar.xz | tar -xJ
+export PATH="$PWD/node-v22.20.0-linux-x64/bin:$PATH"
+
+# Python, from uv's standalone builds (no system packages, no root)
+curl -fsSL https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+./uv-x86_64-unknown-linux-gnu/uv python install 3.12
+./uv-x86_64-unknown-linux-gnu/uv python find 3.12      # use this interpreter as python3
+```
+
+Then the documented path, which is what CI runs on every push:
+
+```bash
+# 1. get the framework
+git clone --branch v0.2.6 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
+
+# 2. its own gate - compiles, validates, runs the suites, the smokes, the adoption chain,
+#    the hosted API and the web build. Takes about a minute from an empty npm cache.
+bash scripts/ci_preflight.sh                     # ends with: ci preflight passed
+
+# 3. install the pipeline into your product repository
+python3 scripts/sync_slice_pipeline_local.py --target ../my-product --mode install \
+  --project-name "My Product" --project-id my-product --github-slug my-org/my-product \
+  --validation-commands "bash scripts/ci_preflight.sh" --harnesses cline
+
+# 4. start from the recommended configuration rather than a blank slate
+cp -r examples/governed-workspace/.docs ../my-product/
+python3 scripts/validate_slice_dependency_tree.py \
+  --tree ../my-product/.docs/slice_dependency_tree.json     # dependency tree valid: …
+
+# 5. build the runner
+cd tools/slice-agent-runner && npm ci && npm run build && cd -
+
+# 6. check the target: until your harness is installed this fails *by name*, which is the
+#    point - a check that cannot run is a failure, not a skip
+node tools/slice-agent-runner/dist/index.js check --repo ../my-product
+
+# 7. prove the wiring with no model, no credentials, no cost
+node tools/slice-agent-runner/dist/index.js run-next --repo ../my-product \
+  --harness generic --harness-command "bash scripts/harness_stub.sh {prompt_file}"
+python3 scripts/validate_run_artifacts.py --run "$(ls -dt ../my-product/.drake/runs/*/ | head -1)"
+
+# 8. install your harness and run a slice
+npm i -g cline && cline auth
+node tools/slice-agent-runner/dist/index.js run-next --repo ../my-product
+```
+
+What you should see, from the clean-room run:
+
+| Step | Result |
+| --- | --- |
+| 2 | `ci preflight passed` — 17 stages, harness matrix 14/14, adoption chain 27/27, ~55s |
+| 3 | 27 files installed, including `.drake/slice-pipeline.config.json` and `AGENTS.md` |
+| 4 | `dependency tree valid: …` |
+| 6 | `[fail] harness binary not found on PATH: cline` — correct, and it names what is missing |
+| 7 | run exits `0`; `evidence.json` validates and names the file the harness changed |
+| 8 | a real slice, implemented by your harness, with evidence recorded under `.drake/runs/` |
+
+Running a validator directly needs `jsonschema`; if your interpreter does not have it, use the
+checkout's provisioned one (`./.venv/bin/python scripts/validate_run_artifacts.py …`) — the
+validators say so rather than installing anything for you.
+
+Reproduce it yourself — the scripts that built the room and walked this path are in the repo:
+
+```bash
+room=$(mktemp -d)
+bash scripts/cleanroom-setup.sh "$room"          # base utilities + Node + Python, nothing else
+bash scripts/cleanroom-run.sh "$room" v0.2.6     # the documented path, inside that room
+```
+
+**This section exists because a clean machine found two defects the host machine hid:** the gate
+ran its validators with the system interpreter *before* provisioning `.venv`, and five
+validators responded to a missing `jsonschema` by pip-installing it into whichever interpreter
+was running them — refused on managed interpreters (PEP 668, uv, Homebrew) and wrong
+everywhere else. Both are fixed; the clean-room run above is the regression test.
+
 ## What is Drake?
 
 Drake is a governance framework that lives inside your repository. It coordinates
@@ -281,4 +370,5 @@ license (see `LICENSE`).
 | Stack decisions example | [`.docs/examples/stack_decisions.example.md`](.docs/examples/stack_decisions.example.md) |
 | MCP hosting | [`docs/mcp_hosting.md`](docs/mcp_hosting.md) |
 | Retest the adoption chain against a release | `scripts/adoption_chain_retest.sh` |
+| Reproduce the from-scratch run | `scripts/cleanroom-setup.sh` + `scripts/cleanroom-run.sh` |
 | Cut a verified release | `scripts/cut_release.sh <version>` (chain before the tag, cold-clone gate after it) |
