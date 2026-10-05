@@ -45,6 +45,7 @@ PUBLIC_ONLY = (
     "scripts/slice-cron.sh",
     ".github/workflows/release-verify.yml",
     # the recommendations and the configuration people copy
+    "docs/whitepaper.md",
     "docs/harnesses.md",
     "docs/example-configuration.md",
     "docs/scheduling.md",
