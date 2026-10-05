@@ -1,0 +1,54 @@
+name: Release verification
+
+# Every deployment is verified as a deployment: a cold clone of the published tag,
+# its own gate, the adoption chain, the harness matrix, the web suite and the API
+# suite. This is the same rehearsal a stranger runs, executed on the artifact they
+# would download rather than on the branch that produced it.
+#
+# The ordinary CI workflow (ci.yml) already runs the adoption chain against the tree
+# on every push and pull request, so the chain is tested before a tag exists; this
+# workflow is the after-the-fact proof that what was published is adoptable.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published tag to verify (e.g. v0.2.3)"
+        required: true
+
+jobs:
+  verify-published-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Resolve the tag under verification
+        id: target
+        run: |
+          tag="${{ github.event.inputs.tag }}"
+          if [ -z "$tag" ]; then tag="$GITHUB_REF_NAME"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "verifying: $tag"
+
+      - name: Verify the published artifact (cold clone, gate, adoption chain)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # A clean PYTHONPATH: an inherited one lets pip treat another environment's
+          # packages as already installed, which the gate now immunises against — but a
+          # release verification should model a stranger's shell exactly.
+          env -u PYTHONPATH bash scripts/adoption_chain_retest.sh "${{ steps.target.outputs.tag }}" gate
