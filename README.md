@@ -279,3 +279,4 @@ license (see `LICENSE`).
 | Slice dependency tree example | [`.docs/examples/slice_dependency_tree.example.json`](.docs/examples/slice_dependency_tree.example.json) |
 | Stack decisions example | [`.docs/examples/stack_decisions.example.md`](.docs/examples/stack_decisions.example.md) |
 | MCP hosting | [`docs/mcp_hosting.md`](docs/mcp_hosting.md) |
+| Retest the adoption chain against a release | `scripts/adoption_chain_retest.sh` |
