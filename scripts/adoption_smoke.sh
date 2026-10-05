@@ -180,4 +180,55 @@ if grep -q "Traceback" "$work/dryrun.txt"; then
   exit 1
 fi
 
+echo "adoption smoke: nothing runnable is reported, not crashed on"
+cat > "$app/.docs/slice_dependency_tree.json" <<'JSON'
+{
+  "schema_version": 2,
+  "generated_at": "2026-10-05T00:00:00Z",
+  "source_backlog_path": ".docs/slice_backlog.md",
+  "default_fanout_limit": 1,
+  "slices": [
+    {
+      "slice_id": "SMOKE-1",
+      "slice_number": 1,
+      "group": "technical",
+      "title": "Prove adoption works",
+      "state": "gated",
+      "status": "ready",
+      "dependencies": [],
+      "blocks": [],
+      "operator_gates": ["operator approval"],
+      "checkpoint": "low-risk",
+      "automation_eligible": true,
+      "priority": 1,
+      "last_known_pr": null,
+      "risk": "low",
+      "effort": "small",
+      "tier": "P0"
+    }
+  ]
+}
+JSON
+# `set -e` would abort before we can read the exit code, and the exit code is the
+# whole point of this scenario.
+set +e
+node "$runner" run-next --repo "$app" --local --dry-run > "$work/gated.txt" 2>&1
+gated_exit=$?
+set -e
+if [ "$gated_exit" -ne 3 ]; then
+  echo "adoption smoke: FAILED - expected exit 3 with nothing runnable, got $gated_exit" >&2
+  cat "$work/gated.txt" >&2
+  exit 1
+fi
+if ! grep -q "no runnable slice" "$work/gated.txt"; then
+  echo "adoption smoke: FAILED - nothing runnable was not explained" >&2
+  cat "$work/gated.txt" >&2
+  exit 1
+fi
+if grep -q "Traceback" "$work/gated.txt"; then
+  echo "adoption smoke: FAILED - nothing runnable printed a traceback" >&2
+  cat "$work/gated.txt" >&2
+  exit 1
+fi
+
 echo "adoption smoke passed"
