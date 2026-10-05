@@ -112,3 +112,17 @@ def test_a_tag_push_verifies_the_published_artifact() -> None:
 
 def test_ci_still_runs_the_gate() -> None:
     assert "bash scripts/ci_preflight.sh" in read(CI_WORKFLOW)
+
+
+def test_the_chain_retest_does_not_hardcode_matrix_counts() -> None:
+    """The retest failed a good release by asserting an exact scenario count.
+
+    A verification script may assert a floor and zero failures; it may not assert the exact
+    number, because every added scenario then breaks the verification of an unrelated release.
+    """
+    retest = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "adoption_chain_retest.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "harness matrix: 14 passed" not in retest
+    assert "matrix_passed" in retest and "-ge 14" in retest

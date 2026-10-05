@@ -87,9 +87,17 @@ if [ "$gate_exit" -eq 0 ] && grep -q "ci preflight passed" "$work/gate.txt"; the
 else
   report fail "ci_preflight.sh passes" "exit $gate_exit"; tail -20 "$work/gate.txt"
 fi
-grep -q "harness matrix: 14 passed, 0 failed" "$work/gate.txt" \
-  && report ok "harness matrix smoke 14/14 inside the gate" \
-  || report fail "harness matrix smoke 14/14 inside the gate"
+# Count-agnostic on purpose: this assertion used to hardcode "14 passed" and broke the moment a
+# scenario was added, failing the verification of a perfectly good release. Assert the floor and
+# zero failures, never the exact number.
+matrix_summary="$(grep -oE 'harness matrix: [0-9]+ passed, [0-9]+ failed' "$work/gate.txt" | tail -1)"
+matrix_passed="$(printf '%s' "$matrix_summary" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+')"
+matrix_failed="$(printf '%s' "$matrix_summary" | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+')"
+if [ -n "$matrix_passed" ] && [ "$matrix_failed" = "0" ] && [ "$matrix_passed" -ge 14 ]; then
+  report ok "harness matrix smoke inside the gate: ${matrix_passed} passed, 0 failed"
+else
+  report fail "harness matrix smoke inside the gate" "${matrix_summary:-no summary line in the gate output}"
+fi
 grep -q "adoption smoke passed" "$work/gate.txt" \
   && report ok "adoption smoke passes inside the gate" \
   || report fail "adoption smoke passes inside the gate"
