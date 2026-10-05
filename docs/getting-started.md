@@ -26,7 +26,12 @@ touches your system interpreter.
 
 `sync_slice_pipeline_local.py` installs the reusable capability (agent
 definitions, hooks, prompts, branch conventions, and the runner config) into a
-target repository. It is conservative by design: `check` writes nothing.
+target repository. It is conservative by design: `check` writes nothing, and your
+own files are never overwritten without `--overwrite-existing`.
+
+Framework-owned tooling (the slice selector, the lifecycle helpers, the hook
+scripts) is refreshed on install instead, so upgrading the framework cannot leave
+you running an old selector behind a new config.
 
 ```bash
 # Report what is missing or stale in your repo.
