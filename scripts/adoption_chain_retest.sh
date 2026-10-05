@@ -37,7 +37,14 @@ python_bin="${PYTHON:-python3}"
 tag="${1:-$(gh release view --json tagName -q .tagName 2>/dev/null || echo v0.2.1)}"
 phase="${2:-all}"          # all | gate | chain
 work="${RETEST_WORK:-$(mktemp -d)}"
-clone="${RETEST_CLONE:-$work/drake}"
+if [ "$phase" = "chain" ]; then
+  # The chain phase needs a repository to install into and drive. Default to the tree
+  # this script lives in, so CI can rehearse the chain on every push without cloning a
+  # tag first; the gate phase always clones a published tag.
+  clone="${RETEST_CLONE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+else
+  clone="${RETEST_CLONE:-$work/drake}"
+fi
 passed=0
 failed=0
 
@@ -52,7 +59,11 @@ report() { # report <ok|fail> <label> [detail]
 echo "phase: $phase   tag: $tag   work: $work"
 if [ "$phase" != "chain" ]; then
 echo "=== stage 0: the published artifact ==="
-gh release view "$tag" --json tagName,name,isDraft,publishedAt -q '"release \(.tagName) — \(.name) — draft=\(.isDraft) — published \(.publishedAt)"' 2>&1
+if command -v gh >/dev/null 2>&1; then
+  gh release view "$tag" --json tagName,name,isDraft,publishedAt \
+    -q '"release \(.tagName) — \(.name) — draft=\(.isDraft) — published \(.publishedAt)"' 2>/dev/null \
+  || echo "no published release metadata for $tag (gh unavailable or release not created yet)"
+fi
 git clone -q --branch "$tag" --depth 1 https://github.com/sv-copilot/drake.git "$clone" 2>&1 | tail -2
 if [ -d "$clone/.git" ]; then
   report ok "cold clone of tag $tag ($(git -C "$clone" log --oneline -1 --format=%h))"

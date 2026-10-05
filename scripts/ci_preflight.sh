@@ -100,6 +100,15 @@ echo "-- run artifacts satisfy the contracts"
 echo "-- harness matrix smoke (catalogue, exit codes, legacy config)"
 PYTHON="$PYTHON" bash scripts/harness_matrix_smoke.sh
 
+# Release management: every deployment rehearses the adoption chain on this tree -
+# documented check/install/check, one install per harness, the run chain with its
+# documented exit codes, the upgrade path and a pre-0.2 config. The chain phase never
+# calls this gate, so this is not recursive; the tag-level counterpart (a cold clone of
+# a published release, gate included) runs in .github/workflows/release-verify.yml.
+echo "-- adoption chain (the documented path a stranger takes, on this tree)"
+PYTHON="$PYTHON" RETEST_WORK="$(mktemp -d)" bash scripts/adoption_chain_retest.sh \
+  "$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo working-tree)" chain
+
 if [ -f services/api/pyproject.toml ]; then
   echo "-- hosted API sketch validation"
   "$PYTHON" scripts/validate_hosted_api_sketch.py
