@@ -270,7 +270,8 @@ license (see `LICENSE`).
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
 | **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using a worked example |
 | Positioning next to coding agents | [`docs/comparison.md`](docs/comparison.md) |
-| **Harnesses (Claude Code, Codex, Cursor, Aider, your own)** | [`docs/harnesses.md`](docs/harnesses.md) |
+| **Harnesses (Claude Code, Codex, Cursor, Cline, Aider, your own)** | [`docs/harnesses.md`](docs/harnesses.md) |
+| **Example configuration to copy** | [`docs/example-configuration.md`](docs/example-configuration.md) + [`examples/governed-workspace/`](examples/governed-workspace/README.md) |
 | Adapter contract (workers) | [`adapters/CONTRACT.md`](adapters/CONTRACT.md) |
 | Task packet schema | [`adapters/task-packet.schema.json`](adapters/task-packet.schema.json) |
 | Evidence contract | [`adapters/evidence-contract.schema.json`](adapters/evidence-contract.schema.json) |

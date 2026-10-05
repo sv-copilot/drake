@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "source_backlog_path": ".docs/slice_backlog.md",
+  "default_fanout_limit": 1,
+  "notes": [
+    "Example tree for a Drake workspace. Replace the slices with your own.",
+    "SLICE-3 is gated on a human decision, which is how a slice waits for the operator."
+  ],
+  "slices": [
+    {
+      "slice_id": "SLICE-1",
+      "slice_number": 1,
+      "group": "technical",
+      "title": "Add the invoice total helper",
+      "state": "ready",
+      "status": "ready",
+      "dependencies": [],
+      "blocks": [
+        2
+      ],
+      "operator_gates": [],
+      "checkpoint": "low-risk",
+      "automation_eligible": true,
+      "priority": 1,
+      "last_known_pr": null,
+      "risk": "low",
+      "effort": "small",
+      "tier": "P0"
+    },
+    {
+      "slice_id": "SLICE-2",
+      "slice_number": 2,
+      "group": "technical",
+      "title": "Charge tax on the invoice total",
+      "state": "ready",
+      "status": "ready",
+      "dependencies": [
+        1
+      ],
+      "blocks": [],
+      "operator_gates": [],
+      "checkpoint": "low-risk",
+      "automation_eligible": true,
+      "priority": 2,
+      "last_known_pr": null,
+      "risk": "low",
+      "effort": "small",
+      "tier": "P0"
+    },
+    {
+      "slice_id": "SLICE-3",
+      "slice_number": 3,
+      "group": "product",
+      "title": "Decide the rounding policy for tax",
+      "state": "gated",
+      "status": "ready",
+      "dependencies": [],
+      "blocks": [],
+      "operator_gates": [
+        "operator decision"
+      ],
+      "checkpoint": "operator",
+      "automation_eligible": false,
+      "priority": 3,
+      "last_known_pr": null,
+      "risk": "low",
+      "effort": "small",
+      "tier": "P1"
+    }
+  ]
+}

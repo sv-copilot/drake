@@ -59,6 +59,22 @@
       "notes": "Print mode without --force only proposes changes. Some installations expose the binary as `agent`."
     },
     {
+      "id": "cline",
+      "name": "Cline",
+      "binary": "cline",
+      "prompt_delivery": "argv",
+      "config_dir": ".cline",
+      "auth_env": [],
+      "invocation": "cline --auto-approve true <prompt>",
+      "docs_url": "https://docs.cline.bot/usage/cli-overview",
+      "verified_on": "2026-10-05",
+      "repo_entry_points": [
+        "AGENTS.md",
+        ".clinerules"
+      ],
+      "notes": "Install with `npm i -g cline`; authenticate with `cline auth`. Headless runs trigger on redirected stdout, piped stdin or --json. --auto-approve true is what makes it unattended: use a disposable branch and constrain shell access with CLINE_COMMAND_PERMISSIONS."
+    },
+    {
       "id": "aider",
       "name": "Aider",
       "binary": "aider",

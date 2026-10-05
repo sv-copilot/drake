@@ -1,0 +1,30 @@
+{
+  "projectName": "Example Workspace",
+  "projectId": "example-workspace",
+  "githubSlug": "OWNER/REPO",
+  "localPath": ".",
+  "integrationBranch": "dev",
+  "featureBranchPrefix": "slice/",
+  "legacyFeatureBranchPrefixes": [
+    "cursor/",
+    "agent/"
+  ],
+  "dependencyTreePath": ".docs/slice_dependency_tree.json",
+  "sliceBacklogPath": ".docs/slice_backlog.md",
+  "sliceDetailDir": ".docs/slices",
+  "sliceSelectorCommand": "python3 scripts/select_next_automation_slice.py --tree .docs/slice_dependency_tree.json",
+  "docsSyncCommand": null,
+  "validationCommands": [
+    "bash scripts/ci_preflight.sh"
+  ],
+  "approvedSubagents": [
+    "slice-preflight",
+    "slice-implementer",
+    "pr-babysitter"
+  ],
+  "harness": {
+    "id": "cline",
+    "model": null,
+    "command": null
+  }
+}
