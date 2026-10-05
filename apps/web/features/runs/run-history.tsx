@@ -261,7 +261,7 @@ export function runFilterOptions(runs: RunSummary[]) {
   };
 }
 
-function sortedUnique(values: Array<string | undefined>) {
+function sortedUnique(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.filter((value): value is string => Boolean(value)))).sort();
 }
 

@@ -38,18 +38,20 @@ The orchestrator uses **two webhook roles**:
 
 | Secret | Purpose |
 | --- | --- |
-| `JOBHUNTER_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app slice-pipeline |
-| `JOBHUNTER_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only (curl adds `Bearer ` prefix) |
-| `SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for drake (portfolio governance) slice-pipeline |
-| `SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
-| `RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app (when enabled) |
-| `RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
-| `ONE_STAR_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app (when enabled) |
-| `ONE_STAR_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
-| `SPENCERVARADI_SITE_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app |
-| `SPENCERVARADI_SITE_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
+| `EXAMPLE_APP_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app slice-pipeline |
+| `EXAMPLE_APP_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only (curl adds `Bearer ` prefix) |
+| `EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for the portfolio governance repo |
+| `EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
+| `EXAMPLE_SERVICE_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for a second project (when enabled) |
+| `EXAMPLE_SERVICE_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
+| `EXAMPLE_SECOND_APP_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app (when enabled) |
+| `EXAMPLE_SECOND_APP_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
+| `EXAMPLE_APP_WEB_SLICE_PIPELINE_WEBHOOK_URL` | Worker webhook URL for example-app |
+| `EXAMPLE_APP_WEB_SLICE_PIPELINE_WEBHOOK_TOKEN` | Raw token only |
 
-Env var names must match [`.docs/projects-registry.json`](.docs/projects-registry.json) `webhook_env` entries.
+Env var names must match your registry's `webhook_env` entries. See
+[`.docs/examples/projects-registry.example.json`](.docs/examples/projects-registry.example.json)
+for the shape.
 
 ### Inbound — orchestrator webhook trigger
 

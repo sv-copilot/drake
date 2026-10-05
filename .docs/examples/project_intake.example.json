@@ -5,7 +5,7 @@
     "name": "Example Project",
     "local_path": "<home>/example-project",
     "github_slug": "sv-copilot/example-project",
-    "integration_branch": "ai-dev"
+    "integration_branch": "dev"
   },
   "product": {
     "goal": "Help a clearly defined user complete one primary workflow.",
@@ -48,7 +48,7 @@
     "branch_model": [
       "main",
       "dev",
-      "ai-dev",
+      "dev",
       "agent/*",
       "cursor/*"
     ],

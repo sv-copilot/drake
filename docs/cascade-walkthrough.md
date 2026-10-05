@@ -1,14 +1,14 @@
 # The Drake Cascade — A Complete Walkthrough
 
-**How Saimon was built — from product strategy to production, using Drake
+**How Example App was built — from product strategy to production, using Drake
 governance at every layer.**
 
 ---
 
 This document walks through Drake's full product development methodology.
-Instead of abstract explanations, we use a real project: **Saimon**, a
+Instead of abstract explanations, we use a real project: **Example App**, a
 self-extending platform of 6 atomic MCP services that powers research, content
-generation, verification, and more. Saimon was built entirely within Drake's
+generation, verification, and more. Example App was built entirely within Drake's
 cascade.
 
 By the end, you'll understand both *what* Drake enforces and *why* each layer
@@ -48,10 +48,10 @@ enforced — by tooling, not convention.
 A document in your control-plane repo that answers: *what are we building, for
 whom, and why?* It sets the direction for every project underneath it.
 
-### Saimon's Strategy
+### Example App's Strategy
 
-Spencer Varadi, a solo technical founder, was managing 10 Docker containers,
-~15 AI agents, a 90-tool jobhunter monolith, and fragile staging URLs — all on
+A solo technical founder was managing 10 Docker containers,
+~15 AI agents, a 90-tool internal monolith, and fragile staging URLs — all on
 a single 2-vCPU VPS. The system worked but was fragile. Maintenance consumed
 time that should have gone to building.
 
@@ -83,20 +83,20 @@ every word is human-authored and human-reviewed.
 concrete project. It defines: users, workflow, success criteria, technology
 profiles, validation commands, and human gates.
 
-### Saimon's Intake
+### Example App's Intake
 
 ```json
 {
   "project": {
-    "id": "saimon",
-    "name": "Saimon Platform",
-    "github_slug": "sv-copilot/saimon",
+    "id": "example-app",
+    "name": "Example App Platform",
+    "github_slug": "sv-copilot/example-app",
     "integration_branch": "ai-dev"
   },
   "product": {
     "goal": "A self-extending platform of 6 atomic MCP services that share one knowledge graph and adapt to new content types via research-backed self-extension.",
     "target_users": [
-      "Spencer Varadi (primary — personal infrastructure)",
+      "the founder (primary — personal infrastructure)",
       "OpenClaw agent (secondary — consumes MCPs as tools)",
       "VS Code Cline agent (tertiary — BUILD mode dispatch only)"
     ],
@@ -122,7 +122,7 @@ profiles, validation commands, and human gates.
   },
   "human_gates": [
     {
-      "id": "HG-SAIMON-001",
+      "id": "HG-EXAMPLE-APP-001",
       "question": "Operator approves destruction of existing knowledge graph before fresh start.",
       "blocks_automation": true
     }
@@ -130,8 +130,8 @@ profiles, validation commands, and human gates.
   "validation": {
     "test": "python -m pytest tests/ -q",
     "lint": "ruff check research_shared/ mcp/",
-    "build": "docker build -t saimon .",
-    "smoke": "docker run --rm saimon search-mcp --health-check"
+    "build": "docker build -t example-app .",
+    "smoke": "docker run --rm example-app search-mcp --health-check"
   }
 }
 ```
@@ -157,7 +157,7 @@ An Architecture Decision Record captures *why* a technical direction was chosen 
 context, alternatives considered, consequences accepted. Drake provides the
 template at `templates/adr.md`.
 
-### Saimon's ADR
+### Example App's ADR
 
 The platform redesign required 33 interconnected decisions. Rather than 33
 separate ADRs, one umbrella ADR captured them all with a decisions log table:
@@ -168,11 +168,11 @@ separate ADRs, one umbrella ADR captured them all with a decisions log table:
 | 2 | Backend Role | Direct-to-DB | Fresh start, no legacy to preserve |
 | 4 | Knowledge Graph | Start fresh | Sacrifice everything. Rebuild from seed |
 | 10 | Content Types | Self-referential single table | Slash naming. Inheritance at query time |
-| 14 | Jobhunter | 90 tools → 2 MCPs + registrations | Delegate search/gen/eval to platform |
+| 14 | Example Service | 90 tools → 2 MCPs + registrations | Delegate search/gen/eval to platform |
 | 16 | Self-Extension | LLM + two-level taxonomy | Platform learns new content types |
 | ... | ... | ... | ... |
 
-The full ADR is at `saimon/.docs/adr/2026-07-26-platform-redesign.md`. It
+The full ADR is at `example-app/.docs/adr/2026-07-26-platform-redesign.md`. It
 captures context (the organic complexity that motivated the redesign),
 alternatives considered (keep monolith — rejected; keep backend — rejected),
 consequences (downtime during migration, simpler ops going forward), and
@@ -194,7 +194,7 @@ docs, creating traceability from implementation back to decision.
 a single PR. The Product Owner owns prioritization. The Engineering Lead
 validates technical feasibility.
 
-### Saimon's Backlog (Phase 1 Excerpt)
+### Example App's Backlog (Phase 1 Excerpt)
 
 | Rank | Slice | What | Size | Deps |
 |------|-------|------|------|------|
@@ -229,7 +229,7 @@ where the EL encodes dependencies.
 The orchestrator reads it to determine promotion order and fan-out. Every
 slice is a node with dependencies, blockers, and state.
 
-### Saimon's Tree
+### Example App's Tree
 
 ```mermaid
 graph TD
@@ -288,7 +288,7 @@ reads the validated tree and executes.
 Every slice is implemented using test-driven development. This is not a
 suggestion — it's a pipeline requirement enforced at two independent gates.
 
-### Saimon's SHARED-LIB-1
+### Example App's SHARED-LIB-1
 
 **RED**: The VPS runner writes failing tests first.
 
@@ -360,12 +360,12 @@ checks, one non-negotiable rule: **no code ships without tests.**
 after every slice. It proves the work was done correctly. It's attached to
 every PR body so reviewers can verify without running tests themselves.
 
-### Saimon's SHARED-LIB-1 Evidence
+### Example App's SHARED-LIB-1 Evidence
 
 ```json
 {
   "slice_id": "SHARED-LIB-1",
-  "repo_id": "saimon",
+  "repo_id": "example-app",
   "test_files_changed": 3,
   "test_results": {
     "passed": 12,
@@ -414,7 +414,7 @@ conforms. Without evidence, no PR.
 Branches with gates: `slice/*` → `ai-dev` → `dev` → `main`. Each promotion
 has a specific gate. No branch is skipped.
 
-### Saimon's Journey Through the Pipeline
+### Example App's Journey Through the Pipeline
 
 ```
 slice/SHARED-LIB-1
@@ -443,7 +443,7 @@ main (release PR)
   │  Gate: CI must be green. Status check required.
   │
   ▼
-Released. Saimon SHARED-LIB-1 is in production.
+Released. Example App SHARED-LIB-1 is in production.
 ```
 
 ### The Branch Policy
@@ -467,18 +467,18 @@ shows exactly what's waiting.
 
 ## The Complete Cycle
 
-Here's what happened, end to end, to build Saimon's shared library:
+Here's what happened, end to end, to build Example App's shared library:
 
 ```
-1. Spencer wrote product strategy: "One platform, many tools."
-2. Spencer filled project_intake.json: Saimon, 6 MCPs, elevated sensitivity.
-3. Spencer + Cline wrote the ADR: 33 decisions, documented alternatives.
-4. Spencer ranked the backlog: SHARED-LIB-1 first, blocks everything.
+1. The founder wrote product strategy: "One platform, many tools."
+2. The founder filled project_intake.json: Example App, 6 MCPs, elevated sensitivity.
+3. The founder + Cline wrote the ADR: 33 decisions, documented alternatives.
+4. The founder ranked the backlog: SHARED-LIB-1 first, blocks everything.
 5. Cline added nodes to the dependency tree: 2 parallel tracks, 10 slices.
 6. Orchestrator promoted SHARED-LIB-1 to ready. Dispatched to VPS runner.
 7. Runner wrote failing tests (RED), implemented (GREEN), refactored.
 8. Runner produced evidence: 3 test files, 12 tests, 0 retries.
-9. Runner opened PR. Spencer reviewed evidence, merged.
+9. Runner opened PR. The founder reviewed evidence, merged.
 10. Runner synced tree: SHARED-LIB-1 validated. SEARCH-MCP-1 unblocked.
 11. Later: promotion PR to dev. CI green. Promotion PR to main. Released.
 ```

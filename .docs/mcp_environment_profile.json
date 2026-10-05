@@ -32,12 +32,12 @@
       }
     },
     "staging": {
-      "description": "Hetzner VPS staging — Drake placeholder running on mcp-staging.spencervaradi.com/drake.",
+      "description": "Remote staging host — Drake placeholder gateway running at mcp-staging.example.com/drake.",
       "mcp_servers": {
         "drake": {
           "enabled": true,
           "transport": "streamable_http",
-          "url": "https://mcp-staging.spencervaradi.com/drake",
+          "url": "https://mcp-staging.example.com/drake",
           "credential_refs": ["DRAKE_MCP_API_KEY"],
           "package_ref": "container:drake-api",
           "runtime_identity": "drake-mcp@staging",
@@ -58,7 +58,7 @@
         "drake": {
           "enabled": false,
           "transport": "streamable_http",
-          "url": "https://mcp.spencervaradi.com/drake",
+          "url": "https://mcp.example.com/drake",
           "credential_refs": ["PROD_DRAKE_MCP_API_KEY"],
           "notes": "Reserved; enable only during approved production rollout."
         }

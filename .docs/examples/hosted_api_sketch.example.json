@@ -16,7 +16,7 @@
         {
           "id": "drake",
           "github_slug": "sv-copilot/drake",
-          "integration_branch": "ai-dev",
+          "integration_branch": "dev",
           "automation_enabled": true,
           "priority": 1,
           "readiness": {
@@ -47,8 +47,8 @@
                 "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN"
               ],
               "webhook_env_names": {
-                "url": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL",
-                "token": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_TOKEN"
+                "url": "EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_URL",
+                "token": "EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_TOKEN"
               }
             }
           ],
@@ -62,7 +62,7 @@
         {
           "id": "example-app",
           "github_slug": "sv-copilot/example-app",
-          "integration_branch": "ai-dev",
+          "integration_branch": "dev",
           "automation_enabled": true,
           "priority": 3,
           "readiness": {
@@ -93,8 +93,8 @@
                 "PORTFOLIO_PLAN_ORCHESTRATOR_WEBHOOK_TOKEN"
               ],
               "webhook_env_names": {
-                "url": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
-                "token": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_TOKEN"
+                "url": "EXAMPLE_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
+                "token": "EXAMPLE_SERVICE_SLICE_PIPELINE_WEBHOOK_TOKEN"
               }
             }
           ],
@@ -175,7 +175,7 @@
           "adapter_type": "cursor",
           "status": "accepted",
           "dispatched_at": "2026-06-21T17:30:05Z",
-          "webhook_url_env_name": "SIMON_PROJECTS_SLICE_PIPELINE_WEBHOOK_URL",
+          "webhook_url_env_name": "EXAMPLE_PORTFOLIO_SLICE_PIPELINE_WEBHOOK_URL",
           "chain_back": true,
           "retry_count": 0,
           "task_packet_id": "hourly-20260621-abc123/15-f7a2"
@@ -189,7 +189,7 @@
           "adapter_type": "cursor",
           "status": "queued",
           "dispatched_at": "2026-06-21T17:30:06Z",
-          "webhook_url_env_name": "RESEARCH_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
+          "webhook_url_env_name": "EXAMPLE_SERVICE_SLICE_PIPELINE_WEBHOOK_URL",
           "chain_back": true,
           "retry_count": 0,
           "task_packet_id": "hourly-20260621-abc123/4-c8d9"
