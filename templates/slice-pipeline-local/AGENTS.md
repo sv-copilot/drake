@@ -12,7 +12,8 @@ report evidence. They never decide what to build.
 - Tests first. A slice is not done until its acceptance checks have run and passed.
 - Report the outcome as an evidence record. Do not edit files that belong to another slice.
 - No secrets in commits, prompts, or evidence. Credentials are referenced by name only.
-- Runtime handoff artifacts belong under `.cursor/automation-runs/` and are never committed.
+- Runtime handoff artifacts belong under `.drake/runs/` and are never committed.
+- This repository's slice pipeline is harness agnostic: `docs/harnesses.md`.
 
 ## Validation
 

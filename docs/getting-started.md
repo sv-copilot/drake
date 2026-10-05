@@ -48,6 +48,7 @@ python3 scripts/sync_slice_pipeline_local.py \
   --project-name "Your Product" \
   --project-id your-product \
   --github-slug OWNER/REPO \
+  --harnesses claude \
   --integration-branch dev \
   --validation-commands "bash scripts/ci_preflight.sh"
 ```
@@ -93,10 +94,16 @@ node tools/slice-agent-runner/dist/index.js check --repo /path/to/your-repo
 node tools/slice-agent-runner/dist/index.js run-next --repo /path/to/your-repo --local --dry-run
 ```
 
-`--dry-run` renders the task packet and prompt without calling a model — use it
-to see exactly what a worker would be told. Drop `--dry-run` (and add `--cloud
---auto-pr` to run against the configured GitHub repo and open the pull request)
-once the packet looks right.
+`--dry-run` renders the task packet and prompt without launching anything — use it
+to see exactly what a worker would be told. Drop `--dry-run` to actually run a slice.
+
+Drake is harness agnostic: it hands the task to whichever coding harness the repo
+configures, and records evidence afterwards. `--harnesses claude,cursor` (Step 2)
+writes only the entry points those harnesses read; the catalogue, per-harness
+invocations, the bring-your-own-command path and the exit codes are in
+[`docs/harnesses.md`](harnesses.md). To prove the wiring before spending a token,
+install with `--harnesses generic --harness-command "bash scripts/harness_stub.sh
+{prompt_file}"` and run a slice: the stub harness writes one file and exits.
 
 ## Step 5 — Evidence and promotion
 

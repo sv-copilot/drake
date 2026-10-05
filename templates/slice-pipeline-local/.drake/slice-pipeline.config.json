@@ -19,7 +19,11 @@
     "slice-implementer",
     "pr-babysitter"
   ],
-  "model": "{{SDK_MODEL}}",
+  "harness": {
+    "id": "{{HARNESS_ID}}",
+    "model": {{HARNESS_MODEL_JSON}},
+    "command": {{HARNESS_COMMAND_JSON}}
+  },
   "portfolioWebhookUrlEnv": "{{PORTFOLIO_WEBHOOK_URL_ENV}}",
   "portfolioWebhookTokenEnv": "{{PORTFOLIO_WEBHOOK_TOKEN_ENV}}",
   "localWebhookUrlEnv": "{{LOCAL_WEBHOOK_URL_ENV}}",

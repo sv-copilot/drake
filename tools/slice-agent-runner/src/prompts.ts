@@ -1,8 +1,5 @@
-import type {
-  NormalizedPayload,
-  RunnerConfig,
-  SelectedSlice,
-} from "./types.js";
+import type { HarnessPreset } from "./harnesses.js";
+import type { NormalizedPayload, RunnerConfig, SelectedSlice } from "./types.js";
 
 export type PromptKind = "preflight" | "run-next";
 
@@ -27,10 +24,15 @@ export function buildPayload(
   };
 }
 
+/**
+ * The prompt is harness-neutral: it names the slice, the policy files and the
+ * handoff it expects, and says nothing about which agent is reading it.
+ */
 export function buildSlicePrompt(
   kind: PromptKind,
   config: RunnerConfig,
-  payload: NormalizedPayload
+  payload: NormalizedPayload,
+  preset: HarnessPreset
 ): string {
   const preflightOnly =
     kind === "preflight"
@@ -38,7 +40,8 @@ export function buildSlicePrompt(
       : "";
 
   return [
-    "You are running the repo-local slice-pipeline-local workflow through the Cursor SDK.",
+    "You are running the repo-local slice pipeline inside an agentic coding harness.",
+    `Harness: ${preset.name} (${preset.id}).`,
     "",
     "Hard constraints:",
     "- Read and follow AGENTS.md and repo-local policy before any git operation.",
@@ -46,7 +49,7 @@ export function buildSlicePrompt(
     "- Keep one slice, one PR, no fan-out.",
     "- Do not implement a different slice.",
     "- Do not commit secrets, tokens, browser sessions, local MCP config, or runtime handoff artifacts.",
-    "- Runtime handoff files belong under .cursor/automation-runs/ and must not be committed.",
+    "- Runtime handoff files belong under .drake/runs/ and must not be committed.",
     preflightOnly.trim(),
     "",
     "Read first:",
@@ -69,6 +72,8 @@ export function buildSlicePrompt(
       selectorCommand: config.sliceSelectorCommand,
       validationCommands: config.validationCommands,
       docsSyncCommand: config.docsSyncCommand,
+      harness: config.harness,
+      model: config.harnessModel,
     }),
     "",
     "Normalized payload:",

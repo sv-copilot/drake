@@ -37,6 +37,26 @@ def test_every_template_asset_exists() -> None:
     assert missing == [], f"template bundle is missing: {missing}"
 
 
+def test_every_harness_view_source_exists() -> None:
+    for harness, views in installer.HARNESS_VIEW_FILES.items():
+        for source, dest in views:
+            assert (installer.TEMPLATE_ROOT / source).is_file(), f"{harness}: {source}"
+            assert dest and not dest.startswith("/"), f"{harness}: {dest}"
+
+
+def test_installer_and_runner_agree_on_harness_ids() -> None:
+    """The installer and the runner must accept exactly the same harness ids."""
+    import re
+
+    runner_source = (
+        REPO_ROOT / "tools" / "slice-agent-runner" / "src" / "harnesses.ts"
+    ).read_text(encoding="utf-8")
+    runner_ids = re.findall(r'^    id: "([a-z]+)",$', runner_source, flags=re.MULTILINE)
+
+    assert runner_ids, "could not parse harness ids out of harnesses.ts"
+    assert tuple(runner_ids) == tuple(installer.HARNESS_IDS)
+
+
 def test_every_repo_script_exists() -> None:
     missing = [
         name
@@ -53,9 +73,7 @@ def test_missing_bundle_assets_reports_nothing_for_this_tree() -> None:
 
 def test_installed_selector_and_its_dependency_are_both_offered() -> None:
     """The generated config runs the selector, so the selector must be installed."""
-    installed = set(installer.TEMPLATE_FILES) | {
-        f"scripts/{name}" for name in installer.REPO_SCRIPTS_TO_INSTALL
-    }
+    installed = installer.installed_paths_for(["cursor"])
 
     assert "scripts/select_next_automation_slice.py" in installed
     assert "scripts/slice_lifecycle.py" in installed
@@ -68,9 +86,7 @@ def test_runner_required_files_are_installed_or_adopter_supplied() -> None:
     dependency tree and backlog are authored by the adopter (the installer writes
     placeholders for both), and everything else has to come from the bundle.
     """
-    installed = set(installer.TEMPLATE_FILES) | {
-        f"scripts/{name}" for name in installer.REPO_SCRIPTS_TO_INSTALL
-    }
+    installed = installer.installed_paths_for(["cursor"])
     adopter_authored = {".docs/slice_dependency_tree.json", ".docs/slice_backlog.md"}
     runner_required = {
         "AGENTS.md",
