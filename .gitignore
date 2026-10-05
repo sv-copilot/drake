@@ -47,5 +47,8 @@ __pycache__/
 # Repo-local virtualenv used by scripts/ci_preflight.sh on PEP 668 hosts
 .venv/
 
+# Runner run artifacts (harness-neutral; a .gitignore is installed alongside them)
+.drake/runs/
+
 # Optional local export denylist (see .drake-export-deny.txt.example)
 .drake-export-deny.txt

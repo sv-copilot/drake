@@ -157,7 +157,7 @@ These rules are enforced by tooling in **this** repository, not by convention:
 | **Validation before merge** | `ci_preflight.sh` must pass, with every check blocking | `scripts/ci_preflight.sh` |
 | **Dependency integrity** | Trees validated for cycles, dependencies missing from the tree, gate/state mismatches, and invalid states | `scripts/validate_slice_dependency_tree.py` |
 | **No credential or private-data leak** | Public exports are scanned for credential shapes, home paths, and private control-plane markers | `scripts/validate_drake_export.py` |
-| **Agent scope isolation** | Templated agent profiles scope which tools a worker may reach | `templates/slice-pipeline-local/.cursor/`, `.docs/mcp_environment_profile.json` |
+| **Agent scope isolation** | Templated agent profiles scope which tools a worker may reach | `templates/slice-pipeline-local/.drake/`, `.docs/mcp_environment_profile.json` |
 
 ---
 
@@ -227,7 +227,7 @@ STAGING_HOST=<server-ip> bash scripts/hosted-ip-staging.sh --check
 | `scripts/` | Validation, export, slice-lifecycle, and dev tooling |
 | `templates/` | Reusable templates: ADR format, `slice-pipeline-local` install bundle |
 | `tests/` | Validator and export-gate tests |
-| `tools/` | CLI utilities (`slice-agent-runner` for local/cloud execution) |
+| `tools/` | CLI utilities (`slice-agent-runner`: selects the next slice, drives any coding harness, records evidence) |
 | `.docs/examples/` | Fictional registry and slice-tree samples for adopters |
 
 ## Who is Drake For?
@@ -270,6 +270,7 @@ license (see `LICENSE`).
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
 | **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using a worked example |
 | Positioning next to coding agents | [`docs/comparison.md`](docs/comparison.md) |
+| **Harnesses (Claude Code, Codex, Cursor, Aider, your own)** | [`docs/harnesses.md`](docs/harnesses.md) |
 | Adapter contract (workers) | [`adapters/CONTRACT.md`](adapters/CONTRACT.md) |
 | Task packet schema | [`adapters/task-packet.schema.json`](adapters/task-packet.schema.json) |
 | Evidence contract | [`adapters/evidence-contract.schema.json`](adapters/evidence-contract.schema.json) |

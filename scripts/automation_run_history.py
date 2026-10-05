@@ -6,7 +6,10 @@ import json
 import re
 from pathlib import Path
 
-RUNS_ROOT = ".cursor/automation-runs"
+RUNS_ROOT = ".drake/runs"
+# Pre-0.2 run artifacts lived under the Cursor-specific path. They are still read,
+# so history survives the move to a harness-neutral location.
+LEGACY_RUNS_ROOTS = (".cursor/automation-runs",)
 RUN_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
 
 REQUIRED_RUN_FILES = (
@@ -32,6 +35,12 @@ def normalize_run_id(value: str) -> str:
 def runs_root(repo_root: Path | None = None) -> Path:
     base = repo_root or Path.cwd()
     return base / RUNS_ROOT
+
+
+def runs_roots(repo_root: Path | None = None) -> list[Path]:
+    """Every run-artifact location to search, newest convention first."""
+    base = repo_root or Path.cwd()
+    return [base / RUNS_ROOT, *(base / legacy for legacy in LEGACY_RUNS_ROOTS)]
 
 
 def list_run_dirs(runs_dir: Path) -> list[Path]:
