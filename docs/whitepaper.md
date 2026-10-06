@@ -3,7 +3,7 @@
 **Whitepaper · October 2026 · v3**
 
 Drake is an open-source, repository-native governance layer for AI-assisted software development.
-It is Apache-2.0 licensed, released under semantic tags (v0.2.11 at the time of writing — see the
+It is Apache-2.0 licensed, released under semantic tags (v0.2.12 at the time of writing — see the
 releases page for the current one), and lives at
 [github.com/sv-copilot/drake](https://github.com/sv-copilot/drake).
 
@@ -26,6 +26,9 @@ naming, because they show what the current revision is checked against:
   the tree schema and **ignored by the selector**. It now orders execution.
 - An earlier version claimed the validator rejects dependency cycles. It did not, until the check
   was written and a test pinned it.
+- The installer used to seed a fresh repository with a placeholder slice named after an internal
+  test fixture, and depended on the loader's legacy upgrade to accept it. It now seeds a neutral
+  placeholder that satisfies the current schema on its own.
 
 Where this paper states a number, it is the output of a command in this repository; where it
 states a verification method, that method can be re-run. Anything unverified says so.
@@ -188,8 +191,35 @@ runs, and in what order.
 **Prerequisites:** `git`, `curl`, `tar`, `xz`, Python 3.12+ (with `venv`), Node 22+ / npm 10+.
 No C toolchain, no system Python packages, no root.
 
-**The path:** clone → run the gate → install into your product repository → validate the
-dependency tree → build the runner → run one slice (`--dry-run` first) → inspect the evidence →
+**The front door is a wizard.** `scripts/drake-setup.py` inspects your repository — manifests, test
+and lint commands, CI workflows, branches, which agent CLIs are on `PATH` — asks only what it could
+not detect (every default shown with the evidence for it), installs the bundle by driving the same
+installer everyone else uses, seeds a three-slice plan for you to replace, and writes a `SETUP.md`
+runbook into your repository. It then *proves* what it did: the tree validates, the installer's
+`check` passes, and `--dry-run` renders the exact harness command without calling a model.
+
+```bash
+python3 scripts/drake-setup.py --target ../my-product              # plan: writes nothing
+python3 scripts/drake-setup.py --target ../my-product --apply      # install, level L1
+python3 scripts/drake-setup.py --target ../my-product --level L2 --apply
+```
+
+**Adoption is four levels, and each is a stopping point rather than a rung.** That is what makes it
+flexible: you choose how far to go, and the framework tells you where you actually are.
+
+| Level | What it gives you | What it does not |
+| --- | --- | --- |
+| **L0** plan only | Config, canonical assets, a seeded dependency tree and slice detail docs | Nothing runs and nothing is scheduled |
+| **L1** one slice | L0 plus a harness wired and proven with `--dry-run`; you trigger runs yourself | No schedule |
+| **L2** unattended | L1 plus a cron/systemd schedule running one slice per tick, with logs and exit codes | No cross-repository selection |
+| **L3** portfolio | L2 across several repositories, each with its own config and tree | The dispatcher is yours; Drake deliberately ships none |
+
+A plan run writes nothing; `--apply` is required to change anything; a level that needs a harness is
+**refused** with the reason rather than half-installed; and a second run on a configured repository
+writes nothing.
+
+**By hand, if you prefer:** clone → run the gate → install into your product repository → validate
+the dependency tree → build the runner → run one slice (`--dry-run` first) → inspect the evidence →
 schedule it.
 
 **The gate** (`scripts/ci_preflight.sh`) runs **17 stages**, all blocking. There is no partial
@@ -278,7 +308,7 @@ diff), branchability (experiment with governance on a branch), and an open core 
 validation-results contracts; the harness catalogue and the canonical asset set with its generated
 views; the installer and validators; the slice selector and lifecycle helpers; the reference
 runner; the gate, the adoption smoke, the harness matrix, the adoption-chain rehearsal and the
-release scripts; the scheduler entry point; the example governed workspace; and the configuration
+release scripts; the scheduler entry point; the adoption wizard; the example governed workspace; and the configuration
 recommendations themselves (`docs/example-configuration.md`, `examples/governed-workspace/`).
 
 **Not provided:** a cross-repository scheduler or dashboard. Drake executes one slice well and
@@ -306,7 +336,7 @@ nothing in this paper depends on it existing.
 
 | Component | Status |
 |---|---|
-| Release | **v0.2.11**, Apache-2.0 |
+| Release | **v0.2.12**, Apache-2.0 |
 | Gate | **17 stages, all blocking**; green from a from-scratch room and on every release |
 | Harness catalogue | **6 presets**; two verified by running the CLI, three by vendor docs, one bring-your-own-command |
 | Runner | Spawns a child process; holds no model credential |
@@ -317,14 +347,15 @@ nothing in this paper depends on it existing.
 | Release management | The adoption chain runs in the gate, before the tag, and after it — asserted by a test |
 | Unattended scheduling | `scripts/slice-cron.sh` with cron and systemd recipes |
 | Clean room | `scripts/cleanroom-setup.sh` / `cleanroom-run.sh` |
-| Unit tests | 84 |
+| Adoption wizard | `scripts/drake-setup.py` — four levels, seeded plan, `SETUP.md` runbook, refusal with a reason |
+| Unit tests | 91 |
 
 **Reproduce the central claim:**
 
 ```bash
 room=$(mktemp -d)
 bash scripts/cleanroom-setup.sh "$room"
-bash scripts/cleanroom-run.sh "$room" v0.2.11
+bash scripts/cleanroom-run.sh "$room" v0.2.12
 ```
 
 ---
