@@ -133,49 +133,52 @@ def test_the_chain_retest_does_not_hardcode_matrix_counts() -> None:
 def test_cutting_a_release_requires_the_documentation_to_name_it(tmp_path: Path) -> None:
     """A release must not be cut while the documentation pins a different version.
 
-    Behavioural on purpose: the pin check is extracted from cut_release.sh and run against fixture
-    documents, so this test survives the check being rewritten (its first version flagged Node's
-    v22.20.0 and a historical v0.1.0 mention, and failed a good release for the wrong reason).
+    The test runs the pin block *as it exists in cut_release.sh*, extracted verbatim, against fixture
+    documents. Copying the patterns here would drift from the real ones - and the real ones have twice
+    been wrong in ways that matched nothing at all (an unescaped `(` in an extended regex, and a
+    `grep -o` pattern that stopped before the version digits).
     """
     source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "cut_release.sh").read_text(
         encoding="utf-8"
     )
-    function = re.search(r"^pin_check\(\) \{.*?^\}", source, re.S | re.M)
-    assert function, "cut_release.sh must keep a pin_check function"
+    # Slice the block out by index rather than by regex: the assertions at the end of it are quoted
+    # shell, which is more trouble to match than to find.
+    start = source.index('unpinned=""')
+    end = source.index('if [ -n "$unpinned" ]')
+    block = source[start:end]
+    assert "pin_check" in block and "README.md" in block
 
     (tmp_path / "docs").mkdir()
     (tmp_path / "README.md").write_text(
         "git clone --branch v0.2.12 --depth 1 https://example.invalid/repo.git\n"
+        'bash scripts/cleanroom-run.sh "$room" v0.2.12\n'
         "curl -fsSL https://nodejs.org/dist/v22.20.0/node-v22.20.0-linux-x64.tar.xz\n"
         "Version v0.1.0 was the first release.\n",
         encoding="utf-8",
     )
     (tmp_path / "docs" / "whitepaper.md").write_text(
         "released under semantic tags (v0.2.12 at the time of writing\n"
-        "| Release | **v0.2.12**, Apache-2.0 |\n",
+        "| Release | **v0.2.12**, Apache-2.0 |\n"
+        'bash scripts/cleanroom-run.sh "$room" v0.2.12\n',
         encoding="utf-8",
     )
 
-    script = rf"""
+    runner = f"""
 set -uo pipefail
 cd {tmp_path}
 version="v0.2.12"
-unpinned=""
-stale=""
-{function.group(0)}
-pin_check README.md '--branch v[0-9.]+'
-pin_check docs/whitepaper.md 'semantic tags \(v[0-9.]+'
-pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9.]+\*\*'
+{block}
 printf 'unpinned=[%s] stale=[%s]' "$unpinned" "$stale"
 """
-    clean = subprocess.run(["bash", "-c", script], text=True, capture_output=True, check=False)
+    clean = subprocess.run(["bash", "-c", runner], text=True, capture_output=True, check=False)
     assert clean.returncode == 0, clean.stderr
-    # Node's v22.20.0 and the historical v0.1.0 are not pin sites: neither may be reported.
+    # Node's v22.20.0 and the historical v0.1.0 are not pin sites: neither may be reported, and every
+    # real pin site must have been found (an empty match would land in `unpinned`).
     assert clean.stdout == "unpinned=[] stale=[]", clean.stdout
 
-    (tmp_path / "README.md").write_text("git clone --branch v0.2.11 --depth 1 x\n", encoding="utf-8")
-    stale_result = subprocess.run(["bash", "-c", script], text=True, capture_output=True, check=False)
-    assert "v0.2.11" in stale_result.stdout, "a stale pin must be reported"
+    (tmp_path / "README.md").write_text('git clone --branch v0.2.11 --depth 1 x\n', encoding="utf-8")
+    stale = subprocess.run(["bash", "-c", runner], text=True, capture_output=True, check=False)
+    assert "v0.2.11" in stale.stdout, f"a stale pin must be reported: {stale.stdout}"
 
     assert "do not pin" in source and "still pin an older release" in source
 
