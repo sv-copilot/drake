@@ -301,6 +301,9 @@ import json, pathlib, sys
 tree = pathlib.Path(sys.argv[1]) / ".docs/slice_dependency_tree.json"
 data = json.loads(tree.read_text())
 for row in data["slices"]:
+    # Both: the selector reads `state`. Setting only `status` worked while the loader derived
+    # state from it, which made this scenario pass for the wrong reason.
+    row["state"] = "done"
     row["status"] = "done"
 tree.write_text(json.dumps(data, indent=2))
 PY
