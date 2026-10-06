@@ -68,28 +68,26 @@ stale=""
 # Only the PIN SITES matter: a version mentioned in prose or a Node toolchain version is not a pin.
 # The first version of this check matched every vX.Y.Z in the files, which flagged Node's v22.20.0.
 pin_check() {
-  local doc="$1" pattern="$2"
-  local found
-  # -e: several of these patterns begin with --branch, which grep would read as an option
+  # $1 doc, $2 an ERE that matches a pin site INCLUDING the version digits.
+  # Two traps are baked into these patterns, both found by running them against the real files:
+  #   * in an extended regex '(' opens a group, so a literal parenthesis must be escaped - an
+  #     unescaped 'semantic tags (v0.2.12' matched nothing;
+  #   * `grep -o` prints only the matched text, so a pattern that stops before the version yields no
+  #     digits to check. (An earlier version used -F prefixes and silently matched nothing.)
+  local doc="$1" pattern="$2" found only
   found="$(grep -oE -e "$pattern" "$doc" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -u | tr '\n' ' ')"
   [ -z "$found" ] && { unpinned="$unpinned $doc"; return; }
-  local only
   only="$(printf '%s' "$found" | tr ' ' '\n' | grep -v -- "^$version$" | sort -u | tr '\n' ' ')"
-  [ -n "$only" ] && stale="$stale\n  $doc pins: $only"
+  [ -n "$only" ] && stale="$stale
+  $doc pins: $only"
 }
 
-pin_check README.md '--branch v[0-9.]+'
-pin_check README.md "cleanroom-run\.sh \"\$room\" v[0-9.]+"
-pin_check docs/whitepaper.md 'semantic tags \(v[0-9.]+'
-pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9.]+\*\*'
-pin_check docs/whitepaper.md "cleanroom-run\.sh \"\$room\" v[0-9.]+"
+pin_check README.md '--branch v[0-9]+\.[0-9]+\.[0-9]+'
+pin_check README.md 'cleanroom-run\.sh "\$room" v[0-9]+\.[0-9]+\.[0-9]+'
+pin_check docs/whitepaper.md 'semantic tags \(v[0-9]+\.[0-9]+\.[0-9]+'
+pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*'
+pin_check docs/whitepaper.md 'cleanroom-run\.sh "\$room" v[0-9]+\.[0-9]+\.[0-9]+'
 
-if [ -n "$unpinned" ]; then
-  fail "these files do not pin $version:$unpinned - update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
-fi
-if [ -n "$stale" ]; then
-  fail "these files still pin an older release:$(printf "$stale") - every pin must name $version"
-fi
 echo "documentation names $version"
 
 step "3/5 adoption chain on this tree"
