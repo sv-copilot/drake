@@ -602,12 +602,15 @@ def merge_hooks_json(
 
 
 def placeholder_docs(tokens: dict[str, str]) -> dict[str, str]:
-    smoke_id = "SMOKE-AUTOMATION-001"
+    # This lands in the adopter's repository, so it must not carry an internal fixture name: the
+    # first tree someone sees saying "SMOKE-AUTOMATION-001" is a bad first impression. It also
+    # carries the current schema's fields explicitly rather than relying on the v1->v2 normalizer.
+    placeholder_id = "SLICE-1"
     backlog_path = tokens["SLICE_BACKLOG_PATH"]
     dependency_tree_path = tokens["DEPENDENCY_TREE_PATH"]
     slice_detail_dir = tokens["SLICE_DETAIL_DIR"].rstrip("/")
     dependency_tree = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": "YYYY-MM-DDTHH:MM:SSZ",
         "source_backlog_path": backlog_path,
         "default_fanout_limit": 1,
@@ -617,9 +620,11 @@ def placeholder_docs(tokens: dict[str, str]) -> dict[str, str]:
         ],
         "slices": [
             {
-                "slice_id": smoke_id,
+                "slice_id": placeholder_id,
                 "slice_number": 1,
-                "title": "Automation smoke slice",
+                "group": "technical",
+                "title": "Replace this placeholder slice with real work",
+                "state": "ready",
                 "status": "ready",
                 "dependencies": [],
                 "blocks": [],
@@ -628,6 +633,9 @@ def placeholder_docs(tokens: dict[str, str]) -> dict[str, str]:
                 "automation_eligible": True,
                 "priority": 1,
                 "last_known_pr": None,
+                "risk": "low",
+                "effort": "small",
+                "tier": "P1",
             }
         ],
     }
@@ -638,7 +646,7 @@ Use this file as the human-readable planning surface. Keep it synchronized with 
 
 | Rank | Slice ID | Status | Summary | Validation | Notes |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `{smoke_id}` | Ready | Harmless automation smoke slice. | Run repo validation commands. | Replace or refine before unattended automation. |
+| 1 | `{placeholder_id}` | Ready | Placeholder slice - replace it with real work before enabling unattended runs. | Run repo validation commands. | Seeded by the installer. |
 """,
         dependency_tree_path: json.dumps(dependency_tree, indent=2) + "\n",
         f"{slice_detail_dir}/README.md": """# Slice Details

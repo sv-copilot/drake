@@ -62,7 +62,7 @@ Then the documented path, which is what CI runs on every push:
 
 ```bash
 # 1. get the framework
-git clone --branch v0.2.10 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
+git clone --branch v0.2.11 --depth 1 https://github.com/sv-copilot/drake.git drake && cd drake
 
 # 2. its own gate - compiles, validates, runs the suites, the smokes, the adoption chain,
 #    the hosted API and the web build. Takes about a minute from an empty npm cache.
@@ -115,7 +115,7 @@ Reproduce it yourself — the scripts that built the room and walked this path a
 ```bash
 room=$(mktemp -d)
 bash scripts/cleanroom-setup.sh "$room"          # base utilities + Node + Python, nothing else
-bash scripts/cleanroom-run.sh "$room" v0.2.10     # the documented path, inside that room
+bash scripts/cleanroom-run.sh "$room" v0.2.11     # the documented path, inside that room
 ```
 
 **This section exists because a clean machine found two defects the host machine hid:** the gate
@@ -264,8 +264,8 @@ code — there is no partial pass.
 
 Then:
 
-1. [`docs/getting-started.md`](docs/getting-started.md) — the minimal adoption
-   path: copy the example registry, install `slice-pipeline-local`, validate.
+1. [`docs/getting-started.md`](docs/getting-started.md) — pick an adoption level
+   (L0–L3), then run `scripts/drake-setup.py` against your own repository.
 2. [`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md) — the whole
    methodology end to end, from strategy to production, on a worked example.
 3. [`docs/whitepaper.md`](docs/whitepaper.md) — what the system is, how it is put
@@ -357,7 +357,7 @@ license (see `LICENSE`).
 
 | Topic | Document |
 |-------|----------|
-| Getting started | [`docs/getting-started.md`](docs/getting-started.md) |
+| Getting started (the wizard and the four levels) | [`docs/getting-started.md`](docs/getting-started.md) |
 | Decision documentation (ADRs) | [`templates/adr.md`](templates/adr.md) |
 | **Full cascade walkthrough** | **[`docs/cascade-walkthrough.md`](docs/cascade-walkthrough.md)** — from strategy to production, using a worked example |
 | Positioning next to coding agents | [`docs/comparison.md`](docs/comparison.md) |
