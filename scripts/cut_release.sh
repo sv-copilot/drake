@@ -88,6 +88,13 @@ pin_check docs/whitepaper.md 'semantic tags \(v[0-9]+\.[0-9]+\.[0-9]+'
 pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*'
 pin_check docs/whitepaper.md 'cleanroom-run\.sh "\$room" v[0-9]+\.[0-9]+\.[0-9]+'
 
+if [ -n "$unpinned" ]; then
+  fail "these files do not pin $version:$unpinned - update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
+fi
+if [ -n "$stale" ]; then
+  fail "these files still pin an older release:$(printf "$stale") - every pin must name $version"
+fi
+
 echo "documentation names $version"
 
 step "3/5 adoption chain on this tree"
