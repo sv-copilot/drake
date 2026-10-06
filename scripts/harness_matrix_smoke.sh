@@ -194,6 +194,10 @@ import sys
 tree = pathlib.Path(sys.argv[1]) / ".docs/slice_dependency_tree.json"
 data = json.loads(tree.read_text())
 for row in data["slices"]:
+    # Set BOTH: the selector decides runnability from `state`. This scenario used to set only
+    # `status` and relied on the loader deriving state from it, which worked only while the
+    # placeholder tree had no explicit state field.
+    row["state"] = "done"
     row["status"] = "done"
 tree.write_text(json.dumps(data, indent=2))
 PY

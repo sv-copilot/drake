@@ -176,3 +176,30 @@ def test_check_reports_a_stale_managed_script_as_blocking(tmp_path: Path) -> Non
     assert result.returncode == 1
     assert "slice_lifecycle.py" in result.stdout
     assert "stale" in result.stdout
+
+
+def test_the_installer_placeholder_tree_is_current_schema() -> None:
+    """The first tree an adopter sees must satisfy the published schema on its own.
+
+    It used to be schema_version 1 with a slice named after an internal smoke fixture, missing
+    group/state/risk/effort/tier and relying on the v1->v2 normalizer to be accepted.
+    """
+    import json
+
+    import sync_slice_pipeline_local as installer
+
+    docs = installer.placeholder_docs(
+        {
+            "SLICE_BACKLOG_PATH": ".docs/slice_backlog.md",
+            "DEPENDENCY_TREE_PATH": ".docs/slice_dependency_tree.json",
+            "SLICE_DETAIL_DIR": ".docs/slices",
+        }
+    )
+    tree = json.loads(next(text for path, text in docs.items() if path.endswith(".json")))
+
+    assert tree["schema_version"] == 2
+    required = ("group", "state", "risk", "effort", "tier")
+    for row in tree["slices"]:
+        for field in required:
+            assert field in row, f"{field} missing from the placeholder slice"
+        assert "SMOKE" not in row["slice_id"].upper(), "placeholder must not leak an internal fixture name"

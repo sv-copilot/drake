@@ -1,7 +1,41 @@
 # Getting started
 
-Adopt Drake in about 30 minutes: verify this repo, then wire the slice pipeline
-into a product repository of your own.
+Adopt Drake in about 30 minutes: verify this repository, then configure a product repository of
+your own. There are two ways to do the second part, and you should pick one deliberately.
+
+## Pick a level
+
+Adoption is four stopping points, not a ladder. Most people should stop at L1 or L2.
+
+| Level | What it gives you | What it does not |
+| --- | --- | --- |
+| **L0** plan only | Config, canonical assets and a seeded dependency tree with slice detail docs | Nothing runs — no harness is wired, nothing is scheduled |
+| **L1** one slice | L0 plus a harness wired and proven with `--dry-run`; you trigger runs by hand | No schedule |
+| **L2** unattended | L1 plus a cron/systemd schedule that runs one slice per tick with logs and exit codes | No cross-repository selection |
+| **L3** portfolio | L2 across several repositories, each with its own config and tree | The dispatcher is yours; Drake deliberately ships none |
+
+## The wizard (recommended)
+
+The installer takes 25 flags and architects nothing. `scripts/drake-setup.py` inspects your
+repository, asks only what it could not detect, proposes a level, installs, and then proves what it
+did — or names what is missing.
+
+```bash
+python3 scripts/drake-setup.py --target ../my-product                 # plan: writes nothing
+python3 scripts/drake-setup.py --target ../my-product --apply         # L1 by default
+python3 scripts/drake-setup.py --target ../my-product --level L2 --apply
+```
+
+It detects your manifests, test/lint/build commands, CI workflows, branches and which agent CLIs
+are on `PATH`; it seeds a three-slice plan (one with a dependency, one waiting on a human decision)
+for you to replace; it writes a `SETUP.md` runbook into your repository; and it finishes by
+validating the tree, running the installer's `check`, and rendering a task packet with `--dry-run`
+so you can see the exact command before any model call. A plan run changes nothing. Running it
+twice changes nothing the second time. Exit codes: **0** reached the level · **1** error · **2** the
+level was not reached, with the reason printed.
+
+Do the steps below by hand if you would rather see every file land, or if you are building your own
+tooling on top of the installer.
 
 ## Prerequisites
 
