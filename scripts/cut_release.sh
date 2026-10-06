@@ -64,18 +64,31 @@ step "2/5 the documentation pins the version being released"
 # without anyone noticing. Enforce it here: cutting a release requires the docs to name it.
 unpinned=""
 stale=""
-for doc in README.md docs/whitepaper.md; do
-  grep -q -- "$version" "$doc" || unpinned="$unpinned $doc"
-  # Naming the new version somewhere is not enough: a doc can name it in one place and still pin an
-  # older tag in another (this happened — the header was updated and the release row was not).
-  other="$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' "$doc" | grep -v -- "^$version$" | sort -u | tr '\n' ' ')"
-  [ -n "$other" ] && stale="$stale\n  $doc pins: $other"
-done
+
+# Only the PIN SITES matter: a version mentioned in prose or a Node toolchain version is not a pin.
+# The first version of this check matched every vX.Y.Z in the files, which flagged Node's v22.20.0.
+pin_check() {
+  local doc="$1" pattern="$2"
+  local found
+  # -e: several of these patterns begin with --branch, which grep would read as an option
+  found="$(grep -oE -e "$pattern" "$doc" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -u | tr '\n' ' ')"
+  [ -z "$found" ] && { unpinned="$unpinned $doc"; return; }
+  local only
+  only="$(printf '%s' "$found" | tr ' ' '\n' | grep -v -- "^$version$" | sort -u | tr '\n' ' ')"
+  [ -n "$only" ] && stale="$stale\n  $doc pins: $only"
+}
+
+pin_check README.md '--branch v[0-9.]+'
+pin_check README.md "cleanroom-run\.sh \"\$room\" v[0-9.]+"
+pin_check docs/whitepaper.md 'semantic tags \(v[0-9.]+'
+pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9.]+\*\*'
+pin_check docs/whitepaper.md "cleanroom-run\.sh \"\$room\" v[0-9.]+"
+
 if [ -n "$unpinned" ]; then
-  fail "these files do not name $version:$unpinned — update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
+  fail "these files do not pin $version:$unpinned - update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
 fi
 if [ -n "$stale" ]; then
-  fail "these files still pin an older release:$(printf "$stale") — every version reference must name $version"
+  fail "these files still pin an older release:$(printf "$stale") - every pin must name $version"
 fi
 echo "documentation names $version"
 
