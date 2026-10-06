@@ -12,6 +12,8 @@ makes that loss loud, in CI, before anyone tags anything.
 from __future__ import annotations
 
 import pathlib
+import re
+import subprocess
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PREFLIGHT = REPO_ROOT / "scripts" / "ci_preflight.sh"
@@ -128,16 +130,59 @@ def test_the_chain_retest_does_not_hardcode_matrix_counts() -> None:
     assert "matrix_passed" in retest and "-ge 14" in retest
 
 
-def test_cutting_a_release_requires_the_documentation_to_name_it() -> None:
-    """The README quick start and the whitepaper pin a version, and they drifted two releases
-    behind: a stranger following the documented path cloned an old tag. The release path now
-    refuses to tag unless those documents name the version being released.
+def test_cutting_a_release_requires_the_documentation_to_name_it(tmp_path: Path) -> None:
+    """A release must not be cut while the documentation pins a different version.
+
+    Behavioural on purpose: the pin check is extracted from cut_release.sh and run against fixture
+    documents, so this test survives the check being rewritten (its first version flagged Node's
+    v22.20.0 and a historical v0.1.0 mention, and failed a good release for the wrong reason).
     """
     source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "cut_release.sh").read_text(
         encoding="utf-8"
     )
+    function = re.search(r"^pin_check\(\) \{.*?^\}", source, re.S | re.M)
+    assert function, "cut_release.sh must keep a pin_check function"
 
-    assert "for doc in README.md docs/whitepaper.md" in source
-    assert "do not name" in source
-    # A doc that names the new version once and pins an older tag elsewhere is still wrong.
-    assert "still pin an older release" in source
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "README.md").write_text(
+        "git clone --branch v0.2.12 --depth 1 https://example.invalid/repo.git\n"
+        "curl -fsSL https://nodejs.org/dist/v22.20.0/node-v22.20.0-linux-x64.tar.xz\n"
+        "Version v0.1.0 was the first release.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "whitepaper.md").write_text(
+        "released under semantic tags (v0.2.12 at the time of writing\n"
+        "| Release | **v0.2.12**, Apache-2.0 |\n",
+        encoding="utf-8",
+    )
+
+    script = rf"""
+set -uo pipefail
+cd {tmp_path}
+version="v0.2.12"
+unpinned=""
+stale=""
+{function.group(0)}
+pin_check README.md '--branch v[0-9.]+'
+pin_check docs/whitepaper.md 'semantic tags \(v[0-9.]+'
+pin_check docs/whitepaper.md '\| Release \| \*\*v[0-9.]+\*\*'
+printf 'unpinned=[%s] stale=[%s]' "$unpinned" "$stale"
+"""
+    clean = subprocess.run(["bash", "-c", script], text=True, capture_output=True, check=False)
+    assert clean.returncode == 0, clean.stderr
+    # Node's v22.20.0 and the historical v0.1.0 are not pin sites: neither may be reported.
+    assert clean.stdout == "unpinned=[] stale=[]", clean.stdout
+
+    (tmp_path / "README.md").write_text("git clone --branch v0.2.11 --depth 1 x\n", encoding="utf-8")
+    stale_result = subprocess.run(["bash", "-c", script], text=True, capture_output=True, check=False)
+    assert "v0.2.11" in stale_result.stdout, "a stale pin must be reported"
+
+    assert "do not pin" in source and "still pin an older release" in source
+
+
+def test_the_pin_check_reads_PATTERNS_starting_with_dashes(tmp_path: Path) -> None:
+    """The check greps for '--branch ...', which grep parses as an option unless -e is used."""
+    source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "cut_release.sh").read_text(
+        encoding="utf-8"
+    )
+    assert 'grep -oE -e "$pattern"' in source
