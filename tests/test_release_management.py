@@ -139,3 +139,5 @@ def test_cutting_a_release_requires_the_documentation_to_name_it() -> None:
 
     assert "for doc in README.md docs/whitepaper.md" in source
     assert "do not name" in source
+    # A doc that names the new version once and pins an older tag elsewhere is still wrong.
+    assert "still pin an older release" in source

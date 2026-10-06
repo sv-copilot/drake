@@ -63,11 +63,19 @@ step "2/5 the documentation pins the version being released"
 # drifted two releases behind once, so a stranger following the documented path cloned an old tag
 # without anyone noticing. Enforce it here: cutting a release requires the docs to name it.
 unpinned=""
+stale=""
 for doc in README.md docs/whitepaper.md; do
   grep -q -- "$version" "$doc" || unpinned="$unpinned $doc"
+  # Naming the new version somewhere is not enough: a doc can name it in one place and still pin an
+  # older tag in another (this happened — the header was updated and the release row was not).
+  other="$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' "$doc" | grep -v -- "^$version$" | sort -u | tr '\n' ' ')"
+  [ -n "$other" ] && stale="$stale\n  $doc pins: $other"
 done
 if [ -n "$unpinned" ]; then
   fail "these files do not name $version:$unpinned — update the pinned version (README quick start and clean-room command, whitepaper release line) and re-run"
+fi
+if [ -n "$stale" ]; then
+  fail "these files still pin an older release:$(printf "$stale") — every version reference must name $version"
 fi
 echo "documentation names $version"
 
