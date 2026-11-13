@@ -1,6 +1,11 @@
 # Drake: Repository-Native Governance for AI-Assisted Software Development
 
-**Whitepaper · October 2026 · v3**
+**Whitepaper · v3.1 · November 2026**
+
+> **What changed in v3.1.** The model layer is now stated rather than implied: the reference
+> configuration runs Claude Code with `--model` set to Opus 5.5, and §5 says what that does and does
+> not mean. The harness-matrix row in §11 previously read 18/18 against a README that reads 14/14;
+> the two numbers count different things and the row now says so. No other claim changed.
 
 Drake is an open-source, repository-native governance layer for AI-assisted software development.
 It is Apache-2.0 licensed, released under semantic tags (v0.2.12 at the time of writing — see the
@@ -163,6 +168,18 @@ The catalogue is machine-readable (`adapters/harnesses.json`) and each entry rec
 verified — by running the CLI, by reading vendor documentation, or as your own command. A test
 asserts the runner and the catalogue agree, so "verified" can never quietly mean "someone read a
 blog post".
+
+### Model is configuration, not a dependency
+
+The catalogue above is a harness comparison, and it stays that way on purpose: Drake passes
+`--model <m>` through as a string and never inspects it. The reference configuration sets it to
+**Claude Opus 5.5** for the Claude Code harness, because that is the strongest model available for
+long-horizon editing work at the time of writing.
+
+That is a statement about the author's setup, not a benchmark. No test in the gate asserts model
+behaviour, because no live vendor model call runs there (§9). A model change is a configuration
+change: edit the string, run the gate, and the evidence record will show a different
+`metadata.json` with the same task packet. Nothing in the governance depends on which model answered.
 
 Install lines pin versions deliberately: an unpinned global install is a supply-chain gamble, and
 upstream has flagged old releases of at least one of these CLIs as malicious.
@@ -343,7 +360,7 @@ nothing in this paper depends on it existing.
 | Selector and tree validator | Priority-aware ordering; cycle detection |
 | Contracts | Task packet and evidence validated against published schemas in CI |
 | Adoption rehearsal | **35/35** against the published release from a cold clone |
-| Harness matrix | **18/18**, including four scheduling scenarios |
+| Harness matrix | **14 harness cases**, plus four scheduling scenarios, **18/18** |
 | Release management | The adoption chain runs in the gate, before the tag, and after it — asserted by a test |
 | Unattended scheduling | `scripts/slice-cron.sh` with cron and systemd recipes |
 | Clean room | `scripts/cleanroom-setup.sh` / `cleanroom-run.sh` |
